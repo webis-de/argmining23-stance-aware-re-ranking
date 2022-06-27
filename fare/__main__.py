@@ -1,6 +1,9 @@
+from pyterrier import init
+
+init()
+
 from more_itertools import unzip
 from pandas import DataFrame
-from pyterrier import init
 from pyterrier.io import read_qrels
 from pyterrier.pipelines import Experiment
 from pyterrier.transformer import Transformer
@@ -13,7 +16,10 @@ from fare.modules.topics_loader import parse_topics
 
 
 def _rerank(pipeline: Transformer) -> Transformer:
+    # Load text contents
     pipeline = pipeline >> TextLoader()
+    pipeline = ~pipeline
+
     stance_tagger_cutoff = max(
         CONFIG.stance_reranker_cutoff,
         CONFIG.fairness_reranker_cutoff
@@ -35,8 +41,6 @@ def _rerank(pipeline: Transformer) -> Transformer:
 
 
 def main() -> None:
-    init()
-
     topics: DataFrame = parse_topics()
     qrels_relevance: DataFrame = read_qrels(
         str(CONFIG.qrels_relevance_file_path.absolute())
@@ -72,9 +76,9 @@ def main() -> None:
         topics=topics,
         qrels=qrels_relevance,
         eval_metrics=CONFIG.metrics,
-        names=all_names,
+        names=[f"{name} relevance" for name in all_names],
         verbose=True,
-        save_dir=str(cache_dir),
+        # save_dir=str(cache_dir),
     ).sort_values(["ndcg_cut_5", "name"], ascending=[False, True])
     print(experiment)
 
@@ -84,9 +88,9 @@ def main() -> None:
         topics=topics,
         qrels=qrels_quality,
         eval_metrics=CONFIG.metrics,
-        names=all_names,
+        names=[f"{name} quality" for name in all_names],
         verbose=True,
-        save_dir=str(cache_dir),
+        # save_dir=str(cache_dir),
     ).sort_values(["ndcg_cut_5", "name"], ascending=[False, True])
     print(experiment)
 
