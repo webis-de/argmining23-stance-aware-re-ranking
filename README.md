@@ -23,53 +23,14 @@ Then install dependencies (this may take a while):
 pipenv install
 ```
 
-### Data Preparation
+### Re-rank and evaluate all run files
 
-We need to download topics, qrels, and runs to re-rank.
-
-#### Topics
-
-Download and unzip [topics](https://webis.de/events/touche-22/data/topics-task2-2022.zip) from Touché 2022 task 2 to `data/topics/topics-task2.xml`.
-
-#### Qrels
-
-Download qrels for [relevance](https://files.webis.de/corpora/corpora-webis/corpus-touche-task2-22/touche-task2-2022-relevance.qrels) and [quality](https://files.webis.de/corpora/corpora-webis/corpus-touche-task2-22/touche-task2-2022-quality.qrels) from Touché 2022 task 2 to `data/qrels`.
-
-#### Runs
-
-Ask the [Touché organizers](https://webis.de/events/touche-22/shared-task-2.html#task-committee) for the run files from Touché 2022 task 2.
-Then, place the files under `data/runs`.
-The folder structure should now be `data/runs/<TEAM>/output/run<NUMBER>` where `<TEAM>` is each team's name and `<NUMBER>` is the run number (up to 5 runs).
-
-### Re-rank a single run file
-
-To test the re-ranking pipeline, run the `fare` CLI like this:
-
-```shell script
-pipenv run python -m fare rerank --topics topics.xml --run run.txt --output reranked.txt
-```
-
-### Evaluate re-ranked results
-
-To evaluate the re-ranking pipeline for all topics, run the `fare` CLI like this:
-
-```shell script
-pipenv run python -m fare evaluate --topics topics.xml --qrels qrels.txt --run run.txt --metric ndcg_cut5
-```
-
-### Options
-
-The re-ranking pipeline can be configured with the options listed in the `help` command. The `help` command also lists all subcommands.
-
-```shell script
-pipenv run python -m fare --help
-```
-
-Each subcommand's extra options can be listed, e.g.:
-
-```shell script
-pipenv run python -m fare rerank --help
-```
+To evaluate the re-ranking pipeline on all runs and all topics, follow these steps:
+1. Modify the configuration in [`config.yml`](config.yml)
+2. Run the `fare` module:
+    ```shell script
+    pipenv run python -m fare
+    ```
 
 ## Testing
 
@@ -84,3 +45,4 @@ pipenv run pytest fare
 ## License
 
 This repository is licensed under the [MIT License](LICENSE).
+The data (in the `data/` directory) may be released under different terms and conditions.
