@@ -15,6 +15,11 @@ requests = "*"
 urllib3 = "*"
 tqdm = "*"
 pandas = "*"
+python-terrier = "*"
+dataclasses-json = "*"
+pyyaml = "*"
+marshmallow = "*"
+diskcache = "*"
 
 [dev-packages]
 
