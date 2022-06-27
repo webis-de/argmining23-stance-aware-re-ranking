@@ -16,10 +16,11 @@ from fare.modules.topics_loader import parse_topics
 
 
 def _rerank(pipeline: Transformer) -> Transformer:
-    # Load text contents
+    # Load text contents.
     pipeline = pipeline >> TextLoader()
     pipeline = ~pipeline
 
+    # Tag stance.
     stance_tagger_cutoff = max(
         CONFIG.stance_reranker_cutoff,
         CONFIG.fairness_reranker_cutoff
@@ -28,15 +29,24 @@ def _rerank(pipeline: Transformer) -> Transformer:
                 stance_tagger_cutoff >>
                 CONFIG.stance_tagger
                 ) ^ pipeline
+    # Filter stance.
     pipeline = pipeline >> StanceFilter(CONFIG.stance_filter_threshold)
+    pipeline = ~pipeline
+
+    # Re-rank stance/subjective first.
     pipeline = (pipeline %
                 CONFIG.stance_reranker_cutoff >>
                 CONFIG.stance_reranker
                 ) ^ pipeline
+    pipeline = ~pipeline
+
+    # Fair re-ranking.
     pipeline = (pipeline %
                 CONFIG.fairness_reranker_cutoff >>
                 CONFIG.fairness_reranker
                 ) ^ pipeline
+    pipeline = ~pipeline
+
     return pipeline
 
 
@@ -68,19 +78,24 @@ def main() -> None:
     all_names = list(all_names)
     all_systems = list(all_systems)
 
-    cache_dir = CONFIG.cache_directory_path.absolute() / "pyterrier"
-    cache_dir.mkdir(exist_ok=True)
-
     print("\nRelevance\n=====\n")
     experiment = Experiment(
         retr_systems=all_systems,
         topics=topics,
         qrels=qrels_relevance,
         eval_metrics=CONFIG.metrics,
-        names=[f"{name} relevance" for name in all_names],
+        names=all_names,
+        filter_by_qrels=CONFIG.filter_by_qrels,
+        round=3,
         verbose=True,
-        # save_dir=str(cache_dir),
-    ).sort_values(["ndcg_cut_5", "name"], ascending=[False, True])
+    )
+    experiment["_name"] = experiment["name"].str.replace(" re-ranked", "")
+    experiment.sort_values(
+        ["_name", *CONFIG.metrics],
+        ascending=[True, *(False for _ in CONFIG.metrics)],
+        inplace=True,
+    )
+    del experiment["_name"]
     print(experiment)
 
     print("\nQuality\n=====\n")
@@ -89,10 +104,18 @@ def main() -> None:
         topics=topics,
         qrels=qrels_quality,
         eval_metrics=CONFIG.metrics,
-        names=[f"{name} quality" for name in all_names],
+    names=all_names,
+        filter_by_qrels=CONFIG.filter_by_qrels,
+    round=3,
         verbose=True,
-        # save_dir=str(cache_dir),
     ).sort_values(["ndcg_cut_5", "name"], ascending=[False, True])
+    experiment["_name"] = experiment["name"].str.replace(" re-ranked", "")
+    experiment.sort_values(
+        ["_name", *CONFIG.metrics],
+        ascending=[True, *(False for _ in CONFIG.metrics)],
+        inplace=True,
+    )
+    del experiment["_name"]
     print(experiment)
 
 
