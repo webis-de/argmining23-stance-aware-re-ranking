@@ -29,7 +29,7 @@ class StanceFirstReranker(Transformer):
 
     def transform(self, ranking: DataFrame) -> DataFrame:
         group_by_query = ranking.groupby("qid")
-        return group_by_query.apply(self.rerank_query)
+        return group_by_query.apply(self.rerank_query).reset_index(drop=True)
 
 
 class SubjectiveStanceFirstReranker(Transformer):
@@ -61,7 +61,7 @@ class SubjectiveStanceFirstReranker(Transformer):
 
     def transform(self, ranking: DataFrame) -> DataFrame:
         group_by_query = ranking.groupby("qid")
-        return group_by_query.apply(self.rerank_query)
+        return group_by_query.apply(self.rerank_query).reset_index(drop=True)
 
 
 class StanceReranker(Transformer, Enum):
