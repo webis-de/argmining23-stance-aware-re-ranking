@@ -10,6 +10,8 @@ class StanceFilter(Transformer):
 
     def transform(self, ranking: DataFrame) -> DataFrame:
         ranking = ranking.copy()
-        stance_under_threshold = ranking["stance_value"].abs() < self.threshold
-        ranking[stance_under_threshold]["stance_label"] = "NEUTRAL"
+        ranking.loc[
+            ranking["stance_value"].abs() < self.threshold,
+            "stance_label"
+        ] = "NEUTRAL"
         return ranking
