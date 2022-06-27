@@ -4,7 +4,7 @@
 [![Commit activity](https://img.shields.io/github/commit-activity/m/heinrichreimer/fare?style=flat-square)](https://github.com/heinrichreimer/fare/commits)
 [![License](https://img.shields.io/github/license/heinrichreimer/fare?style=flat-square)](LICENSE)
 
-# 🆚 fare
+# 🆚 fair
 
 Code and resources to reproduce the paper _FARE: Fair Argument Re-ranking for Comparative Questions_ at [ArgMining 2022](https://argmining-org.github.io/2022/).
 
