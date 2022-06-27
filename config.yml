@@ -10,17 +10,17 @@ huggingfaceApiToken: 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
 huggingfaceModelNameT0: bigscience/T0pp
 
 #stanceTagger: original
-stanceTagger: t0
-#stanceTagger: ground-truth
+#stanceTagger: t0
+stanceTagger: ground-truth
 stanceFilterThreshold: 0.5
 
-stanceReranker: original
+#stanceReranker: original
 #stanceReranker: stance-first
-#stanceReranker: subjective-stance-first
+stanceReranker: subjective-stance-first
 stanceRerankerCutoff: 10
 
-fairnessReranker: original
-#fairnessReranker: alternating-stance
+#fairnessReranker: original
+fairnessReranker: alternating-stance
 fairnessRerankerCutoff: 10
 
 metrics:
