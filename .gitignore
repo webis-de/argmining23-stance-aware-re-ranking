@@ -175,7 +175,7 @@ _minted*
 *.mw
 
 # nomencl
-*.nlg
+*.nlgn
 *.nlo
 *.nls
 
@@ -456,4 +456,4 @@ Thumbs.db
 
 # End of https://www.toptal.com/developers/gitignore/api/latex,vscode,python
 
-data/
+data/cache
