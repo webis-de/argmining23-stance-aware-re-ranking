@@ -1,0 +1,401 @@
+<topics>
+<topic>
+<number>2</number>
+<title>Which is better, a laptop or a desktop?</title>
+<objects>laptop, desktop</objects>
+<description>A user wants to buy a new PC but has no prior preferences. They want to find arguments that show in what personal situation what kind of machine is preferable. This can range from situations like frequent traveling where a mobile device is to be favored to situations of a rather "stationary" gaming desktop PC.</description>
+<narrative>Highly relevant documents will describe the major similarities and dissimilarities of laptops and desktops along with the respective advantages and disadvantages of specific usage scenarios. A comparison of the technical and architectural characteristics without personal opinion, recommendation, or pros/cons is not relevant.</narrative>
+</topic>
+
+<topic>
+<number>3</number>
+<title>Which is better, Canon or Nikon?</title>
+<objects>Canon, Nikon</objects>
+<description>A user wants to buy a new camera from one of the two popular brands they have heard of. Since no further context is given, the user is interested in comparing Canon to Nikon cameras at different price/performance levels.</description>
+<narrative>Highly relevant documents will compare pairs of cameras from the two popular camera manufacturers in different price/performance ranges (from entry-level models to professional equipment)---even optional potential suggestions of favorable cameras from other manufacturers may be contained. A document is relevant if at least some pair of Canon and Nikon cameras are compared or information about either of the cameras is provided but not just on the "technical" specs level. Documents without personal opinion, recommendation, and pros/cons are not relevant.</narrative>
+</topic>
+
+<topic>
+<number>8</number>
+<title>What are the advantages and disadvantages of PHP over Python and vice versa?</title>
+<objects>PHP, Python</objects>
+<description>With no previous coding experience, a young user plans to start learning programming mostly for web development by attending a course at a coding school. But they have seen some online comments on the advantages and disadvantages of these two programming languages. Given a limited amount of time (and money), the user wants to choose just one course to learn coding in either language and needs to be sure to choose the better option.</description>
+<narrative>Relevant documents may contain an overview of more than these two programming languages and can include subjective opinions of anonymous online users and experienced coders. Highly relevant documents should include an explicit and justified recommendation on which of the languages to better start within what scenarios (e.g., job perspectives or ease of including deep learning pipelines).</narrative>
+</topic>
+
+<topic>
+<number>9</number>
+<title>Why is Linux better than Windows?</title>
+<objects>Linux, Windows</objects>
+<description>Being tired of uncontrolled updates, a Windows user is thinking about switching to another operating system, for example, Linux strongly suggested as "better" by a geek friend. The Windows user knows this would cost them some time and effort to get familiar with Linux and decides to search online for more evidence about Linux advantages.</description>
+<narrative>Given a specific intent to find information in support of the decision to switch to Linux, highly relevant documents should explicitly mention the advantages of Linux over Windows and/or disadvantages of Windows. Relevant documents can be limited to more general overviews of different operating systems including Linux and Windows and maybe not focused on the superiority of Linux only.</narrative>
+</topic>
+
+<topic>
+<number>12</number>
+<title>Train or plane? Which is the better choice?</title>
+<objects>Train, plane</objects>
+<description>A frequent traveler (domestic and international) wants to reconsider their preference for taking a plane given global warming but also security issues like plane crashes from smaller airlines. The users want to get an idea of the environmentally, economic, and most secure travel option for different regions around the world (e.g., Europe with some good train systems in some countries vs. the U.S. market with some longer distances).</description>
+<narrative>A highly relevant document will contrast the eco-friendliness of trains with their current top speeds to figure out distance ranges/circumstances that favor trains over planes and vice versa. Highly relevant documents may also contain the alternative of using a ship for intercontinental travels. Besides eco-friendliness, also comfort, security, or other aspects can be used in the explanations and expert and amateur experience, statistics, and studies should be included. A relevant document will not contain a fully verbalized comparison but may help to collect the needed facts to pursue, for instance, an eco-friendliness or a security-focused comparison at the user side.</narrative>
+</topic>
+
+<topic>
+<number>14</number>
+<title>Should one prefer Chinese medicine or Western medicine?</title>
+<objects>Chinese medicine, Western medicine</objects>
+<description>Given the medical outcome of a recent visit to the doctor's office, a user is looking for alternatives to classical Western medicine. Previous to the medical outcome (potentially months or years before), the user has heard about some amazing results in the context of Chinese medicine. Now, the user wants to learn more about when others favor Chinese medicine and when not. The information need includes a general discussion of the differences and similarities of both treatment approaches as well as opinions and scientific studies on their advantages and disadvantages.</description>
+<narrative>A highly relevant document will contrast the general ideas of Chinese medicine and Western medicine and will explain for different medical outcomes what scientific studies and personal opinions favor. Documents that "just" give general background information on Chinese medicine and Western medicine or that only compare both options for rather specific disease patterns can be considered relevant.</narrative>
+</topic>
+
+<topic>
+<number>17</number>
+<title>Do you prefer cats or dogs, and why?</title>
+<objects>cats, dogs</objects>
+<description>A person thinks of getting a pet but is not sure whether they want to have a cat or a dog. They look for advice from others on what is more manageable for a beginner (e.g., what dog breed to favor without any previous experience), whether cats or dogs in general are considered to be more loyal, friendlier, or cleaner, and also what budget needs to be considered finance-wise.</description>
+<narrative>Highly relevant documents will discuss advantages and inconveniences of both having cats or dogs as pets while relevant documents may only contain personal opinions or anecdotes on either owning a cat or a dog. Documents which include only "definitions" of cats and dogs as animals without a clear opinion on them as pets are not relevant.</narrative>
+</topic>
+
+<topic>
+<number>18</number>
+<title>What is the better way to grill outdoors: gas or charcoal?</title>
+<objects>gas, charcoal</objects>
+<description>A person having just decided to start their very first grilling season by buying a grill faces the question that cooks have been asking for decades since the first grill went on sale in the 1950s: Gas or charcoal? Obviously a tricky decision that depends on the actual individual preferences. For instance, many say that it is better to get a great smoky flavor from cooking over charcoal.</description>
+<narrative>Highly relevant documents contain pros and cons for both: using natural gas or using charcoal for outdoor grilling (e.g., flavor, ease of use, eco-friendliness, etc.). A relevant document might just contain opinions of people who share their experience with just one of the options while documents that include only definitions of using charcoal and natural gas, in general, are not relevant.</narrative>
+</topic>
+
+<topic>
+<number>19</number>
+<title>Which is better, MAC or PC?</title>
+<objects>MAC, PC</objects>
+<description>A person is thinking about replacing their old desktop machine by a new one. Without any "religious" preference for either the Mac or PC universe, they are willing to consider buying from either "side". For such an unbiased user, the potential differences between Macs and PCs should be highlighted---probably even that some people believe that the best way to describe the difference between a Mac and a PC is that they represent two different ways of thinking.</description>
+<narrative>Highly relevant documents discuss differences between a Mac and a PC (e.g., software availability, price range, design, vulnerability to viruses, etc.) and express preferences on the respective differences. Relevant documents may contain user opinions who are very happy or also very dissatisfied with some choice on Mac vs. PC that they made but without longer comparisons of both worlds. Documents that include only historical information (e.g., when was the first Mac/PC available) or documents without clearly expressed opinions or comparisons are not relevant.</narrative>
+</topic>
+
+<topic>
+<number>22</number>
+<title>Which is better, Pepsi or Coke?</title>
+<objects>Pepsi, Coke</objects>
+<description>When it comes to soft drinks, there are two kinds of people: people who team up with Coca-Cola and those who are Pepsi players. Both Coca-cola and Pepsi dominate the market of soft drinks and pretty much everyone has a preference for one over the other, without knowing the difference. In order to learn more about the two camps (and maybe to be able to choose one side but not for the sake of trolling), the user wants to compare them in terms of nutritional content (sugar, calories, sodium-content, and caffeine), taste (acidity, vanilla-like), number of people who buy Coke or Pepsi in different countries, etc.</description>
+<narrative>Highly relevant documents contain a comparison of Coke soda and Pepsi soda based on facts (nutrition-wise, sales, etc.) and general opinions from other persons. A relevant document at least states an explicit preference with respect to for instance sugar content or caffeine while irrelevant documents do not come with a preference but for instance only with lists of ingredients.</narrative>
+</topic>
+
+<topic>
+<number>23</number>
+<title>What is better, Google search or Yahoo search?</title>
+<objects>Google search, Yahoo search</objects>
+<description>Even though the tech company Google has created a strong brand name with respect to web search (and other things), some people favor the Yahoo search experience, which is powered by Bing since 2009. Without the intent of trolling, a user is considering to move away from the 90%+ camp of Google search users and has heard that Yahoo once was a good search engine. In particular, there might be scenarios where Yahoo search results (i.e., Bing) are still on par with Google or maybe even better. The user wants to know more about these scenarios (and the ones where Google has advantages) in order to decide whether switching search engines (at least from time to time) might be reasonable. Aspects of the comparisons for potential different use cases/scenarios (e.g., general web search, image search, Twitter search, QA platform, etc.) could be: quality of the search results, speed, ease of access and usage, search reliability, privacy, interactive features, etc.</description>
+<narrative>Highly relevant documents contain user opinions / comparisons of at least Google and Yahoo (or Bing but then stating that Bing powers most of Yahoo's search results) in different scenarios and/or general user share etc. Documents that contain just a comparison of for instance image search abilities can be considered relevant. Documents comparing the Google and Yahoo stock or comparing other non-search issues are not relevant.</narrative>
+</topic>
+
+<topic>
+<number>25</number>
+<title>Which browser is better, Internet Explorer or Firefox?</title>
+<objects>Internet Explorer, Firefox</objects>
+<description>A windows user wants to decide whether to use the default Internet Explorer or go for Firefox as alternative and seeks for information to compare them in multiple different aspects such as security and privacy, performance, ease of use, reliability, etc.</description>
+<narrative>Highly relevant documents discuss in detail pros and cons of both web browsers by contrasting their characteristics and features. This comparison may contain technical details but also personal opinions. A relevant document may explicitly state what are the good/bad features of either the Internet Explorer or the Firefox browser without a clear comparison. Documents that include only descriptions of browser war or historical background how the browsers evolved, etc. are not relevant.</narrative>
+</topic>
+
+<topic>
+<number>26</number>
+<title>Which is a better vehicle: BMW or Audi?</title>
+<objects>BMW, Audi</objects>
+<description>A user needs to buy a new company car and is pretty sure that it should be one manufactured in Germany to impress their customers---still not being sure whether it should be BMW or Audi (Mercedes for some reason already was ruled out). Now, the user searches for technical characteristics and reviews on cars from both brands including price, engine power, durability, ecological impact, reliability, etc. The users hopes to avoid reading through dozens of articles and wants to find one solid review comparing the brands---ideally with an emphasis on the usage as a company car.</description>
+<narrative>Highly relevant documents compare BMW and Audi cars like the BMW 3, 5, and 7 series to Audi’s A4, A6, or A8 series with respect to their aspects like speed, horsepower, price, reliability, etc. It is also OK, if some further car manufacturers are part of the comparison, but BMW and Audi need to be present. Ideally, such documents include recommendations on particular models and a conclusion which of the two brands should be preferred and why in what class (3 series vs. A4, etc.). Relevant documents may discuss cars from either BMW or Audi along some of the mentioned aspects but without a final comparison of an BMW to an Audi car. Documents that include only historical background on the two car manufacturers, or other content that does not help to decide for a specific car model from BMW or Audi are not relevant.</narrative>
+</topic>
+
+<topic>
+<number>27</number>
+<title>Which one is better, an electric stove or a gas stove?</title>
+<objects>electric stove, gas stove</objects>
+<description>A user's current stove has recently begun to burn the bacon and ruin the stew. They think it might be time for a replacement. Having a big family, the user is interested in whether an electric stove or a gas stove is more costly, safer, eco- and family-friendly, etc.</description>
+<narrative>Highly relevant documents contain pros and cons of electric stoves and gas stoves contrasting them along different characteristics (price, eco-friendliness, handling, etc.) from a professional viewpoint or as opinions from "normal" people. Relevant documents contain opinions / experience reports on only electric stoves or only gas stoves. Documents containing only technical descriptions of how an electric stove or a gas stove works, when they were invented, etc. without clear pros/cons or opinions on which to buy are not relevant.</narrative>
+</topic>
+
+<topic>
+<number>28</number>
+<title>What planes are best, Boeing or Airbus?</title>
+<objects>Boeing, Airbus</objects>
+<description>A student at a business school has to write an essay on the corporate rivalry between Boeing and Airbus as one of the fiercest in the history of markets. After some research, the student wants to also devote a passage of the essay to the question of whether Boeing or Airbus produce the better airplanes---both from a historical perspective but also with an eye on the newest developments. The student is looking for documents analyzing the planes of the two giants of the aviation industry side by side by comparing aspects such as market dominance (e.g., when the 747 was invented, did it dominate the A300?), prices, safety, famous accidents, etc.</description>
+<narrative>A highly relevant document compares at least one class of particular Boeing and Airbus planes (e.g., 747 vs. A300 and then the A380) based on aspects like safety, efficiency, capacity, popularity, number of planes sold, etc. Relevant documents may contain opinions of "normal" people on aspects of particular Boeing or Airbus planes without a specific focus on comparison. Documents that contain only historic information about the companies or some planes, documents that only show images of planes, etc. are not relevant.</narrative>
+</topic>
+
+<topic>
+<number>30</number>
+<title>Should I buy an Xbox or a PlayStation?</title>
+<objects>Xbox, PlayStation</objects>
+<description>A 25-year-old has heard from their friends that playing some video games helps them to relax in the evenings. Not having owned a gaming console as a kid, the 25-year-old isn't (yet) "biased" in the Xbox vs PlayStation battle. Event though both consoles offer access to hundreds of games, some of the 25-year-old's friends still said that the consoles differ in terms of price, hardware, available games, user-friendliness, etc. So, to find more "objective" advice online, the 25-year-old searches for documents that discuss the potential differences between the two consoles and their respective advantages to help them buy a gaming console.</description>
+<narrative>Highly relevant documents compare the consoles over different characteristics like usability, hardware, graphics, design, price, technical compatibility, games, etc. Relevant documents may contain only opinions on either an Xbox or a PlayStation. Documents that just contain technical specs of either gaming console, that only discuss how the brands were invented, etc., are not relevant.</narrative>
+</topic>
+
+<topic>
+<number>33</number>
+<title>What is better: ASP or PHP?</title>
+<objects>ASP, PHP</objects>
+<description>A computer science student with already some basic coding knowledge wants to learn some new web development-related skills. The student has read about ASP and PHP as languages used to build dynamic web sites (and knows that PHP is a widely used scripting language and that ASP.NET has Microsoft as its backup bearer and can be operated across any .NET supported languages). Still being not sure in which of these languages to learn some first web development coding the student wants to decide which one to choose for further studies. The interesting aspects include which language is easier to use, simpler to understand, compatible with different platforms, supports more features, is more flexible, etc.</description>
+<narrative>Highly relevant documents will contrast PHP to ASP with respect to web development and show scenarios in which one language could be preferred over the other with respect to aspects like learning curve, web page loading speed, language complexity, etc. Relevant documents express an opinion about just one of the languages by for instance show with some examples how to solve specific problems using the language. Documents that only discuss other web development languages, that only show some historic background of PHP and ASP, etc. are not relevant.</narrative>
+</topic>
+
+<topic>
+<number>34</number>
+<title>What is better for the environment, a real or a fake Christmas tree?</title>
+<objects>real Christmas tree, fake Christmas tree</objects>
+<description>Many families decorate a Christmas tree every year, which over and over again triggers debates over the family Christmas tree: live or artificial? In a family's discussion in early December, the question again pops up: Is buying a real or buying an artificial Christmas tree greener and more environmentally friendly? The family searches for more information and discussions on differences between a real and a fake Christmas tree from the ecological point of view (e.g., tree plantations cover vast territories of wildlife habitat while artificial trees are shipped long distances overseas (but may be "used" more than once), etc.).</description>
+<narrative>Highly relevant documents compare real and fake Christmas trees discussing ecological and environmental impacts of their production and shipping and include a conclusion on the issue. Relevant documents may only cover either real of artificial trees' eco-"footprint" or may compare both variants but not with a clear focus on the ecological issue but potentially other benefits/disadvantages. Documents with no comparison or a discussion of eco-friendliness of the whole Christmas event, etc. are not relevant.</narrative>
+</topic>
+
+<topic>
+<number>36</number>
+<title>What IDE is better for Java: NetBeans or Eclipse?</title>
+<objects>NetBeans, Eclipse</objects>
+<description>A software engineer has been developing Java software in Eclipse for years, but has heard many times that NetBeans might be more convenient and flexible. To decide whether switching is worth it, the software engineer is looking for opinions about pros and cons of using NetBeans and Eclipse.</description>
+<narrative>Highly relevant documents compare the two IDEs for Java over features such as support of debugging, code completion, version control, license, performance, etc., and come to a final conclusion about which of the two is better in what scenario. Relevant documents may elaborate on either IDE and should contribute to developing a user's own opinion. Ads might be relevant if they provide pros and cons of either IDE. Documents providing some general information about the IDEs or not providing opinions or experience of using them are not relevant.</narrative>
+</topic>
+
+<topic>
+<number>37</number>
+<title>Is OpenGL better than Direct3D in terms of portability to different platforms?</title>
+<objects>OpenGL, Direct3D</objects>
+<description>A beginning games developer is still discovering features of the two APIs OpenGL and Direct3D, which are "competing" APIs used to render computer graphics. The developer is now interested which of them better supports cross-platform development in the sense of developing across different operating systems or the effort needed to port code to other potential platforms.</description>
+<narrative>Highly relevant documents discuss the portability of OpenGL and Direct3D across different operating systems and help the user to compare which of the two allows a better cross-platform development (but also other features might be discussed). Relevant documents may provide information on either API and help to understand whether they support a single-platform or many-platform development (e.g., cross-platform success stories of developers with OpenGL or with Direct3D but not necessarily as a comparison of both). Historical information, ads or tutorials on OpenGL and D3D, which do not share insight on the cross-platform abilities are not relevant.</narrative>
+</topic>
+
+<topic>
+<number>42</number>
+<title>Which four wheel truck is better: Ford or Toyota?</title>
+<objects>Ford, Toyota</objects>
+<description>A US-based user wants to buy a new pickup truck. Knowing that the full-size pickup truck market is fiercely competitive, the user has already focused on buying a Ford or a Toyota and now is searching for information and opinions to support a potential decision. The user is looking for overviews/rankings of the best pickup trucks from Ford and Toyota, advice and opinions from other owners, technical specifications, prices, etc.</description>
+<narrative>Highly relevant documents compare at least on Ford four wheel truck to one from Toyota in form of pros/cons with recommendations, opinions, or reviews. Relevant documents help the user to form their opinion on how good or suitable a/the truck(s) of either Ford or Toyota are in specific settings. Documents not focusing on pickup / four wheel trucks but comparing other Ford or Toyota cars (e.g., reviews, lists of best vehicles, opinions) or the documents comparing the companies in general or giving historic background on the truck production of either company are not relevant.</narrative>
+</topic>
+
+<topic>
+<number>43</number>
+<title>Should I prefer a Leica camera over Nikon for portrait photographs?</title>
+<objects>Leica camera, Nikon</objects>
+<description>A professional photographer has spent most of their career shooting portraits with a Nikon camera but has heard from some friend that they love their Leica for portraits. Since the name or logo on the camera is not that important for the photographer, they are willing to give a Leica a try for their next equipment purchase but want to do some general background research on what others think or what reviews can be found online.</description>
+<narrative>Highly relevant documents will support the decision to switch to a Leica or stay with the Nikon in form of stories of photographers having experience to shoot with both, some technical reviews or lists of the best cameras for portraits (all non-beginner models from the two brands can be considered as important). Relevant documents may provide overviews or personal experience of using either a Leica or a Nikon camera for portrait shooting. Documents that describe or compare the brands in general, cameras without a focus on portrait shooting, or the brands history, etc., but do not provide information informing about current Leica or Nikon cameras for portrait photographs are not relevant.</narrative>
+</topic>
+
+<topic>
+<number>48</number>
+<title>Is pasta healthier than pizza?</title>
+<objects>pasta, pizza</objects>
+<description>Low-carb nutrition is a key to successfully lose weight and maintain a healthy lifestyle. Italian cuisine is so seductive: How is it possible to refrain from it? A user's best friend is celebrating their birthday at an Italian restaurant next week. The user is deciding which option will be less unhealthy to eat in terms of diet: Which one contains more calories, which one contains less fat and carbs, etc.? Having heard that pasta might be a better choice than pizza, the user is searching for evidences to prove or reject the assumption.</description>
+<narrative>Highly relevant documents compare pasta and pizza with respect to "healthiness" issues; this may range from opinions of nutritionists, health specialists, or fitness instructors to tabular data of the nutritional content of pasta and pizza (e.g., average calories, fats, carbs). Relevant documents may elaborate on healthiness of just one of the two dishes. History of the dishes, their popularity, recipes, etc., which do not specify any health aspects, are not relevant.</narrative>
+</topic>
+
+<topic>
+<number>51</number>
+<title>What is better at reducing fever in children, Ibuprofen or Aspirin?</title>
+<objects>Ibuprofen, Aspirin</objects>
+<description>Younger parents have their 8-year old child sick. They know that ibuprofen and aspirin can help to reduce fever, but they also heard that one of them is not recommended for children and elderly people. The best solution would be to seek for a doctor's advice, but before that, the parents want to find more information on the web. They search for credible documents from reliable health-related sources that compare the efficacy and safety of ibuprofen and aspirin for reducing the fever in children.</description>
+<narrative>Relevant documents will describe ibuprofen, aspirin and possibly other medicine that can help to reduce fever, especially in children. Highly relevant documents will specifically compare and conclude which of the two is more efficient and safer for children. Documents that only describe the chemical formula or ingredients of the medicines are not relevant.</narrative>
+</topic>
+
+<topic>
+<number>53</number>
+<title>Should I buy steel or ceramic knives?</title>
+<objects>steel knives, ceramic knives</objects>
+<description>Sometimes even simple decisions may need to be well thought trough. A couple is soon moving into a new house with a very nice kitchen and considering to buy a proper knife set that can make a cooking experience much more enjoyable, but can also be very costly. They now look for the reasons why to choose ceramic over steel knives or vice versa.</description> 
+<narrative>Relevant documents provide pros and cons of ceramic and/or steel knives and can discuss how they are similar or different. Highly relevant documents not only will compare the two options, but will also provide a clear advice on which one to prefer or that they are equal. Documents that provide some factual information about knives (e.g., history of invention and use) that do not contribute to making a decision are not relevant.</narrative>
+</topic>
+
+<topic>
+<number>54</number>
+<title>Is morning or afternoon sun the best for fruit trees?</title>
+<objects>morning sun, afternoon sun</objects>
+<description>Gardening can be tricky, and especially for those with no or little experience. Having purchased a new house, a family is planning to plant fruit trees: apples, pears, peaches. Now they want to research more about proper conditions of planting trees. Considering many different factors, they look into what side of their garden to plant fruit trees on: where the sun is in the morning or in the afternoon.</description> 
+<narrative>Relevant documents will elaborate on whether the morning or the afternoon sun is better for fruit trees such that they grow better, are healthier, and provide a greater amount of crops. Relevant documents can contain recommendations for specific tree types like apple trees or fruit trees in general, can discuss the morning and afternoon sun or cardinal directions like east and west. Highly relevant documents will provide a concrete recommendation about the best solution. Documents describing other conditions like watering or soil types, or other types of trees (not fruit trees) and plants are not relevant.</narrative>
+</topic>
+
+<topic>
+<number>55</number>
+<title>What is better for back pain, chiropractic therapy or physical therapy?</title>
+<objects>chiropractic therapy, physical therapy</objects>
+<description>Working from home often has its price, a back pain. In some countries, chiropractic is well established and popular for treating back pain, even if considered pseudo-scientific. A user has started experiencing low back pain and pain in the neck after having worked remotely for 6 months. They tried doing 30-minute physical exercises every day, but the pain has not improved. Now, the user seeks for other options and wants to compare two other approaches to treat the back pain: chiropractic and physical therapies.</description> 
+<narrative>Relevant documents will describe benefits and drawbacks of both therapies or just one. Documents focusing on any type of back pain including neck are relevant. Highly relevant documents must argue for and against the therapies and conclude which one should be prefer or they are equal. Advertisements of clinics or therapists are not relevant.</narrative>
+</topic>
+
+<topic>
+<number>56</number>
+<title>Is Kenya or Tanzania better for a safari?</title>
+<objects>Kenya, Tanzania</objects>
+<description>Going on safari is an exciting experience for tourists, which is both unforgettable and expensive. When choosing which country to go on safari, it is important to consider many factors: How much it will cost, safari tour operator, safety, etc. A couple planning their next vacation have heard from their friends there are two good options for the safari vacation: Kenya and Tanzania. They want to choose between the two options and search for more information on the internet.</description> 
+<narrative>Relevant documents will provide information on safari tours in Kenya and/or Tanzania including but not limited to the costs, duration, accommodation, program, highlights, and additional services. Documents describing the two countries are relevant as long as they help to decide on the vacation destination like safety, medical care, transportation, etc. Highly relevant documents will concretely conclude which of the two, Kenya or Tanzania, is better to go on a safari tour, or they are equally good or bad. Advertisements of safari tour operators, description of touristic companies, descriptions of the countries (like education or political system) that do not help to decide where to go on a safari vacation are not relevant.</narrative>
+</topic>
+
+<topic>
+<number>58</number>
+<title>Which is better, Family Guy or The Simpsons?</title>
+<objects>Family Guy, The Simpsons</objects>
+<description>Family Guy and The Simpsons are probably the most famous sitcom rivals. There are many discussions, forums, and articles on the web where fans argue or just give the reasons why one of them is funnier, has more social relevance or has better guest stars. A big Family Guy fan wonders why some people like The Simpsons that much, and searches for the reasons and opinions that might convince him that The Simpsons is worth watching.</description> 
+<narrative>Personal opinions, blogs, discussions, and articles providing the description of one or the other sitcom are relevant. Relevant documents will compare both over the humor, music, social relevance, cartoon characters, etc. Highly relevant documents will provide a list of reasons why one or the other is better. Documents that just mention the sitcom names but do not provide the description of their features and give the reasons why they are good are not relevant.</narrative>
+</topic>
+
+<topic>
+<number>59</number>
+<title>Which is more difficult, skiing or snowboarding?</title>
+<objects>skiing, snowboarding</objects>
+<description>There are many different winter sport activities that can make holidays fun and physically active. For a novice who decided to get into winter sports, it is often better to start with a less difficult one to have a more enjoyable experience. Having compared equipment costs, possibilities of injuries, available facilities, a novice is now interested in which one, skiing or snowboarding, is easier to start mastering.</description> 
+<narrative>Relevant documents may compare the two sports over different characteristics like proper clothing, equipment costs, etc. but should explicitly contain opinions on which one is more difficult/easier to start in. Documents providing information and opinions on one of the options are relevant. Highly relevant documents will provide a comprehensive list of differences between skiing and snowboarding and explicitly conclude which one is more difficult/easier for either people with experience or for those who just want to start.</narrative>
+</topic>
+
+<topic>
+<number>60</number>
+<title>Why is basketball better than football?</title>
+<objects>basketball, football</objects>
+<description>A student of sports studies is preparing a presentation with the overview of different sports. The main thesis is that basketball is the best team sport: more entertaining, less traumatic, requires good tactical thinking, and contributes to building a team spirit. Now, a student is searching for the evidence, facts, opinions, and arguments, that support the thesis comparing basketball to other sports including football.</description> 
+<narrative>Descriptions of basketball and football are relevant if they convey an opinion on which of the two is better like how difficult it is to play and train, trauma ratios, better keeps body fit, etc. Highly relevant documents will specifically provide reasons why basketball is better than football. Documents providing only statistical information like number of players on a team, history, famous players, etc. not contributing to the conclusion which one is "better" are not relevant.</narrative>
+</topic>
+
+<topic>
+<number>61</number>
+<title>Who is stronger, Hulk or Superman?</title>
+<objects>Hulk, Superman</objects>
+<description>Comic fans have their favorites and often debate, which superhero character is the strongest and can be the fittest to save the world. Involved in a debate on a forum, a user is looking for arguments which of the two, Hulk or Superman, would win a fight. The Green Goliath is extremely strong, but Superman possesses not only physical but also mental powers and can fly. Who will win should they stand up against each other?</description> 
+<narrative>Relevant documents will compare the superpowers of Hulk and Superman and devise a potential winner of a hypothetical duel. Highly relevant documents will provide a number of arguments who of the two is the strongest. Documents describing the history of character creation, listing movies and comics they appeared that do not discuss the powers of the characters are not relevant.</narrative>
+</topic>
+
+<topic>
+<number>62</number>
+<title>Plastic pots or ceramic pots, which is better in terms of plant health?</title>
+<objects>Plastic pots, ceramic pots</objects>
+<description>Gardening is an art. Selecting a proper vessel for plants can significantly influence their health, longevity, and prolificacy. While ceramic pots are costly, heavier, and more fragile, plastic pots may regulate the soil temperature worse or release unhealthy chemicals into the soil. A user is searching for pros and cons of the two planting options, specifically how they influence the plant health.</description> 
+<narrative>Summaries of the differences and (dis)advantages of plastic pots and ceramic pots, both, facts like study findings and opinions of the experienced gardeners, are relevant. Highly relevant  documents must elaborate on which would be a better choice resulting in healthier plants: improved root health, growth capacity, green mass, and overall appearance. Advertisements of hardware or gardening stores, characteristics of planting pots like size, price, etc. that do not provide information on their influence on the plant health are not relevant.</narrative>
+</topic>
+
+<topic>
+<number>67</number>
+<title>Should I take the IELTS or the TOEFL?</title>
+<objects>IELTS, TOEFL</objects>
+<description>Planning to study abroad, a younger high-school graduate is required to submit either an IELTS or TOEFL score at a university. Both are tests to determine the English language level, but the two tests differ in format, scoring, and cost. The graduate is looking up for information to compare the two tests: the price, the duration, the accents one might hear, the scoring scale, etc.</description> 
+<narrative>Relevant documents will describe one or another test in detail. Comparisons between the IELTS and the TOEFL in terms of similarities and differences, advantages and disadvantages are highly relevant. Documents are not relevant if they are just advertisements of schools and resources for test preparation or sites to take the test.</narrative>
+</topic>
+
+<topic>
+<number>68</number>
+<title>Are online courses better than physical classrooms?</title>
+<objects>online courses, physical classrooms</objects>
+<description>The traditional classroom is a physical institution such as colleges and universities where students go to study and attend classes. With the COVID-19 pandemic, learning has taken a whole different shift, and E-learning is the new normal. However, many students, parents, and teachers still wonder if E-learning should become the new norm, and if it is better than the "traditional" learning.</description>
+<narrative>Highly relevant documents should compare the traditional physical classroom concept to its e-learning rival. The documents should compare the two options in terms of time flexibility, variety of courses, different learning options, comfortable learning environment, and time and cost impacts, and ideally state which is more convenient. Advertisements of online classes and courses, online schools and universities are not relevant.</narrative>
+</topic>
+
+<topic>
+<number>69</number>
+<title>Who was a better boxer, Muhammad Ali or Joe Frazier?</title>
+<objects>Muhammad Ali, Joe Frazier</objects>
+<description>When it comes to boxing, there has always been many rivalries, but one of the most significant and famous was between the world champion Muhammad Ali and the WBC/WBA heavyweight champion Joe Frazier. The fight between these two champions was labeled the Fight of the century. Up to nowadays, many fans still would like to debate which champion was better. When asking about which champion was better, one might look at the number of winnings, number of medals, etc.</description>
+<narrative>Highly relevant documents will contrast the boxing champion Mohammad Ali to Joe Frazier. Preferably, the documents would contain information about the fights between these two champions, as well as the number of medals won by each one of them. Relevant documents may provide information only on one of them. Documents that only contain the biography of each boxer are not relevant.</narrative>
+</topic>
+
+<topic>
+<number>70</number>
+<title>Which technology performs better: Apple's or Google's?</title>
+<objects>Apple's, Google's</objects>
+<description>The two tech giants that have always been competing with each other are Google and Apple. Either we are talking about smart phones, videos, photos or cloud storage, each of the companies has different offers, and a user would ideally want to compare them before committing to one service.</description>
+<narrative>Relevant documents should compare the two tech giants Apple and Google to each other in terms of services and the degree of advancement of their technologies. Highly relevant documents should compare more than one products, an example would be comparing both Android to IOS and iTunes to YouTube, the more the better. Relevant documents can focus on either Apple or Google. Documents providing generic information about the companies like profit, number of employees, etc. are not relevant.</narrative>
+</topic>
+
+<topic>
+<number>72</number>
+<title>Who is better at learning a foreign language, kids or adults?</title>
+<objects>kids, adults</objects>
+<description>Our modern day society is with messages telling you who is and who is not good at learning a language. There are many reasons to believe that the popular opinion about how poorly adults learn languages is fundamentally flawed. The user would like to know if it’s worth it for them to even try to learn a language or If it is a lost case. The user would like to know the key differences between adults learning and kids learning a language. Who is better and why.</description>
+<narrative>Highly relevant documents must specifically mention who is better at learning languages, kids or adults. The documents must contain relevant scientific proofs on why and what age category is the best at learning languages. Documents that are about specific languages are considered not relevant.</narrative>
+</topic>
+
+<topic>
+<number>74</number>
+<title>Which city is better, London or Paris?</title>
+<objects>London, Paris</objects>
+<description>Many tourists traveling to Europe wonder whether they should visit London or Paris. Tourists' expectations when visiting a particular place are related to several factors of the chosen destination: culture, architecture, gastronomy, landscape, events, shopping, etc. These features attract people to the destination and contribute to the overall experience of the trip. Others, who consider re-location, are interested in the cost of living, ecology, public transportation, or the opportunities the cities can offer. Before making a decision, the travelers would like to search the web for previous experiences from other travelers as well as any document comparing the two cities.</description>
+<narrative>Highly relevant documents will compare London and Paris from either a tourism perspective or from a perspective of someone thinking about re-location. Highly relevant documents should specifically mention which city is more interesting or provide a list of options which city is better for what. Relevant documents can describe either London or Paris, and should contain opinions, facts, or personal experience of living or just visiting the cities. Documents that contain historical facts that do not contribute to the decision which one is better or advertisments of travel companies are not relevant.</narrative>
+</topic>
+
+<topic>
+<number>76</number>
+<title>Are artificial sweeteners better than white sugar?</title>
+<objects>artificial sweeteners, white sugar</objects>
+<description>In this modern day and age, sugar has become one of the most talked-about topics in nutrition. As more natural sugar alternatives become available on grocery store shelves, it can be difficult to decode which sweetener is best in terms of health, nutrition, risk of diabetes, and so on. A user is faced with a tough choice at the coffee shop: shall they go with the packet of artificial sweetener, knowing it will add zero calories but possibly contain harmful chemicals, or still choose an ordinary sugar?</description>
+<narrative>Highly relevant documents must provide the user with necessary information on artificial sweeteners vs sugar in order to help them make a decision. The documents must compare sugar and artificial sweeteners in terms of chemical compounds, increasing appetite, digestion, and safety. Relevant documents can describe pros and cons of one of the options, not only in terms of how healthy they are but also consider other qualities, e.g., taste. The documents about dietary restrictions that do not provide any evidence are considered not relevant.</narrative>
+</topic>
+
+<topic>
+<number>77</number>
+<title>Is it healthier to bake than to fry food?</title>
+<objects>bake, fry food</objects>
+<description>Eating healthy has becoming more and more popular nowadays, where many people are looking for ways to improve their health. However, eating healthy is not only restricted to eating more green vegetables or adding more proteins to your diet but it also depends a lot on the method of cooking. Either one is just watching their weight or are suffering from blood pressure or diabetes, they would like to know which cooking method caters their needs the most, is it frying / using oil for cooking, or baking. A user is looking for different situations where one method is healthier than the other and all the reasons why that is.</description>
+<narrative>Highly relevant documents must clearly state which cooking method is healthier and harms the least when it comes to multiple parameters, including vitamins absorption, health damages, obesity, and calories. Relevant documents can elaborate on the health benefits / harms of either baking or frying. Documents which talk about recipes or general cooking advice are not relevant if they do not clearly compare baking and frying.</narrative>
+</topic>
+
+<topic>
+<number>78</number>
+<title>Which algorithm is better, quicksort or merge sort?</title>
+<objects>quicksort, merge sort</objects>
+<description>This is a common question asked in data science and algorithm interviews. What sorting algorithm should a data engineer implement, merge sort or quicksort. A developer would like to know which algorithm is better in terms of auxiliary space consumption, complexity at the worse case scenario, locality of reference and stability.</description>
+<narrative>Relevant documents must help a developer choose which sorting algorithm is better to implement, quick sort or merge sort. This question is not only about computational complexity, but the relevant documents should compare the two algorithms in terms of space consumption, scalability, locality of references and more. Document that draw a clear conclusion which one is better or provide a list of application scenarios when one or the other is better are highly relevant. Documents that only describe the two algorithms and do not discuss situations for their application are not relevant.</narrative>
+</topic>
+
+<topic>
+<number>84</number>
+<title>What is better, cow milk or goat milk?</title>
+<objects>cow milk, goat milk</objects>
+<description>While cow milk has been the go-to milk source in the Western world for centuries and remains a healthy option for many, goat milk is increasingly becoming the choice for health-conscious consumers because of its naturally easy-to-digest composition. Consumers would like to know which milk is better for them in terms of calories, digestion, allergies and fat content in order to wisely choose what milk to consume.</description>
+<narrative>Relevant documents should compare cow milk and goat milk to each other in terms of fat content, allergies exposure, calcium percentage and nutrition level and protein content. Highly relevant documents would ideally compare most of the features and provide a conclusion of comparison. The documents that only mention the milk types but do not describe their properties, or just discuss whether to consume dairy or not are not relevant.</narrative>
+</topic>
+
+<topic>
+<number>86</number>
+<title>I am planning to buy sneakers: Which are better, Adidas or Nike?</title>
+<objects>Adidas, Nike</objects>
+<description>If you are into sports activities, you know the importance of good footwear in your life. When thinking about athletic shoes, the obvious brands that come to mind are Nike and Adidas. Deciding on one or another is not only about "coolness" but more importantly about durability, healthiness, and price.</description> 
+<narrative>Relevant documents are review articles or opinions found on blog posts, forums, and threads providing comparison of Adidas and Nike sneakers in general or reviewing particular models. Relevant documents can provide information about one of the options. Highly relevant documents will contain a list of features comparing sneakers of the two brands and/or conclude which one is better. Comparisons of companies or brands but not sneakers are not relevant.</narrative>
+</topic>
+
+<topic>
+<number>88</number>
+<title>Should I major in philosophy or psychology?</title>
+<objects>major in philosophy, psychology</objects>
+<description>A soon-to-be high-school graduate finds themself at a crossroad in their live. Based on their interests, majoring in philosophy or in psychology are the potential options and the graduate is searching for information about the differences and similarities, as well as advantages and disadvantages of majoring in either of them (e.g., with respect to career opportunities or gained skills).</description> 
+<narrative>Relevant documents will overview one of the two majors in terms of career prospects or developed new skills, or they will provide a list of reasons to major in one or the other. Highly relevant documents will compare the two majors side-by-side and help to decide which should be preferred in what context. Not relevant are study program and university advertisements or general descriptions of the disciplines that do not mention benefits, advantages, or pros/cons.</narrative>
+</topic>
+
+<topic>
+<number>91</number>
+<title>When are random forest classifiers better than decision trees?</title>
+<objects>random forest classifiers, decision trees</objects>
+<description>Machine learning is an extensive field featuring dozens of various models. According to the "free lunch theorem", there is no single model in machine learning that is going to outperform all others on all tasks. A machine learning practitioner is interested in knowing what good use-cases of the more complex random forest model to simpler decision tree models are.</description> 
+<narrative>Relevant documents will provide information on random forest or decision trees classification models. Highly relevant documents will provide the list of differences or similarities in the two models, for which types of data one or another is preferable, for which use-cases the simpler model will suffice, etc. Documents are not relevant if they do not mention any of the two models or just mention either random forest or decision tree (e.g., among other existing machine learning models) but do not indicate any properties of these models and their use-cases.</narrative>
+</topic>
+
+<topic>
+<number>92</number>
+<title>What are the pros and cons of wood vs. stone mulch?</title>
+<objects>wood mulch, stone mulch</objects>
+<description>A person is looking for some garden solution. Namely, various types of mulches are available, e.g., from wood, stone, or plastic. These may vary considerably in terms of resistance to weeds, cost, the impact of water, aesthetic, environmental impact, and so on.</description> 
+<narrative>Relevant documents will overview one of the two types of mulch in terms of their properties, e.g., environmental impact or cost. Highly relevant documents will compare the two types of mulch side-by-side concerning these various aspects facilitating an informed choice. Not relevant are documents that mention mulch of some type but do not provide valuable information about their properties.</narrative>
+</topic>
+
+<topic>
+<number>93</number>
+<title>Is rain water better than tap water for plants?</title>
+<objects>rain water, tap water</objects>
+<description>Our every-day's water is filtered and optimized for human consumption, but many lay gardeners wonder if it is not better for the plants to be watered with rain water. Many concerns are about the fact that tap water is treated with chemicals, whereas rain water is purer. A user would like to know which water is better for the plants when it comes to acidity, chemical components and for plants' growth.</description> 
+<narrative>Documents that contain the benefits of storing rain water for watering the plants and the to what extend that is better than tap water are considered highly relevant. The documents should provide concrete comparisons and reasons for why rain water is or is not better in different aspects such as the degree of acidity or pH, chemical composition and growth as well as financial options. Relevant documents may discuss benefits of rain water or possible harms of tap water for the plant's health, without directly comparing them. Documents that talk about the composition of one of the waters but do not link to watering plants are considered not relevant.</narrative>
+</topic>
+
+<topic>
+<number>95</number>
+<title>Which is more environmentally friendly, a hybrid or a diesel?</title>
+<objects>hybrid, diesel</objects>
+<description>Nowadays, more people are aware about the pollution that is linked to the car emissions, and for that reason, there is a significant raise in the demand for environmentally friendly cars. However, there is still a huge debate going on about what cars are more environmentally friendly - petrol/diesel cars or hybrid cars. A car buyer who cares about the environment would like to confirm which type of cars fits their expectations.</description> 
+<narrative>Highly relevant documents must state clearly which car is more environmentally friendly and why. A user should be able to make up their mind after reading the document. Documents describing technical details about each car are considered relevant if they refer to an environmental impact of either a diesel or a hybrid. However, documents containing only descriptions or advertisements that are not linked to the amount of emission or environmental footprint are irrelevant.</narrative>
+</topic>
+
+<topic>
+<number>100</number>
+<title>Should I learn Python or R for data analysis?</title>
+<objects>Python, R</objects>
+<description>Wondering whether you should use Python or R for data analysis? It's hard to know whether to use Python or R for data analysis. And that's especially true if you're a newbie data analyst looking for the right language to start with. Users are looking for documents that help them decide which programming language, Python or R, is better suited for data analysis, is more useful, flexible, easy to learn and efficient.</description>
+<narrative>Relevant documents should compare two programming languages for data analysis: Python and R. Highly relevant documents should compare the two objects in terms of efficiency, usefulness, easiness to learn and so on. Highly relevant documents would ideally compare most of the features. The documents that only describe one language, but provide insights on how it is good for data analysis are relevant. Arguments and opinions of using one of the two or both for other tasks that are not related to data analysis, are not relevant.</narrative>
+</topic>
+</topics>
