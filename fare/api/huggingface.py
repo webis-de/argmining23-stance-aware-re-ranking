@@ -9,7 +9,7 @@ from diskcache import Cache
 from requests import post, HTTPError
 from tqdm import tqdm
 
-from fare.logging import logger
+from fare import logger
 
 
 def md5_hash(text: str) -> str:

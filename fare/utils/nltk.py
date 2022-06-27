@@ -2,7 +2,7 @@ from nltk.downloader import Downloader
 from requests import head
 from requests.exceptions import ConnectionError
 
-from fare.logging import logger
+from fare import logger
 
 SKIPPED_NLTK_DOWNLOAD = False
 

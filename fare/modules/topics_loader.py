@@ -4,7 +4,7 @@ from xml.etree.ElementTree import ElementTree, Element, parse
 from pandas import DataFrame
 
 from fare.config import CONFIG
-from fare.logging import logger
+from fare import logger
 
 
 def _parse_objects(xml: Element) -> Tuple[str, str]:
