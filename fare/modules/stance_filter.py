@@ -1,0 +1,15 @@
+from dataclasses import dataclass
+
+from pandas import DataFrame
+from pyterrier.transformer import Transformer
+
+
+@dataclass(frozen=True)
+class StanceFilter(Transformer):
+    threshold: float = 0.5
+
+    def transform(self, ranking: DataFrame) -> DataFrame:
+        ranking = ranking.copy()
+        stance_under_threshold = ranking["stance_value"].abs() < self.threshold
+        ranking[stance_under_threshold]["stance_label"] = "NEUTRAL"
+        return ranking

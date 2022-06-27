@@ -7,6 +7,7 @@ from pyterrier.transformer import Transformer
 
 from fare.config import CONFIG
 from fare.modules.runs_loader import RunLoader
+from fare.modules.stance_filter import StanceFilter
 from fare.modules.text_loader import TextLoader
 from fare.modules.topics_loader import parse_topics
 
@@ -21,6 +22,7 @@ def _rerank(pipeline: Transformer) -> Transformer:
                 stance_tagger_cutoff >>
                 CONFIG.stance_tagger
                 ) ^ pipeline
+    pipeline = pipeline >> StanceFilter(CONFIG.stance_filter_threshold)
     pipeline = (pipeline %
                 CONFIG.stance_reranker_cutoff >>
                 CONFIG.stance_reranker

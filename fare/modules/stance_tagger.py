@@ -97,10 +97,8 @@ class T0StanceTagger(Transformer):
                 for _, row in ranking.iterrows()
             ]
 
-        from fare.config import CONFIG
-
         def threshold_stance_label(value: float) -> str:
-            return stance_label(value, CONFIG.stance_filter_threshold)
+            return stance_label(value)
 
         ranking["stance_label"] = ranking["stance_value"].map(
             threshold_stance_label

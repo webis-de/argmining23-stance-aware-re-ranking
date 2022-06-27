@@ -14,12 +14,12 @@ def stance_value(label: str) -> float:
         raise ValueError(f"Unknown stance label: {label}")
 
 
-def stance_label(value: float, threshold: float) -> str:
-    if isnan(value) or isnan(threshold):
+def stance_label(value: float) -> str:
+    if isnan(value):
         return "NO"
-    elif abs(value) < threshold:
-        return "NEUTRAL"
     elif value > 0:
         return "FIRST"
-    else:
+    elif value < 0:
         return "SECOND"
+    else:
+        return "NEUTRAL"
