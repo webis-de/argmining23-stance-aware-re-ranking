@@ -53,6 +53,7 @@ def main() -> None:
         f"{team_directory_path.stem} {run_file_path.stem}":
             RunLoader(run_file_path)
         for team_directory_path in CONFIG.runs_directory_path.iterdir()
+        if team_directory_path.is_dir()
         for run_file_path in (team_directory_path / "output").iterdir()
     }
     reranked_runs = {
