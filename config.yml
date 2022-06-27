@@ -1,0 +1,28 @@
+topicsFilePath: data/topics/topics-task2.xml
+qrelsRelevanceFilePath: data/qrels/touche-task2-2022-relevance.qrels
+qrelsQualityFilePath: data/qrels/touche-task2-2022-quality.qrels
+qrelsStanceFilePath: data/qrels/touche-task2-2022-stance.qrels
+runsDirectoryPath: data/runs/
+corpusFilePath: data/corpus/touche-task2-passages-version-002.jsonl
+cacheDirectoryPath: data/cache/
+
+huggingfaceApiToken: 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
+huggingfaceModelNameT0: bigscience/T0pp
+
+#stanceTagger: original
+stanceTagger: t0
+#stanceTagger: ground-truth
+stanceFilterThreshold: 0.5
+
+stanceReranker: original
+#stanceReranker: stance-first
+#stanceReranker: subjective-stance-first
+stanceRerankerCutoff: 10
+
+fairnessReranker: original
+#fairnessReranker: alternating-stance
+fairnessRerankerCutoff: 10
+
+metrics:
+- ndcg_cut_5
+- ndcg_cut_10
