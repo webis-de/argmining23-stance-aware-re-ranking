@@ -25,27 +25,32 @@ def _rerank(pipeline: Transformer) -> Transformer:
         CONFIG.stance_reranker_cutoff,
         CONFIG.fairness_reranker_cutoff
     )
-    pipeline = (pipeline %
-                stance_tagger_cutoff >>
-                CONFIG.stance_tagger
-                ) ^ pipeline
+    if stance_tagger_cutoff > 0:
+        pipeline = (pipeline %
+                    stance_tagger_cutoff >>
+                    CONFIG.stance_tagger
+                    ) ^ pipeline
+        pipeline = ~pipeline
+
     # Filter stance.
     pipeline = pipeline >> StanceFilter(CONFIG.stance_filter_threshold)
     pipeline = ~pipeline
 
     # Re-rank stance/subjective first.
-    pipeline = (pipeline %
-                CONFIG.stance_reranker_cutoff >>
-                CONFIG.stance_reranker
-                ) ^ pipeline
-    pipeline = ~pipeline
+    if CONFIG.stance_reranker_cutoff > 0:
+        pipeline = (pipeline %
+                    CONFIG.stance_reranker_cutoff >>
+                    CONFIG.stance_reranker
+                    ) ^ pipeline
+        pipeline = ~pipeline
 
     # Fair re-ranking.
-    pipeline = (pipeline %
-                CONFIG.fairness_reranker_cutoff >>
-                CONFIG.fairness_reranker
-                ) ^ pipeline
-    pipeline = ~pipeline
+    if CONFIG.fairness_reranker_cutoff > 0:
+        pipeline = (pipeline %
+                    CONFIG.fairness_reranker_cutoff >>
+                    CONFIG.fairness_reranker
+                    ) ^ pipeline
+        pipeline = ~pipeline
 
     return pipeline
 
@@ -96,7 +101,8 @@ def main() -> None:
         inplace=True,
     )
     del experiment["_name"]
-    print(experiment)
+    print(experiment.to_string(min_rows=len(experiment)))
+
 
     print("\nQuality\n=====\n")
     experiment = Experiment(
@@ -104,11 +110,11 @@ def main() -> None:
         topics=topics,
         qrels=qrels_quality,
         eval_metrics=CONFIG.metrics,
-    names=all_names,
+        names=all_names,
         filter_by_qrels=CONFIG.filter_by_qrels,
-    round=3,
+        round=3,
         verbose=True,
-    ).sort_values(["ndcg_cut_5", "name"], ascending=[False, True])
+    )
     experiment["_name"] = experiment["name"].str.replace(" re-ranked", "")
     experiment.sort_values(
         ["_name", *CONFIG.metrics],
@@ -116,7 +122,7 @@ def main() -> None:
         inplace=True,
     )
     del experiment["_name"]
-    print(experiment)
+    print(experiment.to_string(min_rows=len(experiment)))
 
 
 if __name__ == '__main__':
