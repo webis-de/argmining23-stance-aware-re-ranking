@@ -1,19 +1,24 @@
+from dataclasses import dataclass
 from enum import Enum
 from functools import cached_property
 
 from pandas import DataFrame
 from pyterrier.transformer import Transformer, IdentityTransformer
+from tqdm.auto import tqdm
 
 
+@dataclass(frozen=True)
 class StanceFirstReranker(Transformer):
+    verbose: bool = False
 
     @staticmethod
-    def rerank_query(ranking: DataFrame) -> DataFrame:
-        ranking["has_stance"] = ranking["stance_label"].isin([
+    def _rerank_query(ranking: DataFrame) -> DataFrame:
+        ranking = ranking.copy()
+        ranking["has_stance"] = ranking["stance_label"].isin({
             "FIRST",
             "SECOND",
             "NEUTRAL"
-        ])
+        })
         ranking.sort_values(
             "has_stance",
             ascending=False,
@@ -28,23 +33,31 @@ class StanceFirstReranker(Transformer):
         return ranking
 
     def transform(self, ranking: DataFrame) -> DataFrame:
-        group_by_query = ranking.groupby("qid")
-        return group_by_query.apply(self.rerank_query).reset_index(drop=True)
+        groups = ranking.groupby("qid", sort=False, group_keys=False)
+        if self.verbose:
+            tqdm.pandas(desc="Rank stance first", unit="query")
+            groups = groups.progress_apply(self._rerank_query)
+        else:
+            groups = groups.apply(self._rerank_query)
+        return groups.reset_index(drop=True)
 
 
+@dataclass(frozen=True)
 class SubjectiveStanceFirstReranker(Transformer):
+    verbose: bool = False
 
     @staticmethod
-    def rerank_query(ranking: DataFrame) -> DataFrame:
-        ranking["has_stance"] = ranking["stance_label"].isin([
+    def _rerank_query(ranking: DataFrame) -> DataFrame:
+        ranking = ranking.copy()
+        ranking["has_stance"] = ranking["stance_label"].isin({
             "FIRST",
             "SECOND",
             "NEUTRAL"
-        ])
-        ranking["is_subjective"] = ranking["stance_label"].isin([
+        })
+        ranking["is_subjective"] = ranking["stance_label"].isin({
             "FIRST",
             "SECOND",
-        ])
+        })
         ranking.sort_values(
             ["has_stance", "is_subjective"],
             ascending=False,
@@ -60,8 +73,13 @@ class SubjectiveStanceFirstReranker(Transformer):
         return ranking
 
     def transform(self, ranking: DataFrame) -> DataFrame:
-        group_by_query = ranking.groupby("qid")
-        return group_by_query.apply(self.rerank_query).reset_index(drop=True)
+        groups = ranking.groupby("qid", sort=False, group_keys=False)
+        if self.verbose:
+            tqdm.pandas(desc="Rank subjective stance first", unit="query")
+            groups = groups.progress_apply(self._rerank_query)
+        else:
+            groups = groups.apply(self._rerank_query)
+        return groups.reset_index(drop=True)
 
 
 class StanceReranker(Transformer, Enum):
@@ -70,15 +88,15 @@ class StanceReranker(Transformer, Enum):
     SUBJECTIVE_STANCE_FIRST = "subjective-stance-first"
 
     @cached_property
-    def transformer(self) -> Transformer:
+    def _transformer(self) -> Transformer:
         if self == StanceReranker.ORIGINAL:
             return IdentityTransformer()
         elif self == StanceReranker.STANCE_FIRST:
-            return StanceFirstReranker()
+            return StanceFirstReranker(verbose=True)
         elif self == StanceReranker.SUBJECTIVE_STANCE_FIRST:
-            return SubjectiveStanceFirstReranker()
+            return SubjectiveStanceFirstReranker(verbose=True)
         else:
             raise ValueError(f"Unknown stance re-ranker: {self}")
 
     def transform(self, ranking: DataFrame) -> DataFrame:
-        return self.transformer.transform(ranking)
+        return self._transformer.transform(ranking)
