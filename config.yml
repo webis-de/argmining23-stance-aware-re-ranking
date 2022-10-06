@@ -6,8 +6,7 @@ runsDirectoryPath: data/runs/
 corpusFilePath: data/corpus/touche-task2-passages-version-002.jsonl
 cacheDirectoryPath: data/cache/
 
-huggingfaceApiToken: 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
-huggingfaceModelNameT0: bigscience/T0pp
+modelNameT0: bigscience/T0pp
 
 stanceTagger: original
 #stanceTagger: t0

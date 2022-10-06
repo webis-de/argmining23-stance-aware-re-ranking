@@ -1,26 +1,23 @@
-from contextlib import contextmanager
 from dataclasses import dataclass
 from enum import Enum
 from functools import cached_property
 
 from pandas import DataFrame, Series, read_csv
 from pyterrier.transformer import Transformer, IdentityTransformer
+from transformers import pipeline, Pipeline
 
-from fare.api.huggingface import CachedHuggingfaceTextGenerator
 from fare.utils.stance import stance_value, stance_label
 
 
 class T0StanceTagger(Transformer):
 
-    @contextmanager
-    def _generator(self) -> CachedHuggingfaceTextGenerator:
+    @cached_property
+    def _pipeline(self) -> Pipeline:
         from fare.config import CONFIG
-        with CachedHuggingfaceTextGenerator(
-                model=CONFIG.huggingface_model_name_t0,
-                api_key=CONFIG.huggingface_api_token,
-                cache_dir=CONFIG.cache_directory_path,
-        ) as generator:
-            yield generator
+        return pipeline(
+            task="text-generation",
+            model=CONFIG.model_name_t0,
+        )
 
     @staticmethod
     def _task_pro(row: Series, object_col: str) -> str:
@@ -47,14 +44,15 @@ class T0StanceTagger(Transformer):
 
     def _stance_single_target(
             self,
-            generator: CachedHuggingfaceTextGenerator,
             row: Series,
             object_col: str,
     ) -> float:
         task_pro = self._task_pro(row, object_col)
-        answer_pro = generator.generate(task_pro).strip().lower()
+        answer_pro = self._pipeline(task_pro)[0]["generated_text"] \
+            .strip().lower()
         task_con = self._task_con(row, object_col)
-        answer_con = generator.generate(task_con).strip().lower()
+        answer_con = self._pipeline(task_con)[0]["generated_text"] \
+            .strip().lower()
         is_pro = (
                 ("yes" in answer_pro or "pro" in answer_pro) and
                 "no" not in answer_pro
@@ -72,11 +70,10 @@ class T0StanceTagger(Transformer):
 
     def _stance_multi_target(
             self,
-            generator: CachedHuggingfaceTextGenerator,
             row: Series
     ) -> float:
-        stance_a = self._stance_single_target(generator, row, "object_first")
-        stance_b = self._stance_single_target(generator, row, "object_second")
+        stance_a = self._stance_single_target(row, "object_first")
+        stance_b = self._stance_single_target(row, "object_second")
         return stance_a - stance_b
 
     def transform(self, ranking: DataFrame) -> DataFrame:
@@ -86,16 +83,10 @@ class T0StanceTagger(Transformer):
         if "stance_label" in ranking.columns:
             ranking.rename({"stance_label": "stance_label_original"})
 
-        with self._generator() as generator:
-            generator.preload([
-                task
-                for _, row in ranking.iterrows()
-                for task in self._tasks(row)
-            ])
-            ranking["stance_value"] = [
-                self._stance_multi_target(generator, row)
-                for _, row in ranking.iterrows()
-            ]
+        ranking["stance_value"] = [
+            self._stance_multi_target(row)
+            for _, row in ranking.iterrows()
+        ]
 
         def threshold_stance_label(value: float) -> str:
             return stance_label(value)

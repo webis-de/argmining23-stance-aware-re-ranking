@@ -35,8 +35,7 @@ class Config:
         metadata=config(encoder=str, decoder=Path)
     )
 
-    huggingface_api_token: str
-    huggingface_model_name_t0: str
+    model_name_t0: str
 
     stance_tagger: StanceTagger = field(
         metadata=config(
