@@ -35,8 +35,6 @@ class Config:
         metadata=config(encoder=str, decoder=Path)
     )
 
-    model_name_t0: str
-
     stance_tagger: StanceTagger = field(
         metadata=config(
             encoder=lambda tagger: tagger.value,

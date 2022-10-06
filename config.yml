@@ -6,11 +6,11 @@ runsDirectoryPath: data/runs/
 corpusFilePath: data/corpus/touche-task2-passages-version-002.jsonl
 cacheDirectoryPath: data/cache/
 
-modelNameT0: bigscience/T0pp
-
-stanceTagger: original
-#stanceTagger: t0
+#stanceTagger: original
 #stanceTagger: ground-truth
+#stanceTagger: bigscience/T0
+#stanceTagger: bigscience/T0pp
+stanceTagger: bigscience/T0_3B
 stanceFilterThreshold: 0.5
 
 stanceReranker: original
