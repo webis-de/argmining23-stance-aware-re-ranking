@@ -10,19 +10,21 @@ from fare.config import CONFIG
 
 @dataclass
 class TextLoader(Transformer):
+    verbose: bool = False
 
     def transform(self, ranking: DataFrame) -> DataFrame:
         ranking = ranking.copy()
         document_ids: set[str] = set(ranking["docno"].tolist())
         document_texts: dict[str, str] = {}
-        with CONFIG.corpus_file_path.open("r") as corpus_file:
-            num_lines = sum(1 for _ in corpus_file)
-            corpus_file.seek(0)
-            lines = tqdm(
-                corpus_file,
-                total=num_lines,
-                desc="Scanning corpus"
-            )
+        with CONFIG.corpus_file_path.open("r") as lines:
+            if self.verbose:
+                num_lines = sum(1 for _ in lines)
+                lines.seek(0)
+                lines = tqdm(
+                    lines,
+                    total=num_lines,
+                    desc="Scanning corpus"
+                )
             for line in lines:
                 document_dict = loads(line)
                 document_id = document_dict["id"]
