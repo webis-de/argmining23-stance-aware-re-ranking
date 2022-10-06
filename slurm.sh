@@ -9,7 +9,7 @@ srun \
   --gres=gpu:ampere:1 \
   --container-writable \
   --container-image=nvidia/cuda:11.3.1-base-ubuntu20.04 \
-  --container-name=trec22-hm-"$USER"-ubuntu20.04-cuda11.3.1-python3.9-jdk11 \
+  --container-name=fare-ubuntu20.04-cuda11.3.1-python3.9-jdk11 \
   --container-mounts="$PWD":/workspace,"$HOME"/.ssh:/root/.ssh,"$HOME"/.pyterrier:/root/.pyterrier,"$HOME"/.ir_datasets:/root/.ir_datasets \
   --chdir "$PWD" \
   --pty \
