@@ -20,6 +20,8 @@ dataclasses-json = "*"
 pyyaml = "*"
 marshmallow = "*"
 diskcache = "*"
+transformers = "*"
+torch = "*"
 
 [dev-packages]
 
