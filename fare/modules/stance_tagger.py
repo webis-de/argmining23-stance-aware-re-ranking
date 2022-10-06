@@ -9,14 +9,15 @@ from transformers import pipeline, Pipeline
 from fare.utils.stance import stance_value, stance_label
 
 
+@dataclass(frozen=True)
 class T0StanceTagger(Transformer):
+    model: str
 
     @cached_property
     def _pipeline(self) -> Pipeline:
-        from fare.config import CONFIG
         return pipeline(
             task="text-generation",
-            model=CONFIG.model_name_t0,
+            model=self.model,
         )
 
     @staticmethod
@@ -126,17 +127,25 @@ class GroundTruthStanceTagger(Transformer):
 
 class StanceTagger(Transformer, Enum):
     ORIGINAL = "original"
-    T0 = "t0"
+    T0 = "bigscience/T0"
+    T0pp = "bigscience/T0pp"
+    T0_3B = "bigscience/T0_3B"
     GROUND_TRUTH = "ground-truth"
+
+    value: str
 
     @cached_property
     def transformer(self) -> Transformer:
         if self == StanceTagger.ORIGINAL:
             return IdentityTransformer()
-        elif self == StanceTagger.T0:
-            return T0StanceTagger()
         elif self == StanceTagger.GROUND_TRUTH:
             return GroundTruthStanceTagger()
+        elif self in {
+            StanceTagger.T0,
+            StanceTagger.T0pp,
+            StanceTagger.T0_3B,
+        }:
+            return T0StanceTagger(self.value)
         else:
             raise ValueError(f"Unknown stance tagger: {self}")
 
