@@ -2,8 +2,9 @@ from dataclasses import dataclass
 from enum import Enum
 from functools import cached_property
 from math import nan
+from typing import List
 
-from pandas import DataFrame, concat
+from pandas import DataFrame, concat, Series
 from pyterrier.transformer import Transformer, IdentityTransformer
 from tqdm.auto import tqdm
 
@@ -14,13 +15,12 @@ class AlternatingStanceReranker(Transformer):
 
     @staticmethod
     def _rerank_query(ranking: DataFrame) -> DataFrame:
+        print(ranking[["qid", "docno", "stance_value"]])
         ranking = ranking.copy()
-        new_rows = []
-
+        new_rows: List[Series] = []
         last_stance: float = nan
         while len(ranking) > 0:
             candidates: DataFrame
-
             if last_stance > 0:
                 # Last document was pro A.
                 # Find first pro B or neutral document next.
@@ -35,16 +35,18 @@ class AlternatingStanceReranker(Transformer):
                 candidates = ranking
 
             if len(candidates) == 0:
-                # No cadidate for the stance was found,
+                # No candidate for the stance was found,
                 # choose any document next,
                 # regardless of stance.
                 last_stance = nan
                 continue
 
-            document = ranking.loc[candidates.index].iloc[0]
-            last_stance = document["stance_value"]
+            index = candidates.index.tolist()[0]
+            print(f"Chose {index}.")
+            document: Series = candidates.iloc[0]
+            last_stance: float = document["stance_value"]
             new_rows.append(document)
-            ranking.drop(index=candidates.index, inplace=True)
+            ranking.drop(index=index, inplace=True)
         new_ranking = DataFrame(data=new_rows, columns=ranking.columns)
 
         # Reset rank and score.
@@ -72,22 +74,20 @@ class BalancedStanceReranker(Transformer):
         assert 0 <= self.k
         k = min(self.k, len(ranking))
 
-        ranking = ranking.copy()
+        ranking = ranking.copy().reset_index(drop=True)
 
         def count_pro_a() -> int:
-            return sum(
-                1 for _, row in ranking.iloc[:k].iterrows()
-                if row["stance_value"] > 0
-            )
+            head = ranking.iloc[:k]
+            return len(head[head["stance_value"] > 0])
 
         def count_pro_b() -> int:
-            return sum(
-                1 for _, row in ranking.iloc[:k].iterrows()
-                if row["stance_value"] < 0
-            )
+            head = ranking.iloc[:k]
+            return len(head[head["stance_value"] < 0])
 
         while abs(count_pro_a() - count_pro_b()) > 1:
             # The top-k ranking is currently imbalanced.
+            head: DataFrame = ranking.iloc[:k - 1]
+            tail: DataFrame = ranking.iloc[k:]
 
             if count_pro_a() - count_pro_b() > 0:
                 # There are currently more documents pro A.
@@ -95,25 +95,19 @@ class BalancedStanceReranker(Transformer):
                 # move the last pro A document from the top-k ranking
                 # behind that document.
                 # If no such document is found, we can't balance the ranking.
-                index_a = next((
-                    i
-                    for i, row in ranking.iloc[:k].iterrows()
-                    if row["stance_value"] > 0
-                ), None)
-                index_b = next((
-                    i
-                    for i, row in ranking.iloc[k + 1:].iterrows()
-                    if row["stance_value"] < 0
-                ), None)
-                if index_a is None or index_b is None:
+                candidates_a: DataFrame = head[head["stance_value"] > 0]
+                candidates_b: DataFrame = tail[tail["stance_value"] < 0]
+                if len(candidates_a) == 0 or len(candidates_b) == 0:
                     return ranking
                 else:
+                    index_a = candidates_a.index.tolist()[-1]
+                    index_b = candidates_b.index.tolist()[0]
                     ranking = concat([
-                        ranking.iloc[:index_a - 1],
-                        ranking.iloc[index_a + 1:index_b],
-                        ranking.iloc[index_a:index_a],
-                        ranking.iloc[index_b + 1:],
-                    ])
+                        ranking.loc[:index_a - 1],
+                        ranking.loc[index_a + 1:index_b],
+                        ranking.loc[index_a:index_a],
+                        ranking.loc[index_b + 1:],
+                    ]).reset_index(drop=True)
             else:
                 # There are currently more documents pro B.
                 # Find first pro A document after rank k and
@@ -121,25 +115,19 @@ class BalancedStanceReranker(Transformer):
                 # behind that document.
                 # If no such document is found,
                 # we can't balance the ranking, so return the current ranking.
-                index_b = next((
-                    i
-                    for i, row in ranking.iloc[:k].iterrows()
-                    if row["stance_value"] < 0
-                ), None)
-                index_a = next((
-                    i
-                    for i, row in ranking.iloc[k + 1:].iterrows()
-                    if row["stance_value"] > 0
-                ), None)
-                if index_b is None or index_a is None:
+                candidates_b: DataFrame = head[head["stance_value"] < 0]
+                candidates_a: DataFrame = tail[tail["stance_value"] > 0]
+                if len(candidates_a) == 0 or len(candidates_b) == 0:
                     return ranking
                 else:
+                    index_b = candidates_b.index.tolist()[-1]
+                    index_a = candidates_a.index.tolist()[0]
                     ranking = concat([
-                        ranking.iloc[:index_b - 1],
-                        ranking.iloc[index_b + 1:index_a],
-                        ranking.iloc[index_b:index_b],
-                        ranking.iloc[index_a + 1:],
-                    ])
+                        ranking.loc[:index_b - 1],
+                        ranking.loc[index_b + 1:index_a],
+                        ranking.loc[index_b:index_b],
+                        ranking.loc[index_a + 1:],
+                    ]).reset_index(drop=True)
 
         # There are equally many documents pro A and pro B.
         # Thus the ranking is already balanced.
