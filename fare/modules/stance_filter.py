@@ -12,6 +12,10 @@ class StanceFilter(Transformer):
         ranking = ranking.copy()
         ranking.loc[
             ranking["stance_value"].abs() < self.threshold,
+            "stance_value"
+        ] = 0
+        ranking.loc[
+            ranking["stance_value"] == 0,
             "stance_label"
         ] = "NEUTRAL"
         return ranking
