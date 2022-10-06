@@ -6,23 +6,31 @@ runsDirectoryPath: data/runs/
 corpusFilePath: data/corpus/touche-task2-passages-version-002.jsonl
 cacheDirectoryPath: data/cache/
 
-#stanceTagger: original
+stanceTagger: original
 #stanceTagger: ground-truth
 #stanceTagger: bigscience/T0
 #stanceTagger: bigscience/T0pp
-stanceTagger: bigscience/T0_3B
-stanceFilterThreshold: 0.5
+#stanceTagger: bigscience/T0_3B
+stanceFilterThreshold: 0.00
+#stanceFilterThreshold: 0.25
+#stanceFilterThreshold: 0.50
 
-stanceReranker: original
+#stanceReranker: original
 #stanceReranker: stance-first
-#stanceReranker: subjective-stance-first
-stanceRerankerCutoff: 10
+stanceReranker: subjective-stance-first
+#stanceRerankerCutoff: 0
+stanceRerankerCutoff: 5
+#stanceRerankerCutoff: 10
+#stanceRerankerCutoff: 20
 
-fairnessReranker: original
-#fairnessReranker: alternating-stance # Does not yet work.
-fairnessRerankerCutoff: 10
+#fairnessReranker: original
+fairnessReranker: alternating-stance
+#fairnessReranker: balanced-top-5-stance
+fairnessRerankerCutoff: 5
+#fairnessRerankerCutoff: 10
 
-metrics: # Experiment outputs are sorted in by performance in this preference.
+# Experiment outputs are sorted in by performance in this preference.
+metrics:
   - ndcg_cut_5
   - bpref
   - ndcg_cut_10
