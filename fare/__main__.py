@@ -1,6 +1,7 @@
 from pyterrier import init
+from fare.config import CONFIG
 
-init()
+init(no_download=CONFIG.offline)
 
 from more_itertools import unzip
 from pandas import DataFrame
@@ -8,7 +9,6 @@ from pyterrier.io import read_qrels
 from pyterrier.pipelines import Experiment
 from pyterrier.transformer import Transformer
 
-from fare.config import CONFIG
 from fare.modules.runs_loader import RunLoader
 from fare.modules.stance_filter import StanceFilter
 from fare.modules.text_loader import TextLoader

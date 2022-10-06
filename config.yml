@@ -27,4 +27,10 @@ metrics: # Experiment outputs are sorted in by performance in this preference.
   - bpref
   - ndcg_cut_10
 
-filterByQrels: true  # Remove documents without judgments before evaluation.
+# Remove documents without judgments before evaluation.
+filterByQrels: true
+
+# Attempt to work offline.
+# Won't work unless PyTerrier and NLTK dependencies have previously been downloaded.
+# The T0 stance tagger won't work unless all Huggingface API requests were cached previously.
+offline: true

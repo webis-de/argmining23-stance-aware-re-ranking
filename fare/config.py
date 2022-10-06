@@ -62,7 +62,10 @@ class Config:
     fairness_reranker_cutoff: Optional[int]
 
     metrics: list[str]
+
     filter_by_qrels: bool
+
+    offline: bool
 
     def __post_init__(self):
         self.cache_directory_path.mkdir(exist_ok=True)
