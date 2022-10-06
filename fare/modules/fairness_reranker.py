@@ -15,7 +15,6 @@ class AlternatingStanceReranker(Transformer):
 
     @staticmethod
     def _rerank_query(ranking: DataFrame) -> DataFrame:
-        print(ranking[["qid", "docno", "stance_value"]])
         ranking = ranking.copy()
         new_rows: List[Series] = []
         last_stance: float = nan
@@ -42,7 +41,6 @@ class AlternatingStanceReranker(Transformer):
                 continue
 
             index = candidates.index.tolist()[0]
-            print(f"Chose {index}.")
             document: Series = candidates.iloc[0]
             last_stance: float = document["stance_value"]
             new_rows.append(document)
