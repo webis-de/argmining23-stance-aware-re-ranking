@@ -4,6 +4,7 @@ from functools import cached_property
 
 from pandas import DataFrame, Series, read_csv
 from pyterrier.transformer import Transformer, IdentityTransformer
+from tqdm.auto import tqdm
 from transformers import pipeline, Pipeline
 
 from fare.utils.stance import stance_value, stance_label
@@ -12,6 +13,7 @@ from fare.utils.stance import stance_value, stance_label
 @dataclass(frozen=True)
 class T0StanceTagger(Transformer):
     model: str
+    verbose: bool = False
 
     @cached_property
     def _pipeline(self) -> Pipeline:
@@ -84,9 +86,16 @@ class T0StanceTagger(Transformer):
         if "stance_label" in ranking.columns:
             ranking.rename({"stance_label": "stance_label_original"})
 
+        rows = ranking.iterrows()
+        if self.verbose:
+            rows = tqdm(
+                rows,
+                desc=f"Tag stance with {self.model}",
+                unit="document",
+            )
         ranking["stance_value"] = [
             self._stance_multi_target(row)
-            for _, row in ranking.iterrows()
+            for _, row in rows
         ]
 
         def threshold_stance_label(value: float) -> str:
@@ -145,7 +154,7 @@ class StanceTagger(Transformer, Enum):
             StanceTagger.T0pp,
             StanceTagger.T0_3B,
         }:
-            return T0StanceTagger(self.value)
+            return T0StanceTagger(self.value, verbose=True)
         else:
             raise ValueError(f"Unknown stance tagger: {self}")
 
