@@ -19,6 +19,7 @@ srun \
     add-apt-repository -y ppa:deadsnakes/ppa &&
     apt-get install -y python3.9 python3-pip python3.9-dev &&
     export JAVA_HOME=/usr/lib/jvm/java-11-openjdk-amd64/ &&
-    pip install cython pipenv &&
-    pipenv install --deploy &&
-    pipenv run python -m fare $1"
+    pip install --upgrade setuptools wheel cython pipenv &&
+    pipenv requirements > requirements.txt &&
+    pip install --requirements requirements.txt &&
+    python -m fare $1"
