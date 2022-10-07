@@ -4,8 +4,10 @@ from functools import cached_property
 
 from pandas import DataFrame, Series, read_csv
 from pyterrier.transformer import Transformer, IdentityTransformer
+from torch.cuda import is_available
 from tqdm.auto import tqdm
-from transformers import pipeline, Pipeline
+from transformers import Pipeline, Text2TextGenerationPipeline, AutoModel, \
+    AutoTokenizer
 
 from fare.utils.stance import stance_value, stance_label
 
@@ -17,9 +19,10 @@ class T0StanceTagger(Transformer):
 
     @cached_property
     def _pipeline(self) -> Pipeline:
-        return pipeline(
-            task="text-generation",
-            model=self.model,
+        return Text2TextGenerationPipeline(
+            model=AutoModel.from_pretrained(self.model),
+            tokenizer=AutoTokenizer.from_pretrained(self.model),
+            device="cuda" if is_available() else "cpu"
         )
 
     @staticmethod
