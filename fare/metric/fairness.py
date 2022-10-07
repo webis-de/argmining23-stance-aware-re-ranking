@@ -190,15 +190,16 @@ class _NormalizedDiscountedDifference(FairnessMeasure):
             group_counts: dict[Hashable, int],
             protected_group: Hashable,
     ) -> float:
-        ranking_df = ranking
-
         N = sum(group_counts.values())
 
-        rnd_list = []
+        if 0 in ranking["rank"].values:
+            # Some runs use zero-indexed ranks.
+            ranking["rank"] += 1
 
+        metrics = []
         # For each ranking position
-        for i in range(1, 6):
-            temp_ranking = ranking_df[ranking_df["rank"].isin(range(1, i + 1))]
+        for i in ranking["rank"]:
+            temp_ranking = ranking[ranking["rank"].isin(range(1, i + 1))]
 
             stance_freq = temp_ranking[group_col].value_counts()
             stance_freq_df = stance_freq.to_frame().reset_index().rename(
@@ -219,16 +220,14 @@ class _NormalizedDiscountedDifference(FairnessMeasure):
 
             S_plus = group_counts[protected_group]
 
-            intermediate_rnd = (
+            intermediate_metric = (
                     (1 / log(i + 1, 2)) *
                     abs(abs(S_Plus_in_i / (i + 1)) - abs(S_plus / N))
             )
 
-            rnd_list.append(intermediate_rnd)
+            metrics.append(intermediate_metric)
 
-        final_rnd = sum(rnd_list)
-
-        return final_rnd
+        return sum(metrics)
 
 
 NormalizedDiscountedDifference = _NormalizedDiscountedDifference()
