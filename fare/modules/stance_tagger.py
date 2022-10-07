@@ -90,6 +90,7 @@ class T0StanceTagger(Transformer):
         if self.verbose:
             rows = tqdm(
                 rows,
+                total=len(ranking),
                 desc=f"Tag stance with {self.model}",
                 unit="document",
             )
