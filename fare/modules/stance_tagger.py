@@ -22,7 +22,7 @@ class T0StanceTagger(Transformer):
         return Text2TextGenerationPipeline(
             model=AutoModel.from_pretrained(self.model),
             tokenizer=AutoTokenizer.from_pretrained(self.model),
-            device="cuda" if is_available() else "cpu"
+            device="cuda:0" if is_available() else "cpu"
         )
 
     @staticmethod
