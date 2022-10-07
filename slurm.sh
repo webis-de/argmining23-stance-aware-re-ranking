@@ -21,5 +21,5 @@ srun \
     export JAVA_HOME=/usr/lib/jvm/java-11-openjdk-amd64/ &&
     pip install --upgrade setuptools wheel cython pipenv &&
     pipenv requirements > requirements.txt &&
-    pip install --requirements requirements.txt &&
+    pip install -r requirements.txt &&
     python -m fare $1"
