@@ -5,7 +5,7 @@
 [ -d "$HOME"/.ir_datasets ] || mkdir "$HOME"/.ir_datasets
 srun \
   --cpus-per-task 4 \
-  --mem=50G \
+  --mem=100G \
   --gres=gpu:ampere:1 \
   --container-writable \
   --container-image=nvidia/cuda:11.3.1-base-ubuntu20.04 \
