@@ -29,6 +29,8 @@ transformers = "*"
 torch = { version = "*", index = "pytorch" }
 sentencepiece = "*"
 protobuf = "~=3.20"
+scipy = "*"
+ir-measures = "*"
 
 [dev-packages]
 
