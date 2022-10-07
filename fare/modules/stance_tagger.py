@@ -120,10 +120,10 @@ class GroundTruthStanceTagger(Transformer):
         qrels = read_csv(
             str(CONFIG.qrels_stance_file_path.absolute()),
             sep="\\s+",
-            names=["qid", "0", "docno", "stance_label"]
+            names=["qid", "0", "docno", "stance_label"],
+            dtype=str
         )
         del qrels["0"]
-        qrels = qrels.astype({"qid": "str"})
         qrels["stance_value"] = qrels["stance_label"].map(stance_value)
         return qrels
 
