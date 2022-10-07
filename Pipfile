@@ -23,6 +23,7 @@ diskcache = "*"
 transformers = "*"
 torch = "*"
 sentencepiece = "*"
+protobuf = "*"
 
 [dev-packages]
 
