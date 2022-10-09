@@ -92,9 +92,9 @@ class StanceReranker(Transformer, Enum):
         if self == StanceReranker.ORIGINAL:
             return IdentityTransformer()
         elif self == StanceReranker.STANCE_FIRST:
-            return StanceFirstReranker(verbose=True)
+            return StanceFirstReranker()
         elif self == StanceReranker.SUBJECTIVE_STANCE_FIRST:
-            return SubjectiveStanceFirstReranker(verbose=True)
+            return SubjectiveStanceFirstReranker()
         else:
             raise ValueError(f"Unknown stance re-ranker: {self}")
 

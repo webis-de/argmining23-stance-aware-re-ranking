@@ -165,7 +165,7 @@ class FairnessReranker(Transformer, Enum):
         if self == FairnessReranker.ORIGINAL:
             return IdentityTransformer()
         elif self == FairnessReranker.ALTERNATING_STANCE:
-            return AlternatingStanceReranker(verbose=True)
+            return AlternatingStanceReranker()
         elif self == FairnessReranker.BALANCED_TOP_5_STANCE:
             return BalancedStanceReranker(5, verbose=True)
         elif self == FairnessReranker.BALANCED_TOP_10_STANCE:
