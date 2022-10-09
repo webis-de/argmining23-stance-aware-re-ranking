@@ -4,13 +4,15 @@ Paper: https://doi.org/10.1145/3459637.3482099
 Code: https://github.com/sachinpc1993/fair-arguments
 """
 from abc import abstractmethod, ABC
+from collections import defaultdict
 from dataclasses import dataclass, field
 from enum import Enum
 from functools import cached_property
-from math import log
+from math import log, nextafter
 from random import choice
-from typing import Iterable, Union, Iterator, Hashable, Optional, Final, \
-    Sequence
+from typing import (
+    Iterable, Union, Iterator, Hashable, Optional, Final, Sequence
+)
 
 from ir_measures import DefaultPipeline
 from ir_measures.measures import Measure, ParamInfo
@@ -19,6 +21,7 @@ from ir_measures.util import (
     flatten_measures, QrelsConverter, RunConverter, Qrel, ScoredDoc, Metric
 )
 from pandas import DataFrame
+from scipy.special import rel_entr
 
 Qrels = Union[Iterable[Qrel], dict[str, dict[str, int]], DataFrame]
 Run = Union[Iterable[ScoredDoc], dict[str, dict[str, int]], DataFrame]
@@ -289,54 +292,167 @@ class _NormalizedDiscountedDifference(FairnessMeasure):
             group_counts: dict[Hashable, int],
             protected_group: Hashable,
     ) -> float:
-        N = sum(group_counts.values())
-
         if 0 in ranking["rank"].values:
             # Some runs use zero-indexed ranks.
             ranking["rank"] += 1
 
-        metrics = []
+        N = sum(group_counts.values())
+        S_plus = group_counts[protected_group]
+
+        metric = 0
         # For each ranking position
         for i in ranking["rank"]:
-            temp_ranking = ranking[ranking["rank"].isin(range(1, i + 1))]
+            ranking_i = ranking[ranking["rank"].isin(range(1, i + 1))]
 
-            stance_freq = temp_ranking[group_col].value_counts()
-            stance_freq_df = stance_freq.to_frame().reset_index().rename(
-                columns={
-                    group_col: "count",
-                    "index": "group"
-                })
+            group_counts_i = ranking_i[group_col].value_counts().to_dict()
+            group_counts_i = defaultdict(lambda: 0, group_counts_i)
 
-            if len(stance_freq_df[
-                       stance_freq_df["group"] == protected_group
-                   ]["count"]) == 0:
-                S_Plus_in_i = 0
-            else:
-                S_Plus_in_i = list(stance_freq_df[
-                                       stance_freq_df[
-                                           "group"] == protected_group
-                                       ]["count"])[0]
+            S_Plus_i = group_counts_i[protected_group]
 
-            S_plus = group_counts[protected_group]
-
-            intermediate_metric = (
+            metric += (
                     (1 / log(i + 1, 2)) *
-                    abs(abs(S_Plus_in_i / (i + 1)) - abs(S_plus / N))
+                    abs(
+                        abs(S_Plus_i / (i + 1)) -
+                        abs(S_plus / N)
+                    )
             )
 
-            metrics.append(intermediate_metric)
-
-        return sum(metrics)
+        return metric
 
 
 NormalizedDiscountedDifference = _NormalizedDiscountedDifference()
 rND = NormalizedDiscountedDifference
 
 
+def _kl_divergence(x1: Sequence[float], x2: Sequence[float]) -> float:
+    return sum(rel_entr(x1, x2))
+
+
+class _NormalizedDiscountedKlDivergence(FairnessMeasure):
+    SUPPORTED_PARAMS = {
+        **FairnessMeasure.SUPPORTED_PARAMS,
+        "correct_extreme": ParamInfo(
+            dtype=bool,
+            required=False,
+            default=True,
+            desc="correct extreme probability distributions such "
+                 "that 0 > P(x) > 1 and 0 > Q(x) > 1"
+        ),
+    }
+    NAME = "rKL"
+    __name__ = "rKL"
+
+    @cached_property
+    def _correct_extreme(self) -> bool:
+        if "correct_extreme" not in self.params:
+            return True
+        return self.params["correct_extreme"]
+
+    def fairness(
+            self,
+            ranking: DataFrame,
+            group_col: Hashable,
+            group_counts: dict[Hashable, int],
+            protected_group: Hashable,
+    ) -> float:
+        if 0 in ranking["rank"].values:
+            # Some runs use zero-indexed ranks.
+            ranking["rank"] += 1
+
+        N = sum(group_counts.values())
+        S_Plus = group_counts[protected_group]
+        S_Minus = N - S_Plus
+        Q = [S_Plus / N, S_Minus / N]
+        if self._correct_extreme:
+            if S_Plus == N:
+                Q_plus = nextafter(Q[0], 0)
+                Q = [Q_plus, 1 - Q_plus]
+            elif S_Minus == N:
+                Q_minus = nextafter(Q[1], 0)
+                Q = [1 - Q_minus, Q_minus]
+
+        metric = 0
+        for i in ranking["rank"]:
+            ranking_i = ranking[ranking["rank"].isin(range(1, i + 1))]
+
+            group_counts_i = ranking_i[group_col].value_counts().to_dict()
+            group_counts_i = defaultdict(lambda: 0, group_counts_i)
+
+            # P Calculation
+            S_Plus_i = group_counts_i[protected_group]
+            S_Minus_i = i - S_Plus_i
+
+            P = [S_Plus_i / i, S_Minus_i / i]
+            if self._correct_extreme:
+                if S_Plus_i == i:
+                    P_plus = nextafter(P[0], 0)
+                    P = [P_plus, 1 - P_plus]
+                elif S_Minus_i == i:
+                    P_minus = nextafter(P[1], 0)
+                    P = [1 - P_minus, P_minus]
+
+            metric += _kl_divergence(P, Q) / log(i + 1, 2)
+
+        return metric
+
+
+NormalizedDiscountedKlDivergence = _NormalizedDiscountedKlDivergence()
+rKL = NormalizedDiscountedKlDivergence
+
+
+class _NormalizedDiscountedRatio(FairnessMeasure):
+    NAME = "rRD"
+    __name__ = "rRD"
+
+    def fairness(
+            self,
+            ranking: DataFrame,
+            group_col: Hashable,
+            group_counts: dict[Hashable, int],
+            protected_group: Hashable,
+    ) -> float:
+        if 0 in ranking["rank"].values:
+            # Some runs use zero-indexed ranks.
+            ranking["rank"] += 1
+
+        N = sum(group_counts.values())
+        S_Plus = group_counts[protected_group]
+        S_Minus = N - S_Plus
+
+        metric = 0
+        for i in range(1, 6):
+            ranking_i = ranking[ranking["rank"].isin(range(1, i + 1))]
+
+            group_counts_i = ranking_i[group_col].value_counts().to_dict()
+            group_counts_i = defaultdict(lambda: 0, group_counts_i)
+
+            S_Plus_i = group_counts_i[protected_group]
+            S_Minus_i = i - S_Plus_i
+            if (S_Plus_i == 0) or (S_Minus_i == 0):
+                metric += (
+                        (1 / log(i + 1, 2)) *
+                        abs(0 - abs(S_Plus / S_Minus))
+                )
+            else:
+                metric += (
+                        (1 / log(i + 1, 2)) *
+                        abs(
+                            abs(S_Plus_i / S_Minus_i) -
+                            abs(S_Plus / S_Minus)
+                        )
+                )
+
+        return metric
+
+
+NormalizedDiscountedRatio = _NormalizedDiscountedRatio()
+rRD = NormalizedDiscountedRatio
+
+
 @dataclass
 class FairnessEvaluator(Evaluator):
     measures: Final[Iterable[FairnessMeasure]] = field()
-    qrels: DataFrame
+    qrels: Final[DataFrame] = field()
 
     def __post_init__(self):
         super().__init__(self.measures, set(self.qrels["query_id"].unique()))
@@ -355,9 +471,7 @@ class FairnessEvaluator(Evaluator):
 @dataclass(frozen=True)
 class FairnessProvider(Provider):
     NAME = "fairness"
-    SUPPORTED_MEASURES = [
-        rND
-    ]
+    SUPPORTED_MEASURES = [rND, rKL, rRD]
     _is_available = True
 
     def _evaluator(
