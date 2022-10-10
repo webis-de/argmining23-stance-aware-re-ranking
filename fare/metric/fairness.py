@@ -14,8 +14,8 @@ from typing import (
 )
 
 from ir_measures import DefaultPipeline
-from ir_measures.measures import Measure, ParamInfo
-from ir_measures.providers import Provider, Evaluator, register, registry
+from ir_measures.measures import Measure, ParamInfo, register as register_measure
+from ir_measures.providers import Provider, Evaluator, register as register_provider
 from ir_measures.util import (
     flatten_measures, QrelsConverter, RunConverter, Qrel, ScoredDoc, Metric
 )
@@ -330,6 +330,7 @@ class _NormalizedDiscountedDifference(FairnessMeasure):
 
 NormalizedDiscountedDifference = _NormalizedDiscountedDifference()
 rND = NormalizedDiscountedDifference
+register_measure(rND)
 
 
 def _kl_divergence(x1: Sequence[float], x2: Sequence[float]) -> float:
@@ -404,6 +405,7 @@ class _NormalizedDiscountedKlDivergence(FairnessMeasure):
 
 NormalizedDiscountedKlDivergence = _NormalizedDiscountedKlDivergence()
 rKL = NormalizedDiscountedKlDivergence
+register_measure(rKL)
 
 
 class _NormalizedDiscountedRatio(FairnessMeasure):
@@ -451,6 +453,7 @@ class _NormalizedDiscountedRatio(FairnessMeasure):
 
 NormalizedDiscountedRatio = _NormalizedDiscountedRatio()
 rRD = NormalizedDiscountedRatio
+register_measure(rRD)
 
 
 @dataclass
@@ -472,7 +475,6 @@ class FairnessEvaluator(Evaluator):
             yield from measure.compute(self.qrels, run)
 
 
-@dataclass(frozen=True)
 class FairnessProvider(Provider):
     NAME = "fairness"
     SUPPORTED_MEASURES = [rND, rKL, rRD]
@@ -491,6 +493,6 @@ class FairnessProvider(Provider):
         )
         return FairnessEvaluator(measures, qrels)
 
-
-register(FairnessProvider())
-DefaultPipeline.providers.append(registry["fairness"])
+_provider = FairnessProvider()
+register_provider(_provider)
+DefaultPipeline.providers.append(_provider)
