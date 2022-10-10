@@ -51,9 +51,9 @@ class FairnessMeasure(Measure, ABC):
             desc="group column in run"
         ),
         "groups": ParamInfo(
-            dtype=set,
+            dtype=str,
             required=False,
-            desc="group names"
+            desc="comma-separated list of group names"
         ),
         "protected_group": ParamInfo(
             dtype=Hashable,
@@ -84,10 +84,14 @@ class FairnessMeasure(Measure, ABC):
         return self.params["group_col"]
 
     @cached_property
-    def _groups_param(self) -> Optional[set[Hashable]]:
+    def _groups_param(self) -> Optional[set[str]]:
         if "groups" not in self.params:
             return None
-        return self.params["groups"]
+        groups = self.params["groups"]
+        return {
+            group.strip()
+            for group in str(groups).split(",")
+        }
 
     @cached_property
     def _protected_group_param(self) -> Union[
@@ -260,6 +264,9 @@ class FairnessMeasure(Measure, ABC):
         group_col = None
         if self._group_col_param != "group":
             group_col = repr(self._group_col_param)
+        groups = None
+        if self._groups_param is not None:
+            groups = repr(",".join(self._groups_param))
         protected_group = None
         if isinstance(self._protected_group_param, ProtectedGroupStrategy):
             if self._protected_group_param != ProtectedGroupStrategy.MINORITY:
@@ -275,7 +282,7 @@ class FairnessMeasure(Measure, ABC):
             f"{name}={param}"
             for name, param in {
                 "group_col": group_col,
-                "groups": self._groups_param,
+                "groups": groups,
                 "protected_group": protected_group,
                 "tie_breaking": tie_breaking,
             }.items()
