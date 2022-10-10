@@ -1,10 +1,9 @@
 """
-Fairness measures from "Evaluating Fairness in Argument Retrieval"
-Paper: https://doi.org/10.1145/3459637.3482099
-Code: https://github.com/sachinpc1993/fair-arguments
+Fairness measures from:
+- Measuring Fairness in Ranked Outputs: https://doi.org/10.1145/3085504.3085526 https://github.com/DataResponsibly/FairRank
+- Evaluating Fairness in Argument Retrieval: https://doi.org/10.1145/3459637.3482099 https://github.com/sachinpc1993/fair-arguments
 """
 from abc import abstractmethod, ABC
-from collections import defaultdict
 from dataclasses import dataclass, field
 from enum import Enum
 from functools import cached_property
@@ -52,7 +51,7 @@ class FairnessMeasure(Measure, ABC):
             desc="group column in run"
         ),
         "groups": ParamInfo(
-            dtype=set[Hashable],
+            dtype=set,
             required=False,
             desc="group names"
         ),
@@ -129,19 +128,23 @@ class FairnessMeasure(Measure, ABC):
     def fairness(
             self,
             ranking: DataFrame,
-            group_col: Hashable,
+            groups: set[Hashable],
             group_counts: dict[Hashable, int],
             protected_group: Hashable,
     ) -> float:
         pass
 
-    def _group_counts(
+    def group_counts(
             self,
-            qrels: DataFrame,
+            qrels_or_ranking: DataFrame,
+            groups: set[Hashable],
     ) -> dict[Hashable, int]:
-        counts = qrels.groupby(self._group_col_param).size().to_dict()
-        counts = defaultdict(lambda: 0, counts)
-        return counts
+        counts = qrels_or_ranking.groupby(self._group_col_param) \
+            .size().to_dict()
+        return {
+            group: counts[group] if group in counts else 0
+            for group in groups
+        }
 
     def _protected_group(self, group_counts: dict[Hashable, int]) -> Hashable:
         protected_group: Hashable = self._protected_group_param
@@ -210,24 +213,24 @@ class FairnessMeasure(Measure, ABC):
             ranking: DataFrame,
             groups: set[Hashable],
     ) -> float:
-        group_counts = self._group_counts(qrels)
+        group_counts = self.group_counts(qrels, groups)
         protected_group = self._protected_group(group_counts)
-        if protected_group not in groups:
+        if protected_group not in group_counts.keys():
             raise ValueError(
                 f"Protected group {protected_group} "
-                f"not found in groups {groups}."
+                f"not found in groups {set(group_counts.keys())}."
             )
         return self.fairness(
             ranking,
-            self._group_col_param,
+            groups,
             group_counts,
             protected_group,
         )
 
-    def _groups(self, qrels: DataFrame) -> set[Hashable]:
+    def _groups(self, qrels_or_ranking: DataFrame) -> set[Hashable]:
         if self._groups_param is not None:
             return self._groups_param
-        return set(qrels[self._group_col_param].unique().tolist())
+        return set(qrels_or_ranking[self._group_col_param].unique().tolist())
 
     def compute(self, qrels: DataFrame, run: DataFrame) -> Iterator[Metric]:
         groups = self._groups(qrels)
@@ -288,7 +291,7 @@ class _NormalizedDiscountedDifference(FairnessMeasure):
     def fairness(
             self,
             ranking: DataFrame,
-            group_col: Hashable,
+            groups: set[Hashable],
             group_counts: dict[Hashable, int],
             protected_group: Hashable,
     ) -> float:
@@ -303,9 +306,7 @@ class _NormalizedDiscountedDifference(FairnessMeasure):
         # For each ranking position
         for i in ranking["rank"]:
             ranking_i = ranking[ranking["rank"].isin(range(1, i + 1))]
-
-            group_counts_i = ranking_i[group_col].value_counts().to_dict()
-            group_counts_i = defaultdict(lambda: 0, group_counts_i)
+            group_counts_i = self.group_counts(ranking_i, groups)
 
             S_Plus_i = group_counts_i[protected_group]
 
@@ -351,7 +352,7 @@ class _NormalizedDiscountedKlDivergence(FairnessMeasure):
     def fairness(
             self,
             ranking: DataFrame,
-            group_col: Hashable,
+            groups: set[Hashable],
             group_counts: dict[Hashable, int],
             protected_group: Hashable,
     ) -> float:
@@ -374,9 +375,7 @@ class _NormalizedDiscountedKlDivergence(FairnessMeasure):
         metric = 0
         for i in ranking["rank"]:
             ranking_i = ranking[ranking["rank"].isin(range(1, i + 1))]
-
-            group_counts_i = ranking_i[group_col].value_counts().to_dict()
-            group_counts_i = defaultdict(lambda: 0, group_counts_i)
+            group_counts_i = self.group_counts(ranking_i, groups)
 
             # P Calculation
             S_Plus_i = group_counts_i[protected_group]
@@ -407,7 +406,7 @@ class _NormalizedDiscountedRatio(FairnessMeasure):
     def fairness(
             self,
             ranking: DataFrame,
-            group_col: Hashable,
+            groups: set[Hashable],
             group_counts: dict[Hashable, int],
             protected_group: Hashable,
     ) -> float:
@@ -422,9 +421,7 @@ class _NormalizedDiscountedRatio(FairnessMeasure):
         metric = 0
         for i in range(1, 6):
             ranking_i = ranking[ranking["rank"].isin(range(1, i + 1))]
-
-            group_counts_i = ranking_i[group_col].value_counts().to_dict()
-            group_counts_i = defaultdict(lambda: 0, group_counts_i)
+            group_counts_i = self.group_counts(ranking_i, groups)
 
             S_Plus_i = group_counts_i[protected_group]
             S_Minus_i = i - S_Plus_i
