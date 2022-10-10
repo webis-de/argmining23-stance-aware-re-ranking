@@ -3,8 +3,10 @@ from pathlib import Path
 from typing import Optional
 
 from dataclasses_json import dataclass_json, LetterCase, config
+from ir_measures import parse_measure, Measure
 from yaml import safe_load
 
+import fare.metric.fairness
 from fare.modules.fairness_reranker import FairnessReranker
 from fare.modules.stance_reranker import StanceReranker
 from fare.modules.stance_tagger import StanceTagger
@@ -59,7 +61,32 @@ class Config:
     )
     fairness_reranker_cutoff: Optional[int]
 
-    metrics: list[str]
+    measures_relevance: list[Measure] = field(
+        metadata=config(
+            encoder=lambda metrics: [str(metric) for metric in metrics],
+            decoder=lambda metrics: [
+                parse_measure(metric) for metric in metrics
+            ]
+        )
+    )
+    measures_quality: list[Measure] = field(
+        metadata=config(
+            encoder=lambda metrics: [str(metric) for metric in metrics],
+            decoder=lambda metrics: [
+                parse_measure(metric) for metric in metrics
+            ]
+        )
+    )
+    measures_stance: list[Measure] = field(
+        metadata=config(
+            encoder=lambda metrics: [str(metric) for metric in metrics],
+            decoder=lambda metrics: [
+                parse_measure(metric) for metric in metrics
+            ]
+        )
+    )
+    measures_cutoff: Optional[int]
+    measures_per_query: bool
 
     filter_by_qrels: bool
 

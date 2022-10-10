@@ -19,9 +19,9 @@ stanceFilterThreshold: 0.00
 #stanceReranker: stance-first
 stanceReranker: subjective-stance-first
 #stanceRerankerCutoff: 0
-stanceRerankerCutoff: 5
+#stanceRerankerCutoff: 5
 #stanceRerankerCutoff: 10
-#stanceRerankerCutoff: 20
+stanceRerankerCutoff: null
 
 #fairnessReranker: original
 fairnessReranker: alternating-stance
@@ -29,11 +29,19 @@ fairnessReranker: alternating-stance
 fairnessRerankerCutoff: 5
 #fairnessRerankerCutoff: 10
 
-# Experiment outputs are sorted in by performance in this preference.
-metrics:
-  - ndcg_cut_5
-  - bpref
-  - ndcg_cut_10
+measuresRelevance: [ ]
+#measuresRelevance:
+#  - nDCG
+measuresQuality: [ ]
+#measuresQuality:
+#  - nDCG
+#measuresStance: []
+measuresStance:
+  - rND(groups='FIRST,SECOND', group_col='stance_label', tie_breaking='group-ascending')
+  - rKL(groups='FIRST,SECOND', group_col='stance_label', tie_breaking='group-ascending')
+  - rRD(groups='FIRST,SECOND', group_col='stance_label', tie_breaking='group-ascending')
+measuresCutoff: 5
+measuresPerQuery: false
 
 # Remove documents without judgments before evaluation.
 filterByQrels: true
