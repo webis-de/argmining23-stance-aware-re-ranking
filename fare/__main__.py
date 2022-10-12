@@ -161,6 +161,17 @@ def main() -> None:
         on="name",
         suffixes=("", " stance")
     )
+
+    def rename_column(column: str) -> str:
+        column = column.replace("group_col='stance_label'", "")
+        column = column.replace("tie_breaking='group-ascending'", "")
+        column = column.replace(",,", ",")
+        column = column.replace("(,", "(")
+        column = column.replace(",)", ")")
+        column = column.replace("()", "")
+        return column
+
+    experiment.columns = experiment.columns.map(rename_column)
     print(experiment.to_string(min_rows=len(experiment)))
 
 
