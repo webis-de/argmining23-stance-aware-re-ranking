@@ -1,11 +1,12 @@
+from collections import defaultdict
 from dataclasses import dataclass
 from enum import Enum
 from functools import cached_property
 from math import nan
-from typing import List
+from typing import List, Sequence
 
 from numpy import arange
-from pandas import DataFrame, concat, Series
+from pandas import DataFrame, Series
 from pyterrier.model import add_ranks
 from pyterrier.transformer import Transformer, IdentityTransformer
 from tqdm.auto import tqdm
@@ -215,6 +216,7 @@ class InverseStanceGainReranker(Transformer):
 @dataclass(frozen=True)
 class BoostMinorityStanceReranker(Transformer):
     boost: float
+    stances: Sequence[str] = ("FIRST", "SECOND", "NEUTRAL", "NO")
     verbose: bool = False
 
     def _rerank_query(self, ranking: DataFrame) -> DataFrame:
@@ -222,17 +224,19 @@ class BoostMinorityStanceReranker(Transformer):
         ranking["stance_label"].fillna("NO", inplace=True)
 
         stance_counts = ranking.groupby("stance_label").size().to_dict()
-        sorted_stances: str = sorted(
-            ["FIRST", "SECOND", "NEUTRAL", "NO"],
-            key=lambda stance: stance_counts.get(stance, default=0)
-        )[0]
+        minority_stance = sorted(
+            self.stances,
+            key=lambda stance: stance_counts.get(stance, 0)
+        )
 
         # Boost minority stance label.
-        boost = {
-            self.boost if i == 0 else 1
-            for i, stance in enumerate(sorted_stances)
+        stance_boost = {
+            stance: self.boost if i == 0 else 1
+            for i, stance in enumerate(minority_stance)
         }
-        ranking["score"] = ranking["score"] * ranking["score"].map(boost)
+        boost = ranking["stance_label"].map(stance_boost)
+        ranking["score"] = ranking["score"] * boost
+        ranking.sort_values("score", ascending=False, inplace=True)
         return ranking
 
     def transform(self, ranking: DataFrame) -> DataFrame:
@@ -270,7 +274,7 @@ class FairnessReranker(Transformer, Enum):
                 stances=("FIRST", "SECOND", "NEUTRAL")
             )
         elif self == FairnessReranker.BOOST_MINORITY_STANCE:
-            return BoostMinorityStanceReranker(boost=2 )
+            return BoostMinorityStanceReranker(boost=2)
         else:
             raise ValueError(f"Unknown fairness re-ranker: {self}")
 
