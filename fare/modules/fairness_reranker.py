@@ -151,6 +151,19 @@ class BalancedStanceReranker(Transformer):
         return ranking
 
 
+def _normalize_scores(ranking: DataFrame, inplace: bool = False) -> DataFrame:
+    ranking = ranking.copy()
+    min_score = ranking["score"].min()
+    max_score = ranking["score"].max()
+    if not inplace:
+        ranking = ranking.copy()
+    ranking["score"] = (
+            (ranking["score"] - min_score) /
+            (max_score - min_score)
+    )
+    return ranking
+
+
 @dataclass(frozen=True)
 class InverseStanceFrequencyReranker(Transformer):
     verbose: bool = False
