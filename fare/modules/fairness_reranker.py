@@ -175,7 +175,40 @@ class InverseStanceFrequencyReranker(Transformer):
     def transform(self, ranking: DataFrame) -> DataFrame:
         groups = ranking.groupby("qid", sort=False, group_keys=False)
         if self.verbose:
-            tqdm.pandas(desc="Rerank balance score", unit="query")
+            tqdm.pandas(desc="Rerank inverse score frequency", unit="query")
+            groups = groups.progress_apply(self._rerank_query)
+        else:
+            groups = groups.apply(self._rerank_query)
+        ranking = groups.reset_index(drop=True)
+        ranking = add_ranks(ranking)
+        return ranking
+
+
+@dataclass(frozen=True)
+class BoostMinorityStanceReranker(Transformer):
+    boost: float
+    verbose: bool = False
+
+    def _rerank_query(self, ranking: DataFrame) -> DataFrame:
+        ranking = ranking.copy()
+        stance_counts = ranking.groupby("stance_label").size().to_dict()
+        sorted_stances: str = sorted(
+            ["FIRST", "SECOND", "NEUTRAL", "NO"],
+            key=lambda stance: stance_counts.get(stance, default=0)
+        )[0]
+
+        # Boost minority stance label.
+        boost = {
+            self.boost if i == 0 else 1
+            for i, stance in enumerate(sorted_stances)
+        }
+        ranking["score"] = ranking["score"] * ranking["score"].map(boost)
+        return ranking
+
+    def transform(self, ranking: DataFrame) -> DataFrame:
+        groups = ranking.groupby("qid", sort=False, group_keys=False)
+        if self.verbose:
+            tqdm.pandas(desc="Rerank boost minority stance", unit="query")
             groups = groups.progress_apply(self._rerank_query)
         else:
             groups = groups.apply(self._rerank_query)
@@ -190,6 +223,7 @@ class FairnessReranker(Transformer, Enum):
     BALANCED_TOP_5_STANCE = "balanced-top-5-stance"
     BALANCED_TOP_10_STANCE = "balanced-top-10-stance"
     INVERSE_STANCE_FREQUENCY = "inverse-stance-frequency"
+    BOOST_MINORITY_STANCE_2 = "boost-minority-stance-2"
 
     @cached_property
     def transformer(self) -> Transformer:
@@ -198,11 +232,13 @@ class FairnessReranker(Transformer, Enum):
         elif self == FairnessReranker.ALTERNATING_STANCE:
             return AlternatingStanceReranker()
         elif self == FairnessReranker.BALANCED_TOP_5_STANCE:
-            return BalancedStanceReranker(5, verbose=True)
+            return BalancedStanceReranker(k=5, verbose=True)
         elif self == FairnessReranker.BALANCED_TOP_10_STANCE:
-            return BalancedStanceReranker(10, verbose=True)
+            return BalancedStanceReranker(k=10, verbose=True)
         elif self == FairnessReranker.INVERSE_STANCE_FREQUENCY:
-            return InverseStanceFrequencyReranker()
+            return InverseStanceFrequencyReranker(verbose=True)
+        elif self == FairnessReranker.BOOST_MINORITY_STANCE_2:
+            return BoostMinorityStanceReranker(boost=2, verbose=True)
         else:
             raise ValueError(f"Unknown fairness re-ranker: {self}")
 
