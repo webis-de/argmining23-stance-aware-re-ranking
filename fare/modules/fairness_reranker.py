@@ -66,92 +66,6 @@ class AlternatingStanceReranker(Transformer):
         return ranking
 
 
-@dataclass(frozen=True)
-class BalancedStanceReranker(Transformer):
-    k: int
-    verbose: bool = False
-
-    def _transform_query(self, ranking: DataFrame) -> DataFrame:
-        assert 0 <= self.k
-        k = min(self.k, len(ranking))
-
-        ranking = ranking.copy().reset_index(drop=True)
-
-        def count_pro_a() -> int:
-            head = ranking.iloc[:k]
-            return len(head[head["stance_value"] > 0])
-
-        def count_pro_b() -> int:
-            head = ranking.iloc[:k]
-            return len(head[head["stance_value"] < 0])
-
-        while abs(count_pro_a() - count_pro_b()) > 1:
-            # The top-k ranking is currently imbalanced.
-            head: DataFrame = ranking.iloc[:k - 1]
-            tail: DataFrame = ranking.iloc[k:]
-
-            if count_pro_a() - count_pro_b() > 0:
-                # There are currently more documents pro A.
-                # Find first pro B document after rank k and
-                # move the last pro A document from the top-k ranking
-                # behind that document.
-                # If no such document is found, we can't balance the ranking.
-                candidates_a: DataFrame = head[head["stance_value"] > 0]
-                candidates_b: DataFrame = tail[tail["stance_value"] < 0]
-                if len(candidates_a) == 0 or len(candidates_b) == 0:
-                    return ranking
-                else:
-                    index_a = candidates_a.index.tolist()[-1]
-                    index_b = candidates_b.index.tolist()[0]
-                    ranking = concat([
-                        ranking.loc[:index_a - 1],
-                        ranking.loc[index_a + 1:index_b],
-                        ranking.loc[index_a:index_a],
-                        ranking.loc[index_b + 1:],
-                    ]).reset_index(drop=True)
-            else:
-                # There are currently more documents pro B.
-                # Find first pro A document after rank k and
-                # move the last pro B document from the top-k ranking
-                # behind that document.
-                # If no such document is found,
-                # we can't balance the ranking, so return the current ranking.
-                candidates_b: DataFrame = head[head["stance_value"] < 0]
-                candidates_a: DataFrame = tail[tail["stance_value"] > 0]
-                if len(candidates_a) == 0 or len(candidates_b) == 0:
-                    return ranking
-                else:
-                    index_b = candidates_b.index.tolist()[-1]
-                    index_a = candidates_a.index.tolist()[0]
-                    ranking = concat([
-                        ranking.loc[:index_b - 1],
-                        ranking.loc[index_b + 1:index_a],
-                        ranking.loc[index_b:index_b],
-                        ranking.loc[index_a + 1:],
-                    ]).reset_index(drop=True)
-
-        # There are equally many documents pro A and pro B.
-        # Thus the ranking is already balanced.
-
-        # Reset score.
-        ranking["score"] = arange(len(ranking), 0, -1)
-        return ranking
-
-    def transform(self, ranking: DataFrame) -> DataFrame:
-        groups = ranking.groupby("qid", sort=False, group_keys=False)
-        if self.verbose:
-            tqdm.pandas(
-                desc=f"Rerank balancing top-{self.k} stance",
-                unit="query",
-            )
-            groups = groups.progress_apply(self._transform_query)
-        else:
-            groups = groups.apply(self._transform_query)
-        ranking = groups.reset_index(drop=True)
-        ranking = add_ranks(ranking)
-        return ranking
-
-
 def _normalize_scores(ranking: DataFrame, inplace: bool = False) -> DataFrame:
     ranking = ranking.copy()
     min_score = ranking["score"].min()
@@ -254,8 +168,6 @@ class BoostMinorityStanceReranker(Transformer):
 class FairnessReranker(Transformer, Enum):
     ORIGINAL = "original"
     ALTERNATING_STANCE = "alternating-stance"
-    BALANCED_TOP_5_STANCE = "balanced-top-5-stance"
-    BALANCED_TOP_10_STANCE = "balanced-top-10-stance"
     INVERSE_STANCE_GAIN = "inverse-stance-gain"
     BOOST_MINORITY_STANCE = "boost-minority-stance"
 
@@ -265,10 +177,6 @@ class FairnessReranker(Transformer, Enum):
             return IdentityTransformer()
         elif self == FairnessReranker.ALTERNATING_STANCE:
             return AlternatingStanceReranker()
-        elif self == FairnessReranker.BALANCED_TOP_5_STANCE:
-            return BalancedStanceReranker(k=5, verbose=True)
-        elif self == FairnessReranker.BALANCED_TOP_10_STANCE:
-            return BalancedStanceReranker(k=10, verbose=True)
         elif self == FairnessReranker.INVERSE_STANCE_GAIN:
             return InverseStanceGainReranker(
                 stances=("FIRST", "SECOND", "NEUTRAL")
