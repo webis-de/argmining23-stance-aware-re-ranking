@@ -2,7 +2,7 @@ from dataclasses import dataclass
 from enum import Enum
 from functools import cached_property
 
-from pandas import DataFrame, Series, read_csv
+from pandas import DataFrame, Series, read_csv, merge
 from pyterrier.transformer import Transformer, IdentityTransformer
 from torch.cuda import is_available
 from tqdm.auto import tqdm
@@ -129,11 +129,11 @@ class GroundTruthStanceTagger(Transformer):
 
     def transform(self, ranking: DataFrame) -> DataFrame:
         ranking = ranking.copy()
-        ranking.merge(
-            self.qrels_stance,
+        ranking = merge(
+            ranking, self.qrels_stance,
             how="left",
             on=["qid", "docno"],
-            suffixes=("_original", None)
+            suffixes=("_original", None),
         )
         return ranking
 
