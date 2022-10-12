@@ -1,7 +1,11 @@
 """
 Fairness measures from:
-- Measuring Fairness in Ranked Outputs: https://doi.org/10.1145/3085504.3085526 https://github.com/DataResponsibly/FairRank
-- Evaluating Fairness in Argument Retrieval: https://doi.org/10.1145/3459637.3482099 https://github.com/sachinpc1993/fair-arguments
+- Measuring Fairness in Ranked Outputs:
+  https://doi.org/10.1145/3085504.3085526
+  https://github.com/DataResponsibly/FairRank
+- Evaluating Fairness in Argument Retrieval:
+  https://doi.org/10.1145/3459637.3482099
+  https://github.com/sachinpc1993/fair-arguments
 """
 from abc import abstractmethod, ABC
 from collections import Counter
@@ -340,8 +344,8 @@ class _NormalizedDiscountedDifference(FairnessMeasure):
             group_counts: dict[Hashable, int],
             protected_group: Hashable,
     ) -> float:
-        N = sum(group_counts.values())
-        S_plus = group_counts[protected_group]
+        n = sum(group_counts.values())
+        s_plus = group_counts[protected_group]
 
         metric = 0
 
@@ -350,13 +354,13 @@ class _NormalizedDiscountedDifference(FairnessMeasure):
             ranking_i = ranking[:i]
             group_counts_i = self.group_counts(ranking_i, groups)
 
-            S_Plus_i = group_counts_i[protected_group]
+            s_plus_i = group_counts_i[protected_group]
 
             metric += (
                     (1 / log(i + 1, 2)) *
                     abs(
-                        abs(S_Plus_i / (i + 1)) -
-                        abs(S_plus / N)
+                        abs(s_plus_i / (i + 1)) -
+                        abs(s_plus / n)
                     )
             )
 
@@ -399,17 +403,17 @@ class _NormalizedDiscountedKlDivergence(FairnessMeasure):
             group_counts: dict[Hashable, int],
             protected_group: Hashable,
     ) -> float:
-        N = sum(group_counts.values())
-        S_Plus = group_counts[protected_group]
-        S_Minus = N - S_Plus
-        Q = (S_Plus / N, S_Minus / N)
+        n = sum(group_counts.values())
+        s_plus = group_counts[protected_group]
+        s_minus = n - s_plus
+        q = (s_plus / n, s_minus / n)
         if self._correct_extreme:
-            if S_Plus == N:
-                Q_plus = nextafter(Q[0], 0)
-                Q = (Q_plus, 1 - Q_plus)
-            elif S_Minus == N:
-                Q_minus = nextafter(Q[1], 0)
-                Q = (1 - Q_minus, Q_minus)
+            if s_plus == n:
+                q_plus = nextafter(q[0], 0)
+                q = (q_plus, 1 - q_plus)
+            elif s_minus == n:
+                q_minus = nextafter(q[1], 0)
+                q = (1 - q_minus, q_minus)
 
         metric = 0
 
@@ -418,20 +422,18 @@ class _NormalizedDiscountedKlDivergence(FairnessMeasure):
             ranking_i = ranking[:i]
             group_counts_i = self.group_counts(ranking_i, groups)
 
-            # P Calculation
-            S_Plus_i = group_counts_i[protected_group]
-            S_Minus_i = i - S_Plus_i
-
-            P = (S_Plus_i / i, S_Minus_i / i)
+            s_plus_i = group_counts_i[protected_group]
+            s_minus_i = i - s_plus_i
+            p = (s_plus_i / i, s_minus_i / i)
             if self._correct_extreme:
-                if S_Plus_i == i:
-                    P_plus = nextafter(P[0], 0)
-                    P = (P_plus, 1 - P_plus)
-                elif S_Minus_i == i:
-                    P_minus = nextafter(P[1], 0)
-                    P = (1 - P_minus, P_minus)
+                if s_plus_i == i:
+                    P_plus = nextafter(p[0], 0)
+                    p = (P_plus, 1 - P_plus)
+                elif s_minus_i == i:
+                    P_minus = nextafter(p[1], 0)
+                    p = (1 - P_minus, P_minus)
 
-            metric += _kl_divergence(P, Q) / log(i + 1, 2)
+            metric += _kl_divergence(p, q) / log(i + 1, 2)
 
         return metric
 
@@ -452,14 +454,14 @@ class _NormalizedDiscountedRatio(FairnessMeasure):
             group_counts: dict[Hashable, int],
             protected_group: Hashable,
     ) -> float:
-        N = sum(group_counts.values())
-        S_Plus = group_counts[protected_group]
-        S_Minus = N - S_Plus
-        S_frac: float
-        if S_Plus == 0 or S_Minus == 0:
-            S_frac = 0
+        n = sum(group_counts.values())
+        s_plus = group_counts[protected_group]
+        s_minus = n - s_plus
+        s_frac: float
+        if s_plus == 0 or s_minus == 0:
+            s_frac = 0
         else:
-            S_frac = abs(S_Plus / S_Minus)
+            s_frac = abs(s_plus / s_minus)
 
         metric = 0
 
@@ -468,17 +470,17 @@ class _NormalizedDiscountedRatio(FairnessMeasure):
             ranking_i = ranking[:i]
             group_counts_i = self.group_counts(ranking_i, groups)
 
-            S_Plus_i = group_counts_i[protected_group]
-            S_Minus_i = i - S_Plus_i
-            S_i_frac: float
-            if S_Plus_i == 0 or S_Minus_i == 0:
-                S_i_frac = 0
+            s_plus_i = group_counts_i[protected_group]
+            s_minus_i = i - s_plus_i
+            s_frac_i: float
+            if s_plus_i == 0 or s_minus_i == 0:
+                s_frac_i = 0
             else:
-                S_i_frac = abs(S_Plus_i / S_Minus_i)
+                s_frac_i = abs(s_plus_i / s_minus_i)
 
             metric += (
                     (1 / log(i + 1, 2)) *
-                    abs(S_i_frac - S_frac)
+                    abs(s_frac_i - s_frac)
             )
 
         return metric
