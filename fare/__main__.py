@@ -16,7 +16,7 @@ from fare.modules.text_loader import TextLoader
 from fare.modules.topics_loader import parse_topics
 
 
-def _rerank(pipeline: Transformer) -> Transformer:
+def _reranker(pipeline: Transformer) -> Transformer:
     # Load text contents.
     pipeline = pipeline >> TextLoader()
     pipeline = ~pipeline
@@ -49,7 +49,7 @@ def _rerank(pipeline: Transformer) -> Transformer:
     pipeline = pipeline >> StanceFilter(CONFIG.stance_filter_threshold)
     pipeline = ~pipeline
 
-    # Re-rank sta__main__nce/subjective first.
+    # Re-rank stance/subjective first.
     if stance_reranker_cutoff is None:
         pipeline = pipeline >> CONFIG.stance_reranker
     elif stance_reranker_cutoff > 0:
@@ -57,7 +57,7 @@ def _rerank(pipeline: Transformer) -> Transformer:
         pipeline = (
                            pipeline %
                            stance_reranker_cutoff >>
-                           CONFIG.stancconcate_reranker
+                           CONFIG.stance_reranker
                    ) ^ pipeline
     pipeline = ~pipeline
 
@@ -74,6 +74,46 @@ def _rerank(pipeline: Transformer) -> Transformer:
     pipeline = ~pipeline
 
     return pipeline
+
+
+def _reranker_names() -> list[str]:
+    components = []
+
+    # Cutoffs.
+    stance_reranker_cutoff = CONFIG.stance_reranker_cutoff
+    fairness_reranker_cutoff = CONFIG.fairness_reranker_cutoff
+
+    # Tag stance.
+    stance_tagger = CONFIG.stance_tagger.value
+    if stance_tagger == "ground-truth":
+        components.append("true stance")
+    elif stance_tagger != "original":
+        stance_filter_threshold = CONFIG.stance_filter_threshold
+        if stance_filter_threshold > 0:
+            stance_tagger += f"({stance_filter_threshold}:f)"
+        components.append(stance_tagger)
+
+    if stance_reranker_cutoff is None or stance_reranker_cutoff > 0:
+        stance_reranker = CONFIG.stance_reranker.value
+        if stance_reranker_cutoff is not None:
+            stance_reranker_cutoff = f"@{stance_reranker_cutoff}"
+        else:
+            stance_reranker_cutoff = ""
+        if stance_reranker != "original":
+            components.append(f"{stance_reranker}{stance_reranker_cutoff}")
+
+    if fairness_reranker_cutoff is None or fairness_reranker_cutoff > 0:
+        fairness_reranker = CONFIG.fairness_reranker.value
+        if fairness_reranker_cutoff is not None:
+            fairness_reranker_cutoff = f"@{fairness_reranker_cutoff}"
+        else:
+            fairness_reranker_cutoff = ""
+        if fairness_reranker == "boost-minority-stance":
+            fairness_reranker = "boost-min"
+        if fairness_reranker != "original":
+            components.append(f"{fairness_reranker}{fairness_reranker_cutoff}")
+
+    return components
 
 
 def main() -> None:
@@ -98,11 +138,11 @@ def main() -> None:
         if team_directory_path.is_dir()
         for run_file_path in (team_directory_path / "output").iterdir()
     ]
-    # runs = runs[:2]
+    reranker_names = _reranker_names()
     reranked_runs: list[tuple[str, Transformer]] = [
         (
-            f"{name} re-ranked",
-            _rerank(pipeline)
+            " + ".join((name, *reranker_names)),
+            _reranker(pipeline)
         )
         for name, pipeline in runs
     ]
