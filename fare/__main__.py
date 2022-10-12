@@ -111,64 +111,45 @@ def main() -> None:
     all_names: list[str] = list(all_names)
     all_systems: list[Transformer] = list(all_systems)
 
-    experiment_cutoff = CONFIG.measures_cutoff
     print("Compute relevance measures.")
-    relevance_measures = [
-        measure @ experiment_cutoff
-        if experiment_cutoff is not None
-        else measure
-        for measure in CONFIG.measures_relevance
-    ]
     # noinspection PyTypeChecker
     relevance = Experiment(
         retr_systems=all_systems,
         topics=topics,
         qrels=qrels_relevance,
-        eval_metrics=relevance_measures,
+        eval_metrics=CONFIG.measures_relevance,
         names=all_names,
         filter_by_qrels=CONFIG.filter_by_qrels,
         round=3,
         verbose=True,
         perquery=CONFIG.measures_per_query,
-    ) if len(relevance_measures) > 0 else Series(all_names, name="name")
+    ) if len(CONFIG.measures_relevance) > 0 else Series(all_names, name="name")
     print("Compute quality measures.")
-    quality_measures = [
-        measure @ experiment_cutoff
-        if experiment_cutoff is not None
-        else measure
-        for measure in CONFIG.measures_quality
-    ]
     # noinspection PyTypeChecker
     quality = Experiment(
         retr_systems=all_systems,
         topics=topics,
         qrels=qrels_quality,
-        eval_metrics=quality_measures,
+        eval_metrics=CONFIG.measures_quality,
         names=all_names,
         filter_by_qrels=CONFIG.filter_by_qrels,
         round=3,
         verbose=True,
         perquery=CONFIG.measures_per_query,
-    ) if len(quality_measures) > 0 else Series(all_names, name="name")
+    ) if len(CONFIG.measures_quality) > 0 else Series(all_names, name="name")
     print("Compute stance measures.")
-    stance_measures = [
-        measure @ experiment_cutoff
-        if experiment_cutoff is not None
-        else measure
-        for measure in CONFIG.measures_stance
-    ]
     # noinspection PyTypeChecker
     stance = Experiment(
         retr_systems=all_systems,
         topics=topics,
         qrels=qrels_stance,
-        eval_metrics=stance_measures,
+        eval_metrics=CONFIG.measures_stance,
         names=all_names,
         filter_by_qrels=CONFIG.filter_by_qrels,
         round=3,
         verbose=True,
         perquery=CONFIG.measures_per_query,
-    ) if len(stance_measures) > 0 else Series(all_names, name="name")
+    ) if len(CONFIG.measures_stance) > 0 else Series(all_names, name="name")
     experiment = merge(
         merge(
             relevance,

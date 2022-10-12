@@ -6,6 +6,7 @@ from dataclasses_json import dataclass_json, LetterCase, config
 from ir_measures import parse_measure, Measure
 from yaml import safe_load
 
+# noinspection PyUnresolvedReferences
 import fare.metric.fairness
 from fare.modules.fairness_reranker import FairnessReranker
 from fare.modules.stance_reranker import StanceReranker
@@ -85,7 +86,6 @@ class Config:
             ]
         )
     )
-    measures_cutoff: Optional[int]
     measures_per_query: bool
 
     filter_by_qrels: bool
