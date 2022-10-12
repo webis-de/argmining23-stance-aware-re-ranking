@@ -15,7 +15,7 @@ class AlternatingStanceReranker(Transformer):
     verbose: bool = False
 
     @staticmethod
-    def _rerank_query(ranking: DataFrame) -> DataFrame:
+    def _transform_query(ranking: DataFrame) -> DataFrame:
         ranking = ranking.copy()
         new_rows: List[Series] = []
         last_stance: float = nan
@@ -46,22 +46,22 @@ class AlternatingStanceReranker(Transformer):
             last_stance: float = document["stance_value"]
             new_rows.append(document)
             ranking.drop(index=index, inplace=True)
-        new_ranking = DataFrame(data=new_rows, columns=ranking.columns)
+        ranking = DataFrame(data=new_rows, columns=ranking.columns)
 
-        # Reset rank and score.
-        new_ranking["rank"] = list(range(1, len(new_ranking) + 1))
-        new_ranking["score"] = list(range(len(new_ranking), 0, -1))
-
-        return new_ranking
+        # Reset score.
+        ranking["score"] = list(range(len(ranking), 0, -1))
+        return ranking
 
     def transform(self, ranking: DataFrame) -> DataFrame:
         groups = ranking.groupby("qid", sort=False, group_keys=False)
         if self.verbose:
             tqdm.pandas(desc="Rerank alternating stance", unit="query")
-            groups = groups.progress_apply(self._rerank_query)
+            groups = groups.progress_apply(self._transform_query)
         else:
-            groups = groups.apply(self._rerank_query)
-        return groups.reset_index(drop=True)
+            groups = groups.apply(self._transform_query)
+        ranking = groups.reset_index(drop=True)
+        ranking = add_ranks(ranking)
+        return ranking
 
 
 @dataclass(frozen=True)
@@ -69,7 +69,7 @@ class BalancedStanceReranker(Transformer):
     k: int
     verbose: bool = False
 
-    def _rerank_query(self, ranking: DataFrame) -> DataFrame:
+    def _transform_query(self, ranking: DataFrame) -> DataFrame:
         assert 0 <= self.k
         k = min(self.k, len(ranking))
 
@@ -130,16 +130,9 @@ class BalancedStanceReranker(Transformer):
 
         # There are equally many documents pro A and pro B.
         # Thus the ranking is already balanced.
-        # Return the current ranking.
-        return ranking
 
-    def _transform_query(self, ranking: DataFrame) -> DataFrame:
-        ranking = self._rerank_query(ranking)
-
-        # Reset rank and score.
-        ranking["rank"] = list(range(1, len(ranking) + 1))
+        # Reset score.
         ranking["score"] = list(range(len(ranking), 0, -1))
-
         return ranking
 
     def transform(self, ranking: DataFrame) -> DataFrame:
@@ -152,7 +145,9 @@ class BalancedStanceReranker(Transformer):
             groups = groups.progress_apply(self._transform_query)
         else:
             groups = groups.apply(self._transform_query)
-        return groups.reset_index(drop=True)
+        ranking = groups.reset_index(drop=True)
+        ranking = add_ranks(ranking)
+        return ranking
 
 
 @dataclass(frozen=True)
@@ -175,7 +170,6 @@ class InverseStanceFrequencyReranker(Transformer):
             1 / stance_frequencies[row["stance_label"]] * row["score"]
             for _, row in ranking.iterrows()
         ]
-        ranking = add_ranks(ranking)
         return ranking
 
     def transform(self, ranking: DataFrame) -> DataFrame:
@@ -185,7 +179,9 @@ class InverseStanceFrequencyReranker(Transformer):
             groups = groups.progress_apply(self._rerank_query)
         else:
             groups = groups.apply(self._rerank_query)
-        return groups.reset_index(drop=True)
+        ranking = groups.reset_index(drop=True)
+        ranking = add_ranks(ranking)
+        return ranking
 
 
 class FairnessReranker(Transformer, Enum):
