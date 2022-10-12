@@ -150,10 +150,7 @@ class FairnessMeasure(Measure, ABC):
             groups: set[Hashable],
     ) -> dict[Hashable, int]:
         counts = Counter(qrels_or_ranking)
-        return {
-            group: counts[group] if group in counts else 0
-            for group in groups
-        }
+        return {group: counts.get(group, 0) for group in groups}
 
     def _protected_group(self, group_counts: dict[Hashable, int]) -> Hashable:
         protected_group: Hashable = self._protected_group_param
@@ -279,7 +276,9 @@ class FairnessMeasure(Measure, ABC):
         qrels = qrels[["query_id", group_col]]
         run = run[["query_id", group_col]]
 
-        groups = self._groups(qrels)
+        groups = self._groups(qrels[group_col])
+        if len(groups) == 0:
+            raise ValueError("No groups given.")
 
         if self._cutoff_param is not None:
             run = run.groupby("query_id").head(self._cutoff_param)
@@ -456,6 +455,11 @@ class _NormalizedDiscountedRatio(FairnessMeasure):
         N = sum(group_counts.values())
         S_Plus = group_counts[protected_group]
         S_Minus = N - S_Plus
+        S_frac: float
+        if S_Plus == 0 or S_Minus == 0:
+            S_frac = 0
+        else:
+            S_frac = abs(S_Plus / S_Minus)
 
         metric = 0
 
@@ -466,19 +470,16 @@ class _NormalizedDiscountedRatio(FairnessMeasure):
 
             S_Plus_i = group_counts_i[protected_group]
             S_Minus_i = i - S_Plus_i
-            if (S_Plus_i == 0) or (S_Minus_i == 0):
-                metric += (
-                        (1 / log(i + 1, 2)) *
-                        abs(0 - abs(S_Plus / S_Minus))
-                )
+            S_i_frac: float
+            if S_Plus_i == 0 or S_Minus_i == 0:
+                S_i_frac = 0
             else:
-                metric += (
-                        (1 / log(i + 1, 2)) *
-                        abs(
-                            abs(S_Plus_i / S_Minus_i) -
-                            abs(S_Plus / S_Minus)
-                        )
-                )
+                S_i_frac = abs(S_Plus_i / S_Minus_i)
+
+            metric += (
+                    (1 / log(i + 1, 2)) *
+                    abs(S_i_frac - S_frac)
+            )
 
         return metric
 
