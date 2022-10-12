@@ -179,7 +179,7 @@ class InverseStanceGainReranker(Transformer):
 
     def _rerank_query(self, ranking: DataFrame) -> DataFrame:
         ranking = ranking.copy()
-        _normalize_scores(ranking, inplace=True)
+        ranking["stance_label"].fillna("NO", inplace=True)
 
         # Boost by inverse discounted gain per stance.
         ranking_stances = set(ranking["stance_label"])
@@ -189,10 +189,10 @@ class InverseStanceGainReranker(Transformer):
             if stance in ranking_stances
         }
         stance_boost = defaultdict(lambda: 0.0, stance_boost)
-        # print({stance: f"{stance_boost[stance]:.2f}" for stance in ranking["stance_label"].unique()})
         boost = ranking["stance_label"].map(stance_boost)
 
         # Normalize scores.
+        _normalize_scores(ranking, inplace=True)
         ranking["score"] = (
                 (1 - self.alpha) * ranking["score"] +
                 self.alpha * boost
@@ -219,6 +219,8 @@ class BoostMinorityStanceReranker(Transformer):
 
     def _rerank_query(self, ranking: DataFrame) -> DataFrame:
         ranking = ranking.copy()
+        ranking["stance_label"].fillna("NO", inplace=True)
+
         stance_counts = ranking.groupby("stance_label").size().to_dict()
         sorted_stances: str = sorted(
             ["FIRST", "SECOND", "NEUTRAL", "NO"],
