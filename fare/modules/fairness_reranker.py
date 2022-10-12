@@ -5,6 +5,7 @@ from math import nan
 from typing import List
 
 from pandas import DataFrame, concat, Series
+from pyterrier.model import add_ranks
 from pyterrier.transformer import Transformer, IdentityTransformer
 from tqdm.auto import tqdm
 
@@ -154,11 +155,45 @@ class BalancedStanceReranker(Transformer):
         return groups.reset_index(drop=True)
 
 
+@dataclass(frozen=True)
+class InverseStanceFrequencyReranker(Transformer):
+    verbose: bool = False
+
+    @staticmethod
+    def _rerank_query(ranking: DataFrame) -> DataFrame:
+        ranking = ranking.copy()
+        ranking_len = len(ranking)
+        stance_counts = ranking.groupby("stance_label").size().to_dict()
+        stance_frequencies: dict[str, float] = {
+            stance: stance_counts[stance] / ranking_len
+            if stance in stance_counts else 0
+            for stance in ["FIRST", "SECOND", "NEUTRAL", "NO"]
+        }
+
+        # Re-score by weighting by inverse stance frequency.
+        ranking["score"] = [
+            1 / stance_frequencies[row["stance_label"]] * row["score"]
+            for _, row in ranking.iterrows()
+        ]
+        ranking = add_ranks(ranking)
+        return ranking
+
+    def transform(self, ranking: DataFrame) -> DataFrame:
+        groups = ranking.groupby("qid", sort=False, group_keys=False)
+        if self.verbose:
+            tqdm.pandas(desc="Rerank balance score", unit="query")
+            groups = groups.progress_apply(self._rerank_query)
+        else:
+            groups = groups.apply(self._rerank_query)
+        return groups.reset_index(drop=True)
+
+
 class FairnessReranker(Transformer, Enum):
     ORIGINAL = "original"
     ALTERNATING_STANCE = "alternating-stance"
     BALANCED_TOP_5_STANCE = "balanced-top-5-stance"
     BALANCED_TOP_10_STANCE = "balanced-top-10-stance"
+    INVERSE_STANCE_FREQUENCY = "inverse-stance-frequency"
 
     @cached_property
     def transformer(self) -> Transformer:
@@ -170,6 +205,8 @@ class FairnessReranker(Transformer, Enum):
             return BalancedStanceReranker(5, verbose=True)
         elif self == FairnessReranker.BALANCED_TOP_10_STANCE:
             return BalancedStanceReranker(10, verbose=True)
+        elif self == FairnessReranker.INVERSE_STANCE_FREQUENCY:
+            return InverseStanceFrequencyReranker()
         else:
             raise ValueError(f"Unknown fairness re-ranker: {self}")
 
