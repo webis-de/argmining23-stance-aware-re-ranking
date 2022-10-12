@@ -4,9 +4,11 @@ Fairness measures from:
 - Evaluating Fairness in Argument Retrieval: https://doi.org/10.1145/3459637.3482099 https://github.com/sachinpc1993/fair-arguments
 """
 from abc import abstractmethod, ABC
+from collections import Counter
 from dataclasses import dataclass, field
 from enum import Enum
 from functools import cached_property
+from itertools import permutations
 from math import log, nextafter
 from random import choice
 from typing import (
@@ -14,8 +16,12 @@ from typing import (
 )
 
 from ir_measures import DefaultPipeline
-from ir_measures.measures import Measure, ParamInfo, register as register_measure
-from ir_measures.providers import Provider, Evaluator, register as register_provider
+from ir_measures.measures import (
+    Measure, ParamInfo, register as register_measure
+)
+from ir_measures.providers import (
+    Provider, Evaluator, register as register_provider
+)
 from ir_measures.util import (
     flatten_measures, QrelsConverter, RunConverter, Qrel, ScoredDoc, Metric
 )
@@ -129,22 +135,21 @@ class FairnessMeasure(Measure, ABC):
         ]
 
     @abstractmethod
-    def fairness(
+    def unfairness(
             self,
-            ranking: DataFrame,
+            ranking: tuple[Hashable],
             groups: set[Hashable],
             group_counts: dict[Hashable, int],
             protected_group: Hashable,
     ) -> float:
         pass
 
+    @staticmethod
     def group_counts(
-            self,
-            qrels_or_ranking: DataFrame,
+            qrels_or_ranking: tuple[Hashable],
             groups: set[Hashable],
     ) -> dict[Hashable, int]:
-        counts = qrels_or_ranking.groupby(self._group_col_param) \
-            .size().to_dict()
+        counts = Counter(qrels_or_ranking)
         return {
             group: counts[group] if group in counts else 0
             for group in groups
@@ -211,10 +216,32 @@ class FairnessMeasure(Measure, ABC):
         else:
             return protected_group
 
+    @staticmethod
+    def _permuted_rankings(ranking: tuple[Hashable]) -> set[tuple[Hashable]]:
+        # noinspection PyTypeChecker
+        return set(permutations(ranking))
+
+    def max_unfairness(
+            self,
+            ranking: tuple[Hashable],
+            groups: set[Hashable],
+            group_counts: dict[Hashable, int],
+            protected_group: Hashable,
+    ) -> float:
+        return max(
+            self.unfairness(
+                permuted_ranking,
+                groups,
+                group_counts,
+                protected_group,
+            )
+            for permuted_ranking in self._permuted_rankings(ranking)
+        )
+
     def _compute_query(
             self,
-            qrels: DataFrame,
-            ranking: DataFrame,
+            qrels: tuple[Hashable],
+            ranking: tuple[Hashable],
             groups: set[Hashable],
     ) -> float:
         group_counts = self.group_counts(qrels, groups)
@@ -224,34 +251,46 @@ class FairnessMeasure(Measure, ABC):
                 f"Protected group {protected_group} "
                 f"not found in groups {set(group_counts.keys())}."
             )
-        return self.fairness(
+
+        max_unfairness = self.max_unfairness(
             ranking,
             groups,
             group_counts,
-            protected_group,
+            protected_group
         )
+        if max_unfairness == 0:
+            return 0
+        unfairness = self.unfairness(
+            ranking,
+            groups,
+            group_counts,
+            protected_group
+        )
+        normalized_unfairness = unfairness / max_unfairness
+        return normalized_unfairness
 
-    def _groups(self, qrels_or_ranking: DataFrame) -> set[Hashable]:
+    def _groups(self, qrels_or_ranking: tuple[Hashable]) -> set[Hashable]:
         if self._groups_param is not None:
             return self._groups_param
-        return set(qrels_or_ranking[self._group_col_param].unique().tolist())
+        return set(qrels_or_ranking)
 
     def compute(self, qrels: DataFrame, run: DataFrame) -> Iterator[Metric]:
+        group_col = self._group_col_param
+        qrels = qrels[["query_id", group_col]]
+        run = run[["query_id", group_col]]
+
         groups = self._groups(qrels)
 
         if self._cutoff_param is not None:
-            # Assumes that results are already sorted.
-            # (This is done in FairnessEvaluator.)
-            run = run.groupby("query_id").head(self._cutoff_param).reset_index(
-                drop=True)
+            run = run.groupby("query_id").head(self._cutoff_param)
 
         for qid, ranking in run.groupby("query_id"):
             yield Metric(
                 str(qid),
                 self,
                 self._compute_query(
-                    qrels[qrels["query_id"] == qid],
-                    ranking,
+                    tuple(qrels[qrels["query_id"] == qid][group_col]),
+                    tuple(ranking[group_col]),
                     groups,
                 )
             )
@@ -295,24 +334,21 @@ class _NormalizedDiscountedDifference(FairnessMeasure):
     NAME = "rND"
     __name__ = "rND"
 
-    def fairness(
+    def unfairness(
             self,
-            ranking: DataFrame,
+            ranking: tuple[Hashable],
             groups: set[Hashable],
             group_counts: dict[Hashable, int],
             protected_group: Hashable,
     ) -> float:
-        if 0 in ranking["rank"].values:
-            # Some runs use zero-indexed ranks.
-            ranking["rank"] += 1
-
         N = sum(group_counts.values())
         S_plus = group_counts[protected_group]
 
         metric = 0
+
         # For each ranking position
-        for i in ranking["rank"]:
-            ranking_i = ranking[ranking["rank"].isin(range(1, i + 1))]
+        for i in range(1, len(ranking)):
+            ranking_i = ranking[:i]
             group_counts_i = self.group_counts(ranking_i, groups)
 
             S_Plus_i = group_counts_i[protected_group]
@@ -357,46 +393,44 @@ class _NormalizedDiscountedKlDivergence(FairnessMeasure):
             return True
         return self.params["correct_extreme"]
 
-    def fairness(
+    def unfairness(
             self,
-            ranking: DataFrame,
+            ranking: tuple[Hashable],
             groups: set[Hashable],
             group_counts: dict[Hashable, int],
             protected_group: Hashable,
     ) -> float:
-        if 0 in ranking["rank"].values:
-            # Some runs use zero-indexed ranks.
-            ranking["rank"] += 1
-
         N = sum(group_counts.values())
         S_Plus = group_counts[protected_group]
         S_Minus = N - S_Plus
-        Q = [S_Plus / N, S_Minus / N]
+        Q = (S_Plus / N, S_Minus / N)
         if self._correct_extreme:
             if S_Plus == N:
                 Q_plus = nextafter(Q[0], 0)
-                Q = [Q_plus, 1 - Q_plus]
+                Q = (Q_plus, 1 - Q_plus)
             elif S_Minus == N:
                 Q_minus = nextafter(Q[1], 0)
-                Q = [1 - Q_minus, Q_minus]
+                Q = (1 - Q_minus, Q_minus)
 
         metric = 0
-        for i in ranking["rank"]:
-            ranking_i = ranking[ranking["rank"].isin(range(1, i + 1))]
+
+        # For each ranking position
+        for i in range(1, len(ranking)):
+            ranking_i = ranking[:i]
             group_counts_i = self.group_counts(ranking_i, groups)
 
             # P Calculation
             S_Plus_i = group_counts_i[protected_group]
             S_Minus_i = i - S_Plus_i
 
-            P = [S_Plus_i / i, S_Minus_i / i]
+            P = (S_Plus_i / i, S_Minus_i / i)
             if self._correct_extreme:
                 if S_Plus_i == i:
                     P_plus = nextafter(P[0], 0)
-                    P = [P_plus, 1 - P_plus]
+                    P = (P_plus, 1 - P_plus)
                 elif S_Minus_i == i:
                     P_minus = nextafter(P[1], 0)
-                    P = [1 - P_minus, P_minus]
+                    P = (1 - P_minus, P_minus)
 
             metric += _kl_divergence(P, Q) / log(i + 1, 2)
 
@@ -412,24 +446,22 @@ class _NormalizedDiscountedRatio(FairnessMeasure):
     NAME = "rRD"
     __name__ = "rRD"
 
-    def fairness(
+    def unfairness(
             self,
-            ranking: DataFrame,
+            ranking: tuple[Hashable],
             groups: set[Hashable],
             group_counts: dict[Hashable, int],
             protected_group: Hashable,
     ) -> float:
-        if 0 in ranking["rank"].values:
-            # Some runs use zero-indexed ranks.
-            ranking["rank"] += 1
-
         N = sum(group_counts.values())
         S_Plus = group_counts[protected_group]
         S_Minus = N - S_Plus
 
         metric = 0
-        for i in range(1, 6):
-            ranking_i = ranking[ranking["rank"].isin(range(1, i + 1))]
+
+        # For each ranking position
+        for i in range(1, len(ranking)):
+            ranking_i = ranking[:i]
             group_counts_i = self.group_counts(ranking_i, groups)
 
             S_Plus_i = group_counts_i[protected_group]
@@ -492,6 +524,7 @@ class FairnessProvider(Provider):
             inplace=True,
         )
         return FairnessEvaluator(measures, qrels)
+
 
 _provider = FairnessProvider()
 register_provider(_provider)
