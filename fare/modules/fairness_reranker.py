@@ -165,25 +165,39 @@ def _normalize_scores(ranking: DataFrame, inplace: bool = False) -> DataFrame:
 
 
 @dataclass(frozen=True)
-class InverseStanceFrequencyReranker(Transformer):
+class InverseStanceGainReranker(Transformer):
+    stances: Sequence[str] = ("FIRST", "SECOND", "NEUTRAL", "NO")
+    alpha: float = 0.5
     verbose: bool = False
 
     @staticmethod
-    def _rerank_query(ranking: DataFrame) -> DataFrame:
-        ranking = ranking.copy()
-        ranking_len = len(ranking)
-        stance_counts = ranking.groupby("stance_label").size().to_dict()
-        stance_frequencies: dict[str, float] = {
-            stance: stance_counts[stance] / ranking_len
-            if stance in stance_counts else 0
-            for stance in ["FIRST", "SECOND", "NEUTRAL", "NO"]
-        }
+    def _discounted_gain(ranking_stance: Series, stance: str) -> float:
+        return sum(
+            rel / 1
+            for i, rel in enumerate(ranking_stance == stance)
+        )
 
-        # Re-score by weighting by inverse stance frequency.
-        ranking["score"] = [
-            1 / stance_frequencies[row["stance_label"]] * row["score"]
-            for _, row in ranking.iterrows()
-        ]
+    def _rerank_query(self, ranking: DataFrame) -> DataFrame:
+        ranking = ranking.copy()
+        _normalize_scores(ranking, inplace=True)
+
+        # Boost by inverse discounted gain per stance.
+        ranking_stances = set(ranking["stance_label"])
+        stance_boost: dict[str, float] = {
+            stance: 1 / self._discounted_gain(ranking["stance_label"], stance)
+            for stance in self.stances
+            if stance in ranking_stances
+        }
+        stance_boost = defaultdict(lambda: 0.0, stance_boost)
+        # print({stance: f"{stance_boost[stance]:.2f}" for stance in ranking["stance_label"].unique()})
+        boost = ranking["stance_label"].map(stance_boost)
+
+        # Normalize scores.
+        ranking["score"] = (
+                (1 - self.alpha) * ranking["score"] +
+                self.alpha * boost
+        )
+        ranking.sort_values("score", ascending=False, inplace=True)
         return ranking
 
     def transform(self, ranking: DataFrame) -> DataFrame:
@@ -236,8 +250,8 @@ class FairnessReranker(Transformer, Enum):
     ALTERNATING_STANCE = "alternating-stance"
     BALANCED_TOP_5_STANCE = "balanced-top-5-stance"
     BALANCED_TOP_10_STANCE = "balanced-top-10-stance"
-    INVERSE_STANCE_FREQUENCY = "inverse-stance-frequency"
-    BOOST_MINORITY_STANCE_2 = "boost-minority-stance-2"
+    INVERSE_STANCE_GAIN = "inverse-stance-gain"
+    BOOST_MINORITY_STANCE = "boost-minority-stance"
 
     @cached_property
     def transformer(self) -> Transformer:
@@ -249,10 +263,12 @@ class FairnessReranker(Transformer, Enum):
             return BalancedStanceReranker(k=5, verbose=True)
         elif self == FairnessReranker.BALANCED_TOP_10_STANCE:
             return BalancedStanceReranker(k=10, verbose=True)
-        elif self == FairnessReranker.INVERSE_STANCE_FREQUENCY:
-            return InverseStanceFrequencyReranker(verbose=True)
-        elif self == FairnessReranker.BOOST_MINORITY_STANCE_2:
-            return BoostMinorityStanceReranker(boost=2, verbose=True)
+        elif self == FairnessReranker.INVERSE_STANCE_GAIN:
+            return InverseStanceGainReranker(
+                stances=("FIRST", "SECOND", "NEUTRAL")
+            )
+        elif self == FairnessReranker.BOOST_MINORITY_STANCE:
+            return BoostMinorityStanceReranker(boost=2 )
         else:
             raise ValueError(f"Unknown fairness re-ranker: {self}")
 
