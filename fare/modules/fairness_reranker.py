@@ -4,6 +4,7 @@ from functools import cached_property
 from math import nan
 from typing import List
 
+from numpy import arange
 from pandas import DataFrame, concat, Series
 from pyterrier.model import add_ranks
 from pyterrier.transformer import Transformer, IdentityTransformer
@@ -49,7 +50,7 @@ class AlternatingStanceReranker(Transformer):
         ranking = DataFrame(data=new_rows, columns=ranking.columns)
 
         # Reset score.
-        ranking["score"] = list(range(len(ranking), 0, -1))
+        ranking["score"] = arange(len(ranking), 0, -1)
         return ranking
 
     def transform(self, ranking: DataFrame) -> DataFrame:
@@ -132,7 +133,7 @@ class BalancedStanceReranker(Transformer):
         # Thus the ranking is already balanced.
 
         # Reset score.
-        ranking["score"] = list(range(len(ranking), 0, -1))
+        ranking["score"] = arange(len(ranking), 0, -1)
         return ranking
 
     def transform(self, ranking: DataFrame) -> DataFrame:
