@@ -6,8 +6,8 @@ runsDirectoryPath: data/runs/
 corpusFilePath: data/corpus/touche-task2-passages-version-002.jsonl
 cacheDirectoryPath: data/cache/
 
-stanceTagger: original
-#stanceTagger: ground-truth
+#stanceTagger: original
+stanceTagger: ground-truth
 #stanceTagger: bigscience/T0
 #stanceTagger: bigscience/T0pp
 #stanceTagger: bigscience/T0_3B
@@ -15,32 +15,31 @@ stanceFilterThreshold: 0.00
 #stanceFilterThreshold: 0.25
 #stanceFilterThreshold: 0.50
 
-#stanceReranker: original
-#stanceReranker: stance-first
-stanceReranker: subjective-stance-first
-#stanceRerankerCutoff: 0
-#stanceRerankerCutoff: 5
-#stanceRerankerCutoff: 10
-stanceRerankerCutoff: null
+stanceReranker: original
+#stanceReranker: stance-first # FIRST, SECOND, or NEUTRAL
+#stanceReranker: subjective-stance-first # FIRST or SECOND
+stanceRerankerCutoff: 20
 
-#fairnessReranker: original
-fairnessReranker: alternating-stance
-#fairnessReranker: balanced-top-5-stance
-fairnessRerankerCutoff: 5
-#fairnessRerankerCutoff: 10
+fairnessReranker: original
+#fairnessReranker: alternating-stance
+#fairnessReranker: inverse-stance-gain
+#fairnessReranker: boost-minority-stance
+fairnessRerankerCutoff: 20
 
-measuresRelevance: [ ]
-#measuresRelevance:
-#  - nDCG
+#measuresRelevance: [ ]
+measuresRelevance:
+  - nDCG@5
 measuresQuality: [ ]
 #measuresQuality:
-#  - nDCG
+#  - nDCG@5
 #measuresStance: []
 measuresStance:
-  - rND(groups='FIRST,SECOND', group_col='stance_label', tie_breaking='group-ascending')
-  - rKL(groups='FIRST,SECOND', group_col='stance_label', tie_breaking='group-ascending')
-  - rRD(groups='FIRST,SECOND', group_col='stance_label', tie_breaking='group-ascending')
-measuresCutoff: 5
+  - rND(groups='FIRST,SECOND,NEUTRAL', group_col='stance_label', tie_breaking='group-ascending')@5
+#  - rND(group_col='stance_label', tie_breaking='group-ascending')@5
+  - rKL(groups='FIRST,SECOND,NEUTRAL', group_col='stance_label', tie_breaking='group-ascending')@5
+#  - rKL(group_col='stance_label', tie_breaking='group-ascending')@5
+  - rRD(groups='FIRST,SECOND,NEUTRAL', group_col='stance_label', tie_breaking='group-ascending')@5
+#  - rRD(group_col='stance_label', tie_breaking='group-ascending')@5
 measuresPerQuery: false
 
 # Remove documents without judgments before evaluation.
@@ -48,5 +47,4 @@ filterByQrels: true
 
 # Attempt to work offline.
 # Won't work unless PyTerrier and NLTK dependencies have previously been downloaded.
-# The T0 stance tagger won't work unless all Huggingface API requests were cached previously.
 offline: true
