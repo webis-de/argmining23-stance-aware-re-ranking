@@ -1,12 +1,3 @@
-"""
-Fairness measures from:
-- Measuring Fairness in Ranked Outputs:
-  https://doi.org/10.1145/3085504.3085526
-  https://github.com/DataResponsibly/FairRank
-- Evaluating Fairness in Argument Retrieval:
-  https://doi.org/10.1145/3459637.3482099
-  https://github.com/sachinpc1993/fair-arguments
-"""
 from abc import abstractmethod, ABC
 from collections import Counter
 from enum import Enum
@@ -31,19 +22,55 @@ from ir_measures.util import (
 from pandas import DataFrame
 from scipy.special import rel_entr
 
-Qrels = Union[Iterable[Qrel], dict[str, dict[str, int]], DataFrame]
-Run = Union[Iterable[ScoredDoc], dict[str, dict[str, int]], DataFrame]
+QrelsType = Union[Iterable[Qrel], dict[str, dict[str, int]], DataFrame]
+RunType = Union[Iterable[ScoredDoc], dict[str, dict[str, int]], DataFrame]
+ColumnType = Hashable
+GroupNameType = Hashable
 
 
 class ProtectedGroupStrategy(Enum):
+    """
+    Strategy for selecting the protected group per query,
+    in case no fixed protected group was given.
+    """
+
     MINORITY = "minority"
+    """
+    Select the group that occurs least often in the query's qrels.
+    """
+
     MAJORITY = "majority"
+    """
+    Select the group that occurs most often in the query's qrels.
+    """
 
 
 class TieBreakingStrategy(Enum):
+    """
+    Strategy for breaking ties when selecting the protected group
+    using the minority or majority strategies.
+    E.g., if groups A and B occur equally often, then the tie breaking strategy
+    determines whether A or B would be used as protected group.
+    """
+
     RANDOM = "random"
+    """
+    For ties in the protected group selection, choose the protected group 
+    randomly. Note that this introduces randomness and multiple measurements 
+    on the same run can lead to different result metrics.
+    """
+
     GROUP_ASCENDING = "group-ascending"
+    """
+    For ties in the protected group selection, choose the protected group 
+    by ascending order of the group names.
+    """
+
     GROUP_DESCENDING = "group-descending"
+    """
+    For ties in the protected group selection, choose the protected group 
+    by descending order of the group names.
+    """
 
 
 class FairnessMeasure(Measure, ABC):
@@ -51,32 +78,32 @@ class FairnessMeasure(Measure, ABC):
         "cutoff": ParamInfo(
             dtype=int,
             required=False,
-            desc="ranking cutoff threshold"
+            desc="Ranking cutoff threshold."
         ),
         "group_col": ParamInfo(
             dtype=Hashable,
             required=False,
             default="group",
-            desc="group column in run"
+            desc="Group column in the run."
         ),
         "groups": ParamInfo(
             dtype=str,
             required=False,
-            desc="comma-separated list of group names"
+            desc="Comma-separated list of group names (optional)."
         ),
         "protected_group": ParamInfo(
             dtype=Hashable,
             required=False,
             default=ProtectedGroupStrategy.MINORITY.value,
-            desc="protected group name or selection strategy"
+            desc="Protected group name or selection strategy."
         ),
         "tie_breaking": ParamInfo(
             dtype=Hashable,
             required=False,
-            desc="tie breaking strategy when selecting the protected group "
-                 "using the minority or majority strategies or a "
-                 "comma-separated preference list"
-                 "(if not specified, ties will raise an exception)"
+            desc="Tie breaking strategy when selecting the protected group "
+                 "using the minority or majority strategies. Can also be a "
+                 "comma-separated preference list. (If not specified, "
+                 "ties will raise an exception.)"
         ),
     }
 
@@ -87,7 +114,7 @@ class FairnessMeasure(Measure, ABC):
         return self.params["cutoff"]
 
     @cached_property
-    def _group_col_param(self) -> Hashable:
+    def _group_col_param(self) -> ColumnType:
         if "group_col" not in self.params:
             return "group"
         return self.params["group_col"]
@@ -104,14 +131,14 @@ class FairnessMeasure(Measure, ABC):
 
     @cached_property
     def _protected_group_param(self) -> Union[
-        ProtectedGroupStrategy, Hashable
+        ProtectedGroupStrategy, GroupNameType
     ]:
         if "protected_group" not in self.params:
             return ProtectedGroupStrategy.MINORITY
         protected_group = self.params["protected_group"]
         if protected_group in {s.value for s in ProtectedGroupStrategy}:
             return ProtectedGroupStrategy(protected_group)
-        if not isinstance(protected_group, Hashable):
+        if not isinstance(protected_group, GroupNameType):
             raise ValueError(
                 f"Illegal protected_group param: {protected_group}"
             )
@@ -119,7 +146,7 @@ class FairnessMeasure(Measure, ABC):
 
     @cached_property
     def _tie_breaking_param(self) -> Union[
-        TieBreakingStrategy, Sequence, None
+        TieBreakingStrategy, Sequence[GroupNameType], None
     ]:
         if "tie_breaking" not in self.params:
             return None
@@ -128,7 +155,7 @@ class FairnessMeasure(Measure, ABC):
             return None
         if tie_breaking in {s.value for s in TieBreakingStrategy}:
             return TieBreakingStrategy(tie_breaking)
-        if not isinstance(tie_breaking, Hashable):
+        if not isinstance(tie_breaking, (str, bytes)):
             raise ValueError(
                 f"Illegal tie_breaking param: {tie_breaking}"
             )
@@ -140,26 +167,56 @@ class FairnessMeasure(Measure, ABC):
     @abstractmethod
     def unfairness(
             self,
-            ranking: tuple[Hashable],
-            groups: set[Hashable],
-            group_counts: dict[Hashable, int],
-            protected_group: Hashable,
+            ranking: tuple[GroupNameType],
+            groups: set[GroupNameType],
+            group_counts: dict[GroupNameType, int],
+            protected_group: GroupNameType,
     ) -> float:
+        """
+        Compute a ranking's unfairness of representing a given protected group.
+        Pre-computed group counts are provided for efficient computation.
+
+        :param ranking: Ranking, given as an ordered sequence of the ranked
+        items groups.
+        :param groups: Set of groups to be considered for measuring fairness.
+        :param group_counts: Lookup table of how often each group occurs in the
+        query's qrels.
+        :param protected_group: Name of the protected group.
+        :return: Group fairness score for the protected group.
+        """
         pass
 
     @staticmethod
     def group_counts(
-            qrels_or_ranking: tuple[Hashable],
-            groups: set[Hashable],
-    ) -> dict[Hashable, int]:
+            qrels_or_ranking: Iterable[GroupNameType],
+            groups: set[GroupNameType],
+    ) -> dict[GroupNameType, int]:
+        """
+        Compute the number of occurrences of each group in the qrels or
+        ranking.
+        :param qrels_or_ranking: Qrels or ranked list, given as iterable of
+        group names.
+        :param groups: Set of groups to be considered for counting occurrences.
+        :return: Lookup table of how often each group occurs in the qrels or
+        ranking.
+        """
         counts = Counter(qrels_or_ranking)
         return {group: counts.get(group, 0) for group in groups}
 
-    def _protected_group(self, group_counts: dict[Hashable, int]) -> Hashable:
-        protected_group: Hashable = self._protected_group_param
+    def _protected_group(
+            self,
+            group_counts: dict[GroupNameType, int],
+    ) -> GroupNameType:
+        """
+        Determine the protected group based on the group counts for a query.
+        :param group_counts: Lookup table of how often each group occurs in the
+        qrels or ranking.
+        :return: Name of the protected group.
+        """
+        protected_group = self._protected_group_param
         if isinstance(protected_group, ProtectedGroupStrategy):
             strategy: ProtectedGroupStrategy = protected_group
-            groups: list[tuple[Hashable, int]] = [
+            groups: list[tuple[GroupNameType, int]] = [
                 item for item in group_counts.items()
             ]
             if strategy == ProtectedGroupStrategy.MINORITY:
@@ -217,17 +274,43 @@ class FairnessMeasure(Measure, ABC):
             return protected_group
 
     @staticmethod
-    def _permuted_rankings(ranking: tuple[Hashable]) -> set[tuple[Hashable]]:
+    def _permuted_rankings(
+            ranking: tuple[GroupNameType],
+    ) -> set[tuple[GroupNameType]]:
+        """
+        Generate all possible, unique permutations of the ranking.
+        :param ranking:
+        :return: Set of rankings, each given as an ordered sequence of the
+        ranked items groups.
+        """
         # noinspection PyTypeChecker
         return set(permutations(ranking))
 
     def max_unfairness(
             self,
-            ranking: tuple[Hashable],
-            groups: set[Hashable],
-            group_counts: dict[Hashable, int],
-            protected_group: Hashable,
+            ranking: tuple[GroupNameType],
+            groups: set[GroupNameType],
+            group_counts: dict[GroupNameType, int],
+            protected_group: GroupNameType,
     ) -> float:
+        """
+        Compute a ranking's maximum possible unfairness of representing a given
+        protected group. Pre-computed group counts are provided for efficient
+        computation.
+
+        A naive implementation can just generate all possible permutations of
+        the ranking and iteratively find the maximum across the permuted
+        rankings. Subclasses should instead override this method with an
+        analytical solution, if possible.
+
+        :param ranking: Ranking, given as an ordered sequence of the ranked
+        items groups.
+        :param groups: Set of groups to be considered for measuring fairness.
+        :param group_counts: Lookup table of how often each group occurs in the
+        query's qrels.
+        :param protected_group: Name of the protected group.
+        :return: Group fairness score for the protected group.
+        """
         return max(
             self.unfairness(
                 permuted_ranking,
@@ -238,12 +321,21 @@ class FairnessMeasure(Measure, ABC):
             for permuted_ranking in self._permuted_rankings(ranking)
         )
 
-    def _compute_query(
+    def _measure_query(
             self,
-            qrels: tuple[Hashable],
-            ranking: tuple[Hashable],
-            groups: set[Hashable],
+            qrels: tuple[GroupNameType],
+            ranking: tuple[GroupNameType],
+            groups: set[GroupNameType],
     ) -> float:
+        """
+        Measure fairness of a ranking for a single query, based on the query's
+        qrels and groups to be considered.
+        :param qrels: Collection of group names in the query's qrels.
+        :param ranking: Ranking, given as an ordered sequence of the ranked
+        items groups.
+        :param groups: Set of groups to be considered for measuring fairness.
+        :return:
+        """
         group_counts = self.group_counts(qrels, groups)
         protected_group = self._protected_group(group_counts)
         if protected_group not in group_counts.keys():
@@ -269,12 +361,30 @@ class FairnessMeasure(Measure, ABC):
         normalized_unfairness = unfairness / max_unfairness
         return normalized_unfairness
 
-    def _groups(self, qrels_or_ranking: tuple[Hashable]) -> set[Hashable]:
+    def _groups(
+            self,
+            qrels: tuple[GroupNameType],
+    ) -> set[GroupNameType]:
+        """
+        Determine the set of groups to be considered for measuring fairness.
+        :param qrels: Collection of group names in the qrels.
+        :return: Set of groups to be considered for measuring fairness.
+        """
         if self._groups_param is not None:
             return self._groups_param
-        return set(qrels_or_ranking)
+        return set(qrels)
 
-    def compute(self, qrels: DataFrame, run: DataFrame) -> Iterator[Metric]:
+    def measure(self, qrels: DataFrame, run: DataFrame) -> Iterator[Metric]:
+        """
+        Measure fairness of a run based on qrels.
+        :param qrels: Data frame with qrels for each query. The query should be
+        given in the ``query_id`` column and the group in the specified column
+        as per the measure's parameters.
+        :param run: Data frame with ranking for each query. The query should be
+        given in the ``query_id`` column and the group in the specified column
+        as per the measure's parameters.
+        :return:
+        """
         group_col = self._group_col_param
         qrels = qrels[["query_id", group_col]]
         run = run[["query_id", group_col]]
@@ -290,7 +400,7 @@ class FairnessMeasure(Measure, ABC):
             yield Metric(
                 str(qid),
                 self,
-                self._compute_query(
+                self._measure_query(
                     tuple(qrels[qrels["query_id"] == qid][group_col]),
                     tuple(ranking[group_col]),
                     groups,
@@ -308,17 +418,19 @@ class FairnessMeasure(Measure, ABC):
         groups = None
         if self._groups_param is not None:
             groups = repr(",".join(self._groups_param))
+        protected_group_param = self._protected_group_param
         protected_group = None
-        if isinstance(self._protected_group_param, ProtectedGroupStrategy):
-            if self._protected_group_param != ProtectedGroupStrategy.MINORITY:
-                protected_group = repr(self._protected_group_param.value)
-        elif isinstance(self._protected_group_param, Hashable):
-            protected_group = repr(self._protected_group_param)
+        if isinstance(protected_group_param, ProtectedGroupStrategy):
+            if protected_group_param != ProtectedGroupStrategy.MINORITY:
+                protected_group = repr(protected_group_param.value)
+        elif isinstance(protected_group_param, Hashable):
+            protected_group = repr(protected_group_param)
+        tie_breaking_param = self._tie_breaking_param
         tie_breaking = None
-        if isinstance(self._tie_breaking_param, TieBreakingStrategy):
-            tie_breaking = repr(self._tie_breaking_param.value)
-        elif isinstance(self._tie_breaking_param, Sequence):
-            tie_breaking = repr(",".join(self._tie_breaking_param))
+        if isinstance(tie_breaking_param, TieBreakingStrategy):
+            tie_breaking = repr(tie_breaking_param.value)
+        elif isinstance(tie_breaking_param, Sequence):
+            tie_breaking = repr(",".join(tie_breaking_param))
         params = [
             f"{name}={param}"
             for name, param in {
@@ -333,15 +445,41 @@ class FairnessMeasure(Measure, ABC):
 
 
 class _NormalizedDiscountedDifference(FairnessMeasure):
+    """
+    Normalized discounted difference (rND) computes the difference in the
+    proportion of members of the protected group at top-i and in the over-all
+    population, accumulated for all cutoff points in the ranking with a
+    logarithmic discount, and finally normalized wrt. the ideal rND.
+
+    ::
+
+        @inproceedings{YangS2017,
+            author = {Yang, Ke and Stoyanovich, Julia},
+            title = {Measuring Fairness in Ranked Outputs},
+            year = {2017},
+            isbn = {9781450352826},
+            publisher = {Association for Computing Machinery},
+            address = {New York, NY, USA},
+            url = {https://doi.org/10.1145/3085504.3085526},
+            doi = {10.1145/3085504.3085526},
+            booktitle = {Proceedings of the 29th International Conference on
+                Scientific and Statistical Database Management},
+            articleno = {22},
+            numpages = {6},
+            location = {Chicago, IL, USA},
+            series = {SSDBM '17}
+        }
+    """
+
     NAME = "rND"
     __name__ = "rND"
 
     def unfairness(
             self,
-            ranking: tuple[Hashable],
-            groups: set[Hashable],
-            group_counts: dict[Hashable, int],
-            protected_group: Hashable,
+            ranking: tuple[GroupNameType],
+            groups: set[GroupNameType],
+            group_counts: dict[GroupNameType, int],
+            protected_group: GroupNameType,
     ) -> float:
         n = sum(group_counts.values())
         s_plus = group_counts[protected_group]
@@ -366,10 +504,35 @@ class _NormalizedDiscountedDifference(FairnessMeasure):
 
 NormalizedDiscountedDifference = _NormalizedDiscountedDifference()
 rND = NormalizedDiscountedDifference
-register_measure(rND)
+register_measure(rND, ["NormalizedDiscountedDifference"])
 
 
 class _NormalizedDiscountedKlDivergence(FairnessMeasure):
+    """
+    Normalized discounted KL-divergence (rKL) computes the expectation of the
+    difference between protected group membership at top-i versus in the
+    overall population, accumulated for all cutoff points in the ranking with a
+    logarithmic discount, and finally normalized wrt. the ideal rKL.
+    ::
+
+        @inproceedings{YangS2017,
+            author = {Yang, Ke and Stoyanovich, Julia},
+            title = {Measuring Fairness in Ranked Outputs},
+            year = {2017},
+            isbn = {9781450352826},
+            publisher = {Association for Computing Machinery},
+            address = {New York, NY, USA},
+            url = {https://doi.org/10.1145/3085504.3085526},
+            doi = {10.1145/3085504.3085526},
+            booktitle = {Proceedings of the 29th International Conference on
+                Scientific and Statistical Database Management},
+            articleno = {22},
+            numpages = {6},
+            location = {Chicago, IL, USA},
+            series = {SSDBM '17}
+        }
+    """
+
     SUPPORTED_PARAMS = {
         **FairnessMeasure.SUPPORTED_PARAMS,
         "correct_extreme": ParamInfo(
@@ -411,10 +574,10 @@ class _NormalizedDiscountedKlDivergence(FairnessMeasure):
 
     def unfairness(
             self,
-            ranking: tuple[Hashable],
-            groups: set[Hashable],
-            group_counts: dict[Hashable, int],
-            protected_group: Hashable,
+            ranking: tuple[GroupNameType],
+            groups: set[GroupNameType],
+            group_counts: dict[GroupNameType, int],
+            protected_group: GroupNameType,
     ) -> float:
         n = sum(group_counts.values())
         s_plus = group_counts[protected_group]
@@ -437,10 +600,37 @@ class _NormalizedDiscountedKlDivergence(FairnessMeasure):
 
 NormalizedDiscountedKlDivergence = _NormalizedDiscountedKlDivergence()
 rKL = NormalizedDiscountedKlDivergence
-register_measure(rKL)
+register_measure(rKL, ["NormalizedDiscountedKlDivergence"])
 
 
 class _NormalizedDiscountedRatio(FairnessMeasure):
+    """
+    Normalized discounted ratio (rRD) computes the difference in the
+    proportion of members of the protected group versus the unprotected group
+    at top-i and in the over-all population, accumulated for all cutoff points
+    in the ranking with a logarithmic discount, and finally normalized wrt. the
+    ideal rRD.
+
+    ::
+
+        @inproceedings{YangS2017,
+            author = {Yang, Ke and Stoyanovich, Julia},
+            title = {Measuring Fairness in Ranked Outputs},
+            year = {2017},
+            isbn = {9781450352826},
+            publisher = {Association for Computing Machinery},
+            address = {New York, NY, USA},
+            url = {https://doi.org/10.1145/3085504.3085526},
+            doi = {10.1145/3085504.3085526},
+            booktitle = {Proceedings of the 29th International Conference on
+                Scientific and Statistical Database Management},
+            articleno = {22},
+            numpages = {6},
+            location = {Chicago, IL, USA},
+            series = {SSDBM '17}
+        }
+    """
+
     NAME = "rRD"
     __name__ = "rRD"
 
@@ -453,10 +643,10 @@ class _NormalizedDiscountedRatio(FairnessMeasure):
 
     def unfairness(
             self,
-            ranking: tuple[Hashable],
-            groups: set[Hashable],
-            group_counts: dict[Hashable, int],
-            protected_group: Hashable,
+            ranking: tuple[GroupNameType],
+            groups: set[GroupNameType],
+            group_counts: dict[GroupNameType, int],
+            protected_group: GroupNameType,
     ) -> float:
         n = sum(group_counts.values())
         s_plus = group_counts[protected_group]
@@ -482,7 +672,7 @@ class _NormalizedDiscountedRatio(FairnessMeasure):
 
 NormalizedDiscountedRatio = _NormalizedDiscountedRatio()
 rRD = NormalizedDiscountedRatio
-register_measure(rRD)
+register_measure(rRD, ["NormalizedDiscountedRatio"])
 
 
 class FairnessEvaluator(Evaluator):
@@ -494,7 +684,7 @@ class FairnessEvaluator(Evaluator):
         self._measures = measures
         self._qrels = qrels
 
-    def _iter_calc(self, run: Run) -> Iterator[Metric]:
+    def _iter_calc(self, run: RunType) -> Iterator[Metric]:
         run: DataFrame = RunConverter(run).as_pd_dataframe()
         run.sort_values(
             by=["query_id", "score"],
@@ -502,10 +692,21 @@ class FairnessEvaluator(Evaluator):
             inplace=True,
         )
         for measure in self._measures:
-            yield from measure.compute(self._qrels, run)
+            yield from measure.measure(self._qrels, run)
 
 
 class FairnessProvider(Provider):
+    """
+    Group fairness measures from the papers:
+
+    - Measuring Fairness in Ranked Outputs:
+      https://doi.org/10.1145/3085504.3085526
+      https://github.com/DataResponsibly/FairRank
+    - Evaluating Fairness in Argument Retrieval:
+      https://doi.org/10.1145/3459637.3482099
+      https://github.com/sachinpc1993/fair-arguments
+    """
+
     NAME = "fairness"
     SUPPORTED_MEASURES = [rND, rKL, rRD]
     _is_available = True
@@ -513,7 +714,7 @@ class FairnessProvider(Provider):
     def _evaluator(
             self,
             measures: Iterable[FairnessMeasure],
-            qrels: Qrels
+            qrels: QrelsType
     ) -> FairnessEvaluator:
         measures = flatten_measures(measures)
         qrels: DataFrame = QrelsConverter(qrels).as_pd_dataframe()
