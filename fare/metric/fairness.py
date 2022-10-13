@@ -9,7 +9,6 @@ Fairness measures from:
 """
 from abc import abstractmethod, ABC
 from collections import Counter
-from dataclasses import dataclass, field
 from enum import Enum
 from functools import cached_property
 from itertools import permutations
@@ -348,8 +347,6 @@ class _NormalizedDiscountedDifference(FairnessMeasure):
         s_plus = group_counts[protected_group]
 
         metric = 0
-
-        # For each ranking position
         for i in range(1, len(ranking)):
             ranking_i = ranking[:i]
             group_counts_i = self.group_counts(ranking_i, groups)
@@ -372,10 +369,6 @@ rND = NormalizedDiscountedDifference
 register_measure(rND)
 
 
-def _kl_divergence(x1: Sequence[float], x2: Sequence[float]) -> float:
-    return sum(rel_entr(x1, x2))
-
-
 class _NormalizedDiscountedKlDivergence(FairnessMeasure):
     SUPPORTED_PARAMS = {
         **FairnessMeasure.SUPPORTED_PARAMS,
@@ -396,6 +389,26 @@ class _NormalizedDiscountedKlDivergence(FairnessMeasure):
             return True
         return self.params["correct_extreme"]
 
+    def _distribution(
+            self,
+            plus: int,
+            minus: int,
+            n: int,
+    ) -> tuple[float, float]:
+        distribution = (plus / n, minus / n)
+        if self._correct_extreme:
+            if plus == n:
+                q_plus = nextafter(distribution[0], 0)
+                distribution = (q_plus, 1 - q_plus)
+            elif minus == n:
+                q_minus = nextafter(distribution[1], 0)
+                distribution = (1 - q_minus, q_minus)
+        return distribution
+
+    @staticmethod
+    def _kl_divergence(x1: Sequence[float], x2: Sequence[float]) -> float:
+        return sum(rel_entr(x1, x2))
+
     def unfairness(
             self,
             ranking: tuple[Hashable],
@@ -406,34 +419,18 @@ class _NormalizedDiscountedKlDivergence(FairnessMeasure):
         n = sum(group_counts.values())
         s_plus = group_counts[protected_group]
         s_minus = n - s_plus
-        q = (s_plus / n, s_minus / n)
-        if self._correct_extreme:
-            if s_plus == n:
-                q_plus = nextafter(q[0], 0)
-                q = (q_plus, 1 - q_plus)
-            elif s_minus == n:
-                q_minus = nextafter(q[1], 0)
-                q = (1 - q_minus, q_minus)
+        q = self._distribution(s_plus, s_minus, n)
 
         metric = 0
-
-        # For each ranking position
         for i in range(1, len(ranking)):
             ranking_i = ranking[:i]
             group_counts_i = self.group_counts(ranking_i, groups)
 
             s_plus_i = group_counts_i[protected_group]
             s_minus_i = i - s_plus_i
-            p = (s_plus_i / i, s_minus_i / i)
-            if self._correct_extreme:
-                if s_plus_i == i:
-                    P_plus = nextafter(p[0], 0)
-                    p = (P_plus, 1 - P_plus)
-                elif s_minus_i == i:
-                    P_minus = nextafter(p[1], 0)
-                    p = (1 - P_minus, P_minus)
+            p = self._distribution(s_plus_i, s_minus_i, i)
 
-            metric += _kl_divergence(p, q) / log(i + 1, 2)
+            metric += self._kl_divergence(p, q) / log(i + 1, 2)
 
         return metric
 
@@ -447,6 +444,13 @@ class _NormalizedDiscountedRatio(FairnessMeasure):
     NAME = "rRD"
     __name__ = "rRD"
 
+    @staticmethod
+    def _fraction(numerator: int, denominator: int) -> float:
+        if numerator == 0 or denominator == 0:
+            return 0
+        else:
+            return abs(numerator / denominator)
+
     def unfairness(
             self,
             ranking: tuple[Hashable],
@@ -457,26 +461,16 @@ class _NormalizedDiscountedRatio(FairnessMeasure):
         n = sum(group_counts.values())
         s_plus = group_counts[protected_group]
         s_minus = n - s_plus
-        s_frac: float
-        if s_plus == 0 or s_minus == 0:
-            s_frac = 0
-        else:
-            s_frac = abs(s_plus / s_minus)
+        s_frac = self._fraction(s_plus, s_minus)
 
         metric = 0
-
-        # For each ranking position
         for i in range(1, len(ranking)):
             ranking_i = ranking[:i]
             group_counts_i = self.group_counts(ranking_i, groups)
 
             s_plus_i = group_counts_i[protected_group]
             s_minus_i = i - s_plus_i
-            s_frac_i: float
-            if s_plus_i == 0 or s_minus_i == 0:
-                s_frac_i = 0
-            else:
-                s_frac_i = abs(s_plus_i / s_minus_i)
+            s_frac_i = self._fraction(s_plus_i, s_minus_i)
 
             metric += (
                     (1 / log(i + 1, 2)) *
@@ -491,13 +485,14 @@ rRD = NormalizedDiscountedRatio
 register_measure(rRD)
 
 
-@dataclass
 class FairnessEvaluator(Evaluator):
-    measures: Final[Iterable[FairnessMeasure]] = field()
-    qrels: Final[DataFrame] = field()
+    _measures: Final[Iterable[FairnessMeasure]]
+    _qrels: Final[DataFrame]
 
-    def __post_init__(self):
-        super().__init__(self.measures, set(self.qrels["query_id"].unique()))
+    def __init__(self, measures: Iterable[FairnessMeasure], qrels: DataFrame):
+        super().__init__(measures, set(self._qrels["query_id"].unique()))
+        self._measures = measures
+        self._qrels = qrels
 
     def _iter_calc(self, run: Run) -> Iterator[Metric]:
         run: DataFrame = RunConverter(run).as_pd_dataframe()
@@ -506,8 +501,8 @@ class FairnessEvaluator(Evaluator):
             ascending=[True, False],
             inplace=True,
         )
-        for measure in self.measures:
-            yield from measure.compute(self.qrels, run)
+        for measure in self._measures:
+            yield from measure.compute(self._qrels, run)
 
 
 class FairnessProvider(Provider):
