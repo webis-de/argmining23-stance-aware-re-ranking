@@ -8,6 +8,10 @@
 
 Code and resources to reproduce the paper _FARE: Fair Argument Re-ranking for Comparative Questions_ at [ArgMining 2022](https://argmining-org.github.io/2022/).
 
+## TODO
+- RoBerta stance tagger fine-tuning on Touché stance dataset (Sascha)
+- Same side stance detection (later)
+
 ## Usage
 
 The following sections describe how to use our code to re-rank comparative search engine results, using Pipenv.
