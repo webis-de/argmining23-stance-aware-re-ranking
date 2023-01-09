@@ -15,13 +15,13 @@ stanceFilterThreshold: 0.00
 #stanceFilterThreshold: 0.25
 #stanceFilterThreshold: 0.50
 
-stanceReranker: original
-#stanceReranker: stance-first # FIRST, SECOND, or NEUTRAL
+#stanceReranker: original
+stanceReranker: stance-first # FIRST, SECOND, or NEUTRAL
 #stanceReranker: subjective-stance-first # FIRST or SECOND
 stanceRerankerCutoff: 20
 
-fairnessReranker: original
-#fairnessReranker: alternating-stance
+#fairnessReranker: original
+fairnessReranker: alternating-stance
 #fairnessReranker: inverse-stance-gain
 #fairnessReranker: boost-minority-stance
 fairnessRerankerCutoff: 20
