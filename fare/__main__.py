@@ -1,3 +1,5 @@
+from pathlib import Path
+
 from pyterrier import init
 
 from fare.config import CONFIG
@@ -16,11 +18,12 @@ from fare.modules.text_loader import TextLoader
 from fare.modules.topics_loader import parse_topics
 
 
-def _reranker(pipeline: Transformer) -> Transformer:
+def _run(run_file_path: Path) -> Transformer:
+    pipeline = RunLoader(run_file_path)
+
     # Load text contents.
     pipeline = pipeline >> TextLoader()
     pipeline = ~pipeline
-
     # Cutoffs.
     stance_reranker_cutoff = CONFIG.stance_reranker_cutoff
     fairness_reranker_cutoff = CONFIG.fairness_reranker_cutoff
@@ -45,11 +48,31 @@ def _reranker(pipeline: Transformer) -> Transformer:
                    ) ^ pipeline
     pipeline = ~pipeline
 
+    return pipeline
+
+
+def _run_names() -> list[str]:
+    components = []
+
+    stance_tagger = CONFIG.stance_tagger.value
+    if stance_tagger == "ground-truth":
+        components.append("true stance")
+    elif stance_tagger != "original":
+        stance_filter_threshold = CONFIG.stance_filter_threshold
+        if stance_filter_threshold > 0:
+            stance_tagger += f"({stance_filter_threshold}:f)"
+        components.append(stance_tagger)
+
+    return components
+
+
+def _reranker(pipeline: Transformer) -> Transformer:
     # Filter stance.
     pipeline = pipeline >> StanceFilter(CONFIG.stance_filter_threshold)
     pipeline = ~pipeline
 
     # Re-rank stance/subjective first.
+    stance_reranker_cutoff = CONFIG.stance_reranker_cutoff
     if stance_reranker_cutoff is None:
         pipeline = pipeline >> CONFIG.stance_reranker
     elif stance_reranker_cutoff > 0:
@@ -62,6 +85,7 @@ def _reranker(pipeline: Transformer) -> Transformer:
     pipeline = ~pipeline
 
     # Fair re-ranking.
+    fairness_reranker_cutoff = CONFIG.fairness_reranker_cutoff
     if fairness_reranker_cutoff is None:
         pipeline = pipeline >> CONFIG.fairness_reranker
     elif fairness_reranker_cutoff > 0:
@@ -82,16 +106,6 @@ def _reranker_names() -> list[str]:
     # Cutoffs.
     stance_reranker_cutoff = CONFIG.stance_reranker_cutoff
     fairness_reranker_cutoff = CONFIG.fairness_reranker_cutoff
-
-    # Tag stance.
-    stance_tagger = CONFIG.stance_tagger.value
-    if stance_tagger == "ground-truth":
-        components.append("true stance")
-    elif stance_tagger != "original":
-        stance_filter_threshold = CONFIG.stance_filter_threshold
-        if stance_filter_threshold > 0:
-            stance_tagger += f"({stance_filter_threshold}:f)"
-        components.append(stance_tagger)
 
     if stance_reranker_cutoff is None or stance_reranker_cutoff > 0:
         stance_reranker = CONFIG.stance_reranker.value
@@ -129,10 +143,13 @@ def main() -> None:
     )
     qrels_stance["stance_label"] = qrels_stance["label"]
 
+    run_names = _run_names()
     runs: list[tuple[str, Transformer]] = [
         (
-            f"{team_directory_path.stem} {run_file_path.stem}",
-            RunLoader(run_file_path)
+            " + ".join((
+                f"{team_directory_path.stem} {run_file_path.stem}", *run_names
+            )),
+            _run(run_file_path)
         )
         for team_directory_path in CONFIG.runs_directory_path.iterdir()
         if team_directory_path.is_dir()
