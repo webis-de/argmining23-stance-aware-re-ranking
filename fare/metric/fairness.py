@@ -680,7 +680,7 @@ class FairnessEvaluator(Evaluator):
     _qrels: Final[DataFrame]
 
     def __init__(self, measures: Iterable[FairnessMeasure], qrels: DataFrame):
-        super().__init__(measures, set(self._qrels["query_id"].unique()))
+        super().__init__(measures, set(qrels["query_id"].unique()))
         self._measures = measures
         self._qrels = qrels
 
