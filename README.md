@@ -1,4 +1,4 @@
-[![CI](https://img.shields.io/github/workflow/status/heinrichreimer/fare/CI?style=flat-square)](https://github.com/heinrichreimer/fare/actions?query=workflow%3A"CI")
+[![CI](https://img.shields.io/github/actions/workflow/status/heinrichreimer/fare/ci.yml?branch=main&style=flat-square)](https://github.com/heinrichreimer/fare/actions/workflows/ci.yml)
 [![Code coverage](https://img.shields.io/codecov/c/github/heinrichreimer/fare?style=flat-square)](https://codecov.io/github/heinrichreimer/fare/)
 [![Issues](https://img.shields.io/github/issues/heinrichreimer/fare?style=flat-square)](https://github.com/heinrichreimer/fare/issues)
 [![Commit activity](https://img.shields.io/github/commit-activity/m/heinrichreimer/fare?style=flat-square)](https://github.com/heinrichreimer/fare/commits)
