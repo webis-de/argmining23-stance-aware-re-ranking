@@ -31,6 +31,7 @@ sentencepiece = "*"
 protobuf = "~=3.20"
 scipy = "*"
 ir-measures = "*"
+openpyxl = "*"
 
 [dev-packages]
 
