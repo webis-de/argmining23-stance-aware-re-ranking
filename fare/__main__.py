@@ -60,14 +60,14 @@ def _run(
     pipeline = ~pipeline
 
     if run_config.stance_tagger == StanceTagger.GROUND_TRUTH:
-        names += "true stance"
+        names.append("true stance")
     elif run_config.stance_tagger != StanceTagger.ORIGINAL:
         name = run_config.stance_tagger.value
         if run_config.stance_filter_threshold > 0:
             name += f"({run_config.stance_filter_threshold}:f)"
         if run_config.stance_tagger_cutoff is not None:
             name += f"@{run_config.stance_tagger_cutoff}"
-        name += name
+        names.append(name)
 
     # Re-rank stance/subjective first.
     if run_config.stance_reranker_cutoff is None:
@@ -87,7 +87,7 @@ def _run(
         name = run_config.stance_reranker.value
         if run_config.stance_reranker_cutoff is not None:
             name += f"@{run_config.stance_reranker_cutoff}"
-        name += name
+        names.append(name)
 
     # Fair re-ranking.
     if run_config.fairness_reranker_cutoff is None:
@@ -110,7 +110,7 @@ def _run(
             name = "boost-min"
         if run_config.fairness_reranker_cutoff is not None:
             name += f"@{run_config.fairness_reranker_cutoff}"
-        name += name
+        names.append(name)
 
     return NamedPipeline(names, pipeline)
 
@@ -196,6 +196,8 @@ def main() -> None:
         column = column.replace("(,", "(")
         column = column.replace(",)", ")")
         column = column.replace("()", "")
+        column = column.replace("(groups='FIRST,SECOND,NEUTRAL')",
+                                "(FIRST,SECOND,NEUTRAL)")
         return column
 
     experiment.columns = experiment.columns.map(rename_column)
