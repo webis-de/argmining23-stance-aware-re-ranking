@@ -1,12 +1,15 @@
 from pathlib import Path
+from typing import NamedTuple
 
 from pyterrier import init
 
-from fare.config import CONFIG
+from fare.config import CONFIG, RunConfig
+from fare.modules.fairness_reranker import FairnessReranker
+from fare.modules.stance_reranker import StanceReranker
+from fare.modules.stance_tagger import StanceTagger
 
 init(no_download=CONFIG.offline)
 
-from more_itertools import unzip, interleave
 from pandas import DataFrame, merge, Series
 from pyterrier.io import read_qrels
 from pyterrier.pipelines import Experiment
@@ -18,116 +21,97 @@ from fare.modules.text_loader import TextLoader
 from fare.modules.topics_loader import parse_topics
 
 
-def _run(run_file_path: Path) -> Transformer:
+class NamedPipeline(NamedTuple):
+    names: list[str]
+    pipeline: Transformer
+
+    @property
+    def name(self):
+        return " + ".join(self.names)
+
+
+def _run(
+        run_file_path: Path, run_config: RunConfig
+) -> NamedPipeline:
+    team_directory_path = run_file_path.parent.parent
+
     pipeline = RunLoader(run_file_path)
+    names = [f"{team_directory_path.stem} {run_file_path.stem}"]
 
     # Load text contents.
     pipeline = pipeline >> TextLoader()
     pipeline = ~pipeline
-    # Cutoffs.
-    stance_reranker_cutoff = CONFIG.stance_reranker_cutoff
-    fairness_reranker_cutoff = CONFIG.fairness_reranker_cutoff
-    stance_tagger_cutoff = max(
-        (
-            cutoff
-            for cutoff in (stance_reranker_cutoff, fairness_reranker_cutoff)
-            if cutoff is not None
-        ),
-        default=None,
-    )
 
     # Tag stance.
-    if stance_tagger_cutoff is None:
-        pipeline = pipeline >> CONFIG.stance_tagger
-    elif stance_tagger_cutoff > 0:
+    stance_tagger = (
+            run_config.stance_tagger >>
+            StanceFilter(run_config.stance_tagger_threshold)
+    )
+    if run_config.stance_tagger_cutoff is None:
+        pipeline = pipeline >> stance_tagger
+    elif run_config.stance_tagger_cutoff > 0:
         # noinspection PyTypeChecker
         pipeline = (
                            pipeline %
-                           stance_tagger_cutoff >>
-                           CONFIG.stance_tagger
+                           run_config.stance_tagger_cutoff >>
+                           stance_tagger
                    ) ^ pipeline
     pipeline = ~pipeline
 
-    return pipeline
-
-
-def _run_names() -> list[str]:
-    components = []
-
-    stance_tagger = CONFIG.stance_tagger.value
-    if stance_tagger == "ground-truth":
-        components.append("true stance")
-    elif stance_tagger != "original":
-        stance_filter_threshold = CONFIG.stance_filter_threshold
-        if stance_filter_threshold > 0:
-            stance_tagger += f"({stance_filter_threshold}:f)"
-        components.append(stance_tagger)
-
-    return components
-
-
-def _reranker(pipeline: Transformer) -> Transformer:
-    # Filter stance.
-    pipeline = pipeline >> StanceFilter(CONFIG.stance_filter_threshold)
-    pipeline = ~pipeline
+    if run_config.stance_tagger == StanceTagger.GROUND_TRUTH:
+        names += "true stance"
+    elif run_config.stance_tagger != StanceTagger.ORIGINAL:
+        name = run_config.stance_tagger.value
+        if run_config.stance_filter_threshold > 0:
+            name += f"({run_config.stance_filter_threshold}:f)"
+        if run_config.stance_tagger_cutoff is not None:
+            name += f"@{run_config.stance_tagger_cutoff}"
+        name += name
 
     # Re-rank stance/subjective first.
-    stance_reranker_cutoff = CONFIG.stance_reranker_cutoff
-    if stance_reranker_cutoff is None:
-        pipeline = pipeline >> CONFIG.stance_reranker
-    elif stance_reranker_cutoff > 0:
+    if run_config.stance_reranker_cutoff is None:
+        pipeline = pipeline >> run_config.stance_reranker
+    elif run_config.stance_reranker_cutoff > 0:
         # noinspection PyTypeChecker
         pipeline = (
                            pipeline %
-                           stance_reranker_cutoff >>
-                           CONFIG.stance_reranker
+                           run_config.stance_reranker_cutoff >>
+                           run_config.stance_reranker
                    ) ^ pipeline
     pipeline = ~pipeline
+
+    if (run_config.stance_reranker != StanceReranker.ORIGINAL and
+            (run_config.stance_reranker_cutoff is None or
+             run_config.stance_reranker_cutoff > 0)):
+        name = run_config.stance_reranker.value
+        if run_config.stance_reranker_cutoff is not None:
+            name += f"@{run_config.stance_reranker_cutoff}"
+        name += name
 
     # Fair re-ranking.
-    fairness_reranker_cutoff = CONFIG.fairness_reranker_cutoff
-    if fairness_reranker_cutoff is None:
-        pipeline = pipeline >> CONFIG.fairness_reranker
-    elif fairness_reranker_cutoff > 0:
+    if run_config.fairness_reranker_cutoff is None:
+        pipeline = pipeline >> run_config.fairness_reranker
+    elif run_config.fairness_reranker_cutoff > 0:
         # noinspection PyTypeChecker
         pipeline = (
                            pipeline %
-                           fairness_reranker_cutoff >>
-                           CONFIG.fairness_reranker
+                           run_config.fairness_reranker_cutoff >>
+                           run_config.fairness_reranker
                    ) ^ pipeline
     pipeline = ~pipeline
 
-    return pipeline
+    if (run_config.fairness_reranker != StanceReranker.ORIGINAL and
+            (run_config.fairness_reranker_cutoff is None or
+             run_config.fairness_reranker_cutoff > 0)):
+        name = run_config.fairness_reranker.value
+        if (run_config.fairness_reranker ==
+                FairnessReranker.BOOST_MINORITY_STANCE):
+            name = "boost-min"
+        if run_config.fairness_reranker_cutoff is not None:
+            name += f"@{run_config.fairness_reranker_cutoff}"
+        name += name
 
-
-def _reranker_names() -> list[str]:
-    components = []
-
-    # Cutoffs.
-    stance_reranker_cutoff = CONFIG.stance_reranker_cutoff
-    fairness_reranker_cutoff = CONFIG.fairness_reranker_cutoff
-
-    if stance_reranker_cutoff is None or stance_reranker_cutoff > 0:
-        stance_reranker = CONFIG.stance_reranker.value
-        if stance_reranker_cutoff is not None:
-            stance_reranker_cutoff = f"@{stance_reranker_cutoff}"
-        else:
-            stance_reranker_cutoff = ""
-        if stance_reranker != "original":
-            components.append(f"{stance_reranker}{stance_reranker_cutoff}")
-
-    if fairness_reranker_cutoff is None or fairness_reranker_cutoff > 0:
-        fairness_reranker = CONFIG.fairness_reranker.value
-        if fairness_reranker_cutoff is not None:
-            fairness_reranker_cutoff = f"@{fairness_reranker_cutoff}"
-        else:
-            fairness_reranker_cutoff = ""
-        if fairness_reranker == "boost-minority-stance":
-            fairness_reranker = "boost-min"
-        if fairness_reranker != "original":
-            components.append(f"{fairness_reranker}{fairness_reranker_cutoff}")
-
-    return components
+    return NamedPipeline(names, pipeline)
 
 
 def main() -> None:
@@ -143,30 +127,15 @@ def main() -> None:
     )
     qrels_stance["stance_label"] = qrels_stance["label"]
 
-    run_names = _run_names()
-    runs: list[tuple[str, Transformer]] = [
-        (
-            " + ".join((
-                f"{team_directory_path.stem} {run_file_path.stem}", *run_names
-            )),
-            _run(run_file_path)
-        )
+    runs: list[NamedPipeline] = [
+        _run(run_file_path, run_config)
         for team_directory_path in CONFIG.runs_directory_path.iterdir()
         if team_directory_path.is_dir()
         for run_file_path in (team_directory_path / "output").iterdir()
+        for run_config in CONFIG.runs
     ]
-    reranker_names = _reranker_names()
-    reranked_runs: list[tuple[str, Transformer]] = [
-        (
-            " + ".join((name, *reranker_names)),
-            _reranker(pipeline)
-        )
-        for name, pipeline in runs
-    ]
-    all_runs = interleave(runs, reranked_runs)
-    all_names, all_systems = unzip(all_runs)
-    all_names: list[str] = list(all_names)
-    all_systems: list[Transformer] = list(all_systems)
+    all_names: list[str] = [run.name for run in runs]
+    all_systems: list[Transformer] = [run.pipeline for run in runs]
 
     print("Compute relevance measures.")
     # noinspection PyTypeChecker

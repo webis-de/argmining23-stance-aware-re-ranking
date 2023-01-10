@@ -1,6 +1,6 @@
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Optional
+from typing import Optional, List
 
 from dataclasses_json import dataclass_json, LetterCase, config
 from ir_measures import parse_measure, Measure
@@ -11,6 +11,26 @@ import fare.metric.fairness
 from fare.modules.fairness_reranker import FairnessReranker
 from fare.modules.stance_reranker import StanceReranker
 from fare.modules.stance_tagger import StanceTagger
+
+
+@dataclass_json(letter_case=LetterCase.CAMEL)
+@dataclass
+class RunConfig:
+    stance_tagger: StanceTagger = field(metadata=config(
+        decoder=StanceTagger
+    ))
+    stance_reranker: StanceReranker = field(metadata=config(
+        decoder=StanceReranker
+    ))
+    fairness_reranker: FairnessReranker = field(
+        metadata=config(
+            decoder=FairnessReranker
+        )
+    )
+    stance_tagger_threshold: float = 0.0
+    stance_tagger_cutoff: Optional[int] = None
+    stance_reranker_cutoff: Optional[int] = None
+    fairness_reranker_cutoff: Optional[int] = None
 
 
 @dataclass_json(letter_case=LetterCase.CAMEL)
@@ -38,54 +58,20 @@ class Config:
         metadata=config(encoder=str, decoder=Path)
     )
 
-    stance_tagger: StanceTagger = field(
-        metadata=config(
-            encoder=lambda tagger: tagger.value,
-            decoder=StanceTagger
-        )
-    )
-    stance_filter_threshold: float
+    runs: List[RunConfig]
 
-    stance_reranker: StanceReranker = field(
-        metadata=config(
-            encoder=lambda reranker: reranker.value,
-            decoder=StanceReranker
-        )
-    )
-    stance_reranker_cutoff: Optional[int]
-
-    fairness_reranker: FairnessReranker = field(
-        metadata=config(
-            encoder=lambda reranker: reranker.value,
-            decoder=FairnessReranker
-        )
-    )
-    fairness_reranker_cutoff: Optional[int]
-
-    measures_relevance: list[Measure] = field(
-        metadata=config(
-            encoder=lambda metrics: [str(metric) for metric in metrics],
-            decoder=lambda metrics: [
-                parse_measure(metric) for metric in metrics
-            ]
-        )
-    )
-    measures_quality: list[Measure] = field(
-        metadata=config(
-            encoder=lambda metrics: [str(metric) for metric in metrics],
-            decoder=lambda metrics: [
-                parse_measure(metric) for metric in metrics
-            ]
-        )
-    )
-    measures_stance: list[Measure] = field(
-        metadata=config(
-            encoder=lambda metrics: [str(metric) for metric in metrics],
-            decoder=lambda metrics: [
-                parse_measure(metric) for metric in metrics
-            ]
-        )
-    )
+    measures_relevance: list[Measure] = field(metadata=config(
+        decoder=lambda metrics: [parse_measure(metric) for metric in metrics]
+    ))
+    measures_quality: list[Measure] = field(metadata=config(
+        decoder=lambda metrics: [parse_measure(metric) for metric in metrics]
+    ))
+    measures_stance: list[Measure] = field(metadata=config(
+        decoder=lambda metrics: [parse_measure(metric) for metric in metrics]
+    ))
+    measures_diversity: list[Measure] = field(metadata=config(
+        decoder=lambda metrics: [parse_measure(metric) for metric in metrics]
+    ))
     measures_per_query: bool
 
     filter_by_qrels: bool
