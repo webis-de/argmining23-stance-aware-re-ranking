@@ -57,6 +57,9 @@ class Config:
     cache_directory_path: Path = field(
         metadata=config(encoder=str, decoder=Path)
     )
+    metrics_output_file_path: Path = field(
+        metadata=config(encoder=str, decoder=Path)
+    )
 
     runs: List[RunConfig]
 

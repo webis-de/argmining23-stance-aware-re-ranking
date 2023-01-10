@@ -3,6 +3,7 @@ from typing import NamedTuple
 
 from pyterrier import init
 
+from fare import logger
 from fare.config import CONFIG, RunConfig
 from fare.modules.fairness_reranker import FairnessReranker
 from fare.modules.stance_reranker import StanceReranker
@@ -198,7 +199,17 @@ def main() -> None:
         return column
 
     experiment.columns = experiment.columns.map(rename_column)
-    print(experiment.to_string(min_rows=len(experiment)))
+    if CONFIG.metrics_output_file_path.suffix == ".csv":
+        experiment.to_csv(CONFIG.metrics_output_file_path, index=False)
+    if CONFIG.metrics_output_file_path.suffix == ".xlsx":
+        if CONFIG.measures_per_query:
+            logger.warning(
+                "Evaluation measures per query "
+                "might generate too large Excel sheet."
+            )
+        experiment.to_excel(CONFIG.metrics_output_file_path, index=False)
+    if not CONFIG.measures_per_query:
+        print(experiment.to_string(min_rows=len(experiment)))
 
 
 if __name__ == '__main__':
