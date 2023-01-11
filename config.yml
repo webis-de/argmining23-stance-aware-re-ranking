@@ -5,8 +5,10 @@ qrelsStanceFilePath: data/qrels/touche-task2-2022-stance.qrels
 runsDirectoryPath: data/runs/
 corpusFilePath: data/corpus/touche-task2-passages-version-002.jsonl
 cacheDirectoryPath: data/cache/
+metricsOutputFilePath: data/metrics.csv
 #metricsOutputFilePath: data/metrics.xlsx
-metricsOutputFilePath: data/metrics-per-query.csv
+#metricsOutputFilePath: data/metrics-per-query.csv
+#metricsOutputFilePath: data/metrics-per-query.xlsx
 
 runs:
 - stanceTagger: original
@@ -52,8 +54,8 @@ measuresStance:
 - rRD(group_col='stance_label',tie_breaking='group-ascending',groups='FIRST,SECOND,NEUTRAL')@5
 measuresDiversity:
 - alpha_nDCG@5
-#measuresPerQuery: false
-measuresPerQuery: true
+measuresPerQuery: false
+#measuresPerQuery: true
 
 # Remove documents without judgments before evaluation.
 #filterByQrels: true
