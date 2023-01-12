@@ -6,21 +6,22 @@ from pandas import DataFrame, Series, read_csv, merge
 from pyterrier.transformer import Transformer, IdentityTransformer
 from torch.cuda import is_available
 from tqdm.auto import tqdm
-from transformers import Pipeline, Text2TextGenerationPipeline, AutoModel, \
-    AutoTokenizer
+from transformers import (
+    Pipeline, Text2TextGenerationPipeline, AutoTokenizer, AutoModelForSeq2SeqLM
+)
 
 from fare.utils.stance import stance_value, stance_label
 
 
 @dataclass(frozen=True)
-class T0StanceTagger(Transformer):
+class TextGenerationStanceTagger(Transformer):
     model: str
     verbose: bool = False
 
     @cached_property
     def _pipeline(self) -> Pipeline:
         return Text2TextGenerationPipeline(
-            model=AutoModel.from_pretrained(self.model),
+            model=AutoModelForSeq2SeqLM.from_pretrained(self.model),
             tokenizer=AutoTokenizer.from_pretrained(self.model),
             device="cuda:0" if is_available() else "cpu"
         )
@@ -42,10 +43,10 @@ class T0StanceTagger(Transformer):
     @staticmethod
     def _tasks(row: Series) -> list[str]:
         return [
-            T0StanceTagger._task_pro(row, "object_first"),
-            T0StanceTagger._task_pro(row, "object_second"),
-            T0StanceTagger._task_con(row, "object_first"),
-            T0StanceTagger._task_con(row, "object_second"),
+            TextGenerationStanceTagger._task_pro(row, "object_first"),
+            TextGenerationStanceTagger._task_pro(row, "object_second"),
+            TextGenerationStanceTagger._task_con(row, "object_first"),
+            TextGenerationStanceTagger._task_con(row, "object_second"),
         ]
 
     def _stance_single_target(
@@ -101,13 +102,7 @@ class T0StanceTagger(Transformer):
             self._stance_multi_target(row)
             for _, row in rows
         ]
-
-        def threshold_stance_label(value: float) -> str:
-            return stance_label(value)
-
-        ranking["stance_label"] = ranking["stance_value"].map(
-            threshold_stance_label
-        )
+        ranking["stance_label"] = ranking["stance_value"].map(stance_label)
         return ranking
 
 
@@ -143,6 +138,7 @@ class StanceTagger(Transformer, Enum):
     T0 = "bigscience/T0"
     T0pp = "bigscience/T0pp"
     T0_3B = "bigscience/T0_3B"
+    FLAN_T5_BASE = "google/flan-t5-base"
     GROUND_TRUTH = "ground-truth"
 
     value: str
@@ -153,14 +149,19 @@ class StanceTagger(Transformer, Enum):
             return IdentityTransformer()
         elif self == StanceTagger.GROUND_TRUTH:
             return GroundTruthStanceTagger()
-        elif self in {
-            StanceTagger.T0,
-            StanceTagger.T0pp,
-            StanceTagger.T0_3B,
-        }:
-            return T0StanceTagger(self.value, verbose=True)
+        elif self in _TEXT_GENERATION_MODELS:
+            # noinspection PyTypeChecker
+            return TextGenerationStanceTagger(self.value, verbose=True)
         else:
             raise ValueError(f"Unknown stance tagger: {self}")
 
     def transform(self, ranking: DataFrame) -> DataFrame:
         return self.transformer.transform(ranking)
+
+
+_TEXT_GENERATION_MODELS = {
+    StanceTagger.T0,
+    StanceTagger.T0pp,
+    StanceTagger.T0_3B,
+    StanceTagger.FLAN_T5_BASE
+}
