@@ -140,7 +140,7 @@ def _pairwise_t_test(experiment: DataFrame) -> DataFrame:
     measure_columns = [
         measure
         for measure in experiment.columns
-        if measure not in ("qid", "run", "name", "name_index")
+        if measure not in ("qid", "run", "name", "name_index", "index")
     ]
 
     for measure in measure_columns:
