@@ -41,9 +41,9 @@ runs:
   fairnessReranker: alternating-stance
   fairnessRerankerCutoff: 20
 
-maxTeams: -1
+maxTeams: null
 #maxTeams: 3
-maxRunsPerTeam: -1
+maxRunsPerTeam: null
 #maxRunsPerTeam: 2
 
 measuresRelevance:
