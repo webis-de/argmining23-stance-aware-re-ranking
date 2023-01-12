@@ -7,35 +7,44 @@ corpusFilePath: data/corpus/touche-task2-passages-version-002.jsonl
 cacheDirectoryPath: data/cache/
 
 runs:
+#- stanceTagger: original
+#  stanceTagger: ground-truth
+#  stanceTagger: bigscience/T0
+#  stanceTagger: bigscience/T0pp
+#  stanceTagger: bigscience/T0_3B
+#  stanceTaggerThreshold: 0.00
+#  stanceTaggerCutoff: 20
+#  stanceReranker: stance-first # FIRST, SECOND, or NEUTRAL
+#  stanceReranker: subjective-stance-first # FIRST or SECOND
+#  stanceReranker: original
+#  stanceRerankerCutoff: 20
+#  fairnessReranker: original
+#  fairnessReranker: alternating-stance
+#  fairnessReranker: inverse-stance-gain
+#  fairnessReranker: boost-minority-stance
+#  fairnessRerankerCutoff: 20
 - stanceTagger: original
   stanceReranker: original
   fairnessReranker: original
+#- stanceTagger: google/flan-t5-base
+#  stanceTaggerCutoff: 20
+#  stanceReranker: original
+#  fairnessReranker: original
 - stanceTagger: ground-truth
-  #stanceTagger: bigscience/T0
-  #stanceTagger: bigscience/T0pp
-  #stanceTagger: bigscience/T0_3B
-  stanceTaggerThreshold: 0.00
-  #stanceTaggerThreshold: 0.25
-  #stanceTaggerThreshold: 0.50
-  stanceTaggerCutoff: 20
   stanceReranker: original
   fairnessReranker: original
 - stanceTagger: ground-truth
-  stanceTaggerThreshold: 0.00
-  stanceTaggerCutoff: 20
-  stanceReranker: stance-first # FIRST, SECOND, or NEUTRAL
-  #stanceReranker: subjective-stance-first # FIRST or SECOND
-  stanceRerankerCutoff: 20
+  stanceReranker: stance-first
   fairnessReranker: original
 - stanceTagger: ground-truth
-  stanceTaggerThreshold: 0.00
-  stanceTaggerCutoff: 20
   stanceReranker: stance-first
-  stanceRerankerCutoff: 20
   fairnessReranker: alternating-stance
-  #fairnessReranker: inverse-stance-gain
-  #fairnessReranker: boost-minority-stance
   fairnessRerankerCutoff: 20
+
+maxTeams: -1
+#maxTeams: 2
+maxRunsPerTeam: -1
+#maxRunsPerTeam: 1
 
 measuresRelevance:
 - nDCG@5
@@ -50,12 +59,10 @@ measuresStance:
 - rRD(group_col='stance_label',tie_breaking='group-ascending',groups='FIRST,SECOND,NEUTRAL')@5
 measuresDiversity:
 - alpha_nDCG@5
-measuresPerQuery: false
-#measuresPerQuery: true
+#measuresPerQuery: false
+measuresPerQuery: true
 
 significanceLevel: 0.05
-significanceAllPairs: false
-#significanceAllPairs: true
 
 metricsOutputFilePath: data/metrics.csv
 #metricsOutputFilePath: data/metrics.xlsx

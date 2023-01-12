@@ -5,7 +5,7 @@ from fare.config import CONFIG
 init(no_download=CONFIG.offline)
 
 from collections import defaultdict
-from itertools import pairwise, combinations
+from itertools import combinations
 from pathlib import Path
 from typing import NamedTuple
 
@@ -120,10 +120,10 @@ def _pairwise_t_test(experiment: DataFrame) -> DataFrame:
     experiment = experiment.copy()
 
     names = experiment["name"].unique()
-    if CONFIG.significance_all_pairs:
-        name_pairs = list(combinations(names, 2))
-    else:
-        name_pairs = list(pairwise(names))
+    name_index = {name: i + 1 for i, name in enumerate(names)}
+    name_pairs = list(combinations(names, 2))
+
+    experiment["name_index"] = experiment["name"].map(name_index)
 
     significance_level = CONFIG.significance_level
     significance_level /= len(name_pairs)  # Bonferroni correction.
@@ -138,26 +138,23 @@ def _pairwise_t_test(experiment: DataFrame) -> DataFrame:
     measure_columns = [
         measure
         for measure in experiment.columns
-        if measure not in ("qid", "run", "name", "topic")
+        if measure not in ("qid", "run", "name", "name_index")
     ]
 
     for measure in measure_columns:
-        pairwise_significance: dict[str, set[str]] = defaultdict(set)
+        pairwise_significance: dict[str, set[int]] = defaultdict(set)
         for run1, run2 in name_pairs:
             if is_significant(run1, run2, measure):
-                pairwise_significance[run1].add(run2)
-                pairwise_significance[run2].add(run1)
+                pairwise_significance[run1].add(name_index[run2])
+                pairwise_significance[run2].add(name_index[run1])
 
-        if CONFIG.significance_all_pairs:
-            experiment[f"{measure} t-test"] = experiment["name"] \
-                .map(lambda name: "; ".join(pairwise_significance[name]))
-        else:
-            experiment[f"{measure} t-test"] = [None, *[
-                name_prev in pairwise_significance[name]
-                for name_prev, name in name_pairs
-            ]] * len(experiment["qid"].unique())
+        experiment[f"{measure} t-test"] = experiment["name"].map(
+            lambda name: ",".join(
+                map(str, sorted(pairwise_significance[name]))
+            )
+        )
 
-    new_columns = ["qid", "run", "name"]
+    new_columns = ["qid", "run", "name", "name_index"]
     for measure in measure_columns:
         new_columns.append(measure)
         new_columns.append(f"{measure} t-test")
@@ -180,10 +177,14 @@ def main() -> None:
     runs: list[NamedPipeline] = [
         _run(run_file_path, run_config)
         for team_directory_path in
-        CONFIG.runs_directory_path.iterdir()
+        sorted(
+            CONFIG.runs_directory_path.iterdir()
+        )[:CONFIG.max_teams]
         if team_directory_path.is_dir()
         for run_file_path in
-        (team_directory_path / "output").iterdir()
+        sorted(
+            (team_directory_path / "output").iterdir()
+        )[:CONFIG.max_runs_per_team]
         for run_config in CONFIG.runs
     ]
     all_names: list[str] = [run.name for run in runs]
@@ -286,26 +287,23 @@ def main() -> None:
     experiment["run"] = experiment["name"].apply(
         lambda name: name.split(" + ")[0]
     )
-    experiment["name"] = [
-        name.removeprefix(f"{run} + ")
-        for run, name in zip(experiment["run"], experiment["name"])
-    ]
     experiment = experiment.groupby(by="run", sort=False, group_keys=False) \
         .apply(_pairwise_t_test)
+    del experiment["run"]
 
     # Aggregate results.
     if not CONFIG.measures_per_query:
         aggregations = {
             column:
                 "first"
-                if (column.endswith("t-test") or "run" == column
-                    or "name" == column)
+                if (column.endswith("t-test") or column == "run"
+                    or column == "name" or column == "name_index")
                 else "mean"
             for column in experiment.columns
             if column != "qid"
         }
         experiment = experiment \
-            .groupby(by=["run", "name"], sort=False, group_keys=True) \
+            .groupby(by=["name", "name_index"], sort=False, group_keys=True) \
             .aggregate(aggregations)
 
         # Export results.
@@ -313,10 +311,6 @@ def main() -> None:
     if CONFIG.measures_per_query:
         output_path = output_path.with_suffix(
             f".perquery{output_path.suffix}"
-        )
-    if CONFIG.significance_all_pairs:
-        output_path = output_path.with_suffix(
-            f".all-pairs{output_path.suffix}"
         )
     if output_path.suffix == ".csv":
         experiment.to_csv(output_path, index=False, float_format="%.3f")

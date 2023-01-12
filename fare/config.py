@@ -61,6 +61,9 @@ class Config:
         metadata=config(encoder=str, decoder=Path)
     )
 
+    max_teams: Optional[int]
+    max_runs_per_team: Optional[int]
+
     runs: List[RunConfig]
 
     measures_relevance: list[Measure] = field(metadata=config(
@@ -78,7 +81,6 @@ class Config:
     measures_per_query: bool
 
     significance_level: Optional[float]
-    significance_all_pairs: bool
 
     filter_by_qrels: bool
 
