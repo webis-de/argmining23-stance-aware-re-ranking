@@ -42,9 +42,9 @@ runs:
   fairnessRerankerCutoff: 20
 
 maxTeams: -1
-#maxTeams: 2
+#maxTeams: 3
 maxRunsPerTeam: -1
-#maxRunsPerTeam: 1
+#maxRunsPerTeam: 2
 
 measuresRelevance:
 - nDCG@5
@@ -59,8 +59,8 @@ measuresStance:
 - rRD(group_col='stance_label',tie_breaking='group-ascending',groups='FIRST,SECOND,NEUTRAL')@5
 measuresDiversity:
 - alpha_nDCG@5
-#measuresPerQuery: false
-measuresPerQuery: true
+measuresPerQuery: false
+#measuresPerQuery: true
 
 significanceLevel: 0.05
 
