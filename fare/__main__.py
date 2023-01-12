@@ -1,22 +1,26 @@
-from pathlib import Path
-from typing import NamedTuple
-
 from pyterrier import init
 
-from fare.config import CONFIG, RunConfig
-from fare.modules.fairness_reranker import FairnessReranker
-from fare.modules.stance_reranker import StanceReranker
-from fare.modules.stance_tagger import StanceTagger
+from fare.config import CONFIG
 
 init(no_download=CONFIG.offline)
+
+from collections import defaultdict
+from itertools import pairwise, combinations
+from pathlib import Path
+from typing import NamedTuple
 
 from pandas import DataFrame, merge, Series
 from pyterrier.io import read_qrels
 from pyterrier.pipelines import Experiment
 from pyterrier.transformer import Transformer
+from scipy.stats import ttest_rel
 
+from fare.config import RunConfig
+from fare.modules.fairness_reranker import FairnessReranker
 from fare.modules.runs_loader import RunLoader
 from fare.modules.stance_filter import StanceFilter
+from fare.modules.stance_reranker import StanceReranker
+from fare.modules.stance_tagger import StanceTagger
 from fare.modules.text_loader import TextLoader
 from fare.modules.topics_loader import parse_topics
 
@@ -114,6 +118,54 @@ def _run(
     return NamedPipeline(names, pipeline)
 
 
+def _pairwise_t_test(experiment: DataFrame) -> DataFrame:
+    experiment = experiment.copy()
+
+    names = experiment["name"].unique()
+    if CONFIG.significance_all_pairs:
+        name_pairs = list(combinations(names, 2))
+    else:
+        name_pairs = list(pairwise(names))
+
+    significance_level = CONFIG.significance_level
+    significance_level /= len(name_pairs)  # Bonferroni correction.
+
+    def is_significant(name1: str, name2: str, measure: str) -> bool:
+        experiment1 = experiment[experiment["name"] == name1]
+        experiment2 = experiment[experiment["name"] == name2]
+        t_test = ttest_rel(experiment1[measure], experiment2[measure])
+        significant = t_test.pvalue < significance_level
+        return significant
+
+    measure_columns = [
+        measure
+        for measure in experiment.columns
+        if measure not in ("qid", "run", "name", "topic")
+    ]
+
+    for measure in measure_columns:
+        pairwise_significance: dict[str, set[str]] = defaultdict(set)
+        for run1, run2 in name_pairs:
+            if is_significant(run1, run2, measure):
+                pairwise_significance[run1].add(run2)
+                pairwise_significance[run2].add(run1)
+
+        if CONFIG.significance_all_pairs:
+            experiment[f"{measure} t-test"] = experiment["name"] \
+                .map(lambda name: "; ".join(pairwise_significance[name]))
+        else:
+            experiment[f"{measure} t-test"] = [None, *[
+                name_prev in pairwise_significance[name]
+                for name_prev, name in name_pairs
+            ]] * len(experiment["qid"].unique())
+
+    new_columns = ["qid", "run", "name"]
+    for measure in measure_columns:
+        new_columns.append(measure)
+        new_columns.append(f"{measure} t-test")
+    return experiment[new_columns]
+
+
 def main() -> None:
     topics: DataFrame = parse_topics()
     qrels_relevance: DataFrame = read_qrels(
@@ -129,13 +181,21 @@ def main() -> None:
 
     runs: list[NamedPipeline] = [
         _run(run_file_path, run_config)
-        for team_directory_path in CONFIG.runs_directory_path.iterdir()
+        for team_directory_path in
+        CONFIG.runs_directory_path.iterdir()
         if team_directory_path.is_dir()
-        for run_file_path in (team_directory_path / "output").iterdir()
+        for run_file_path in
+        (team_directory_path / "output").iterdir()
         for run_config in CONFIG.runs
     ]
     all_names: list[str] = [run.name for run in runs]
     all_systems: list[Transformer] = [run.pipeline for run in runs]
+
+    empty_experiment: DataFrame = merge(
+        topics["qid"],
+        Series(all_names, name="name"),
+        how="cross",
+    )
 
     print("Compute relevance measures.")
     # noinspection PyTypeChecker
@@ -146,10 +206,9 @@ def main() -> None:
         eval_metrics=CONFIG.measures_relevance,
         names=all_names,
         filter_by_qrels=CONFIG.filter_by_qrels,
-        round=3,
         verbose=True,
-        perquery=CONFIG.measures_per_query,
-    ) if len(CONFIG.measures_relevance) > 0 else Series(all_names, name="name")
+        perquery=True,
+    ) if len(CONFIG.measures_relevance) > 0 else empty_experiment
     print("Compute quality measures.")
     # noinspection PyTypeChecker
     quality = Experiment(
@@ -159,10 +218,9 @@ def main() -> None:
         eval_metrics=CONFIG.measures_quality,
         names=all_names,
         filter_by_qrels=CONFIG.filter_by_qrels,
-        round=3,
         verbose=True,
-        perquery=CONFIG.measures_per_query,
-    ) if len(CONFIG.measures_quality) > 0 else Series(all_names, name="name")
+        perquery=True,
+    ) if len(CONFIG.measures_quality) > 0 else empty_experiment
     print("Compute stance measures.")
     # noinspection PyTypeChecker
     stance = Experiment(
@@ -172,42 +230,40 @@ def main() -> None:
         eval_metrics=CONFIG.measures_stance,
         names=all_names,
         filter_by_qrels=CONFIG.filter_by_qrels,
-        round=3,
         verbose=True,
-        perquery=CONFIG.measures_per_query,
-    ) if len(CONFIG.measures_stance) > 0 else Series(all_names, name="name")
-    merge_columns = ["name"]
-    if CONFIG.measures_per_query:
-        relevance = relevance.pivot_table(
-            index=["qid", "name"],
-            columns="measure",
-            values="value",
-            aggfunc="first",
-        )
-        quality = quality.pivot_table(
-            index=["qid", "name"],
-            columns="measure",
-            values="value",
-            aggfunc="first",
-        )
-        stance = stance.pivot_table(
-            index=["qid", "name"],
-            columns="measure",
-            values="value",
-            aggfunc="first",
-        )
-        merge_columns.append("qid")
+        perquery=True,
+    ) if len(CONFIG.measures_stance) > 0 else empty_experiment
+
+    relevance = relevance.pivot_table(
+        index=["qid", "name"],
+        columns="measure",
+        values="value",
+        aggfunc="first",
+    )
+    quality = quality.pivot_table(
+        index=["qid", "name"],
+        columns="measure",
+        values="value",
+        aggfunc="first",
+    )
+    stance = stance.pivot_table(
+        index=["qid", "name"],
+        columns="measure",
+        values="value",
+        aggfunc="first",
+    )
+
     experiment = merge(
         merge(
             relevance,
             quality,
-            on=merge_columns,
+            on=["qid", "name"],
             suffixes=(" relevance", " quality")
         ),
         stance,
-        on=merge_columns,
+        on=["qid", "name"],
         suffixes=("", " stance")
-    ).reset_index()
+    ).reset_index(drop=False)
 
     def rename_column(column: str) -> str:
         column = column.replace("group_col='stance_label'", "")
@@ -221,10 +277,53 @@ def main() -> None:
         return column
 
     experiment.columns = experiment.columns.map(rename_column)
-    if CONFIG.metrics_output_file_path.suffix == ".csv":
-        experiment.to_csv(CONFIG.metrics_output_file_path, index=False)
-    if CONFIG.metrics_output_file_path.suffix == ".xlsx":
-        experiment.to_excel(CONFIG.metrics_output_file_path, index=False)
+
+    def fix_name_order(df: DataFrame) -> DataFrame:
+        df = df.set_index("name")
+        df = df.loc[all_names]
+        return df.reset_index(drop=False)
+
+    experiment = experiment.groupby("qid").apply(fix_name_order)
+
+    experiment["run"] = experiment["name"].apply(
+        lambda name: name.split(" + ")[0]
+    )
+    experiment["name"] = [
+        name.removeprefix(f"{run} + ")
+        for run, name in zip(experiment["run"], experiment["name"])
+    ]
+    experiment = experiment.groupby(by="run", sort=False, group_keys=False) \
+        .apply(_pairwise_t_test)
+
+    # Aggregate results.
+    if not CONFIG.measures_per_query:
+        aggregations = {
+            column:
+                "first"
+                if (column.endswith("t-test") or "run" == column
+                    or "name" == column)
+                else "mean"
+            for column in experiment.columns
+            if column != "qid"
+        }
+        experiment = experiment \
+            .groupby(by=["run", "name"], sort=False, group_keys=True) \
+            .aggregate(aggregations)
+
+        # Export results.
+    output_path = CONFIG.metrics_output_file_path
+    if CONFIG.measures_per_query:
+        output_path = output_path.with_suffix(
+            f".perquery{output_path.suffix}"
+        )
+    if CONFIG.significance_all_pairs:
+        output_path = output_path.with_suffix(
+            f".all-pairs{output_path.suffix}"
+        )
+    if output_path.suffix == ".csv":
+        experiment.to_csv(output_path, index=False, float_format="%.3f")
+    if output_path.suffix == ".xlsx":
+        experiment.to_excel(output_path, index=False)
 
 
 if __name__ == '__main__':

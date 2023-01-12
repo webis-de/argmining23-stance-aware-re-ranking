@@ -77,6 +77,9 @@ class Config:
     ))
     measures_per_query: bool
 
+    significance_level: Optional[float]
+    significance_all_pairs: bool
+
     filter_by_qrels: bool
 
     offline: bool
