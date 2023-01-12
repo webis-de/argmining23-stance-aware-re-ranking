@@ -126,7 +126,9 @@ def _pairwise_t_test(experiment: DataFrame) -> DataFrame:
     experiment["name_index"] = experiment["name"].map(name_index)
 
     significance_level = CONFIG.significance_level
-    significance_level /= len(name_pairs)  # Bonferroni correction.
+    if len(name_pairs) > 0:
+        # Bonferroni correction.
+        significance_level /= len(name_pairs)
 
     def is_significant(name1: str, name2: str, measure: str) -> bool:
         experiment1 = experiment[experiment["name"] == name1]
