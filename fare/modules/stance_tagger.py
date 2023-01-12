@@ -1,6 +1,7 @@
 from dataclasses import dataclass, field
 from enum import Enum
 from functools import cached_property
+from math import nan, isnan
 from statistics import mean
 
 from diskcache import Cache
@@ -22,7 +23,7 @@ class TextGenerationStanceTagger(Transformer):
     verbose: bool = False
 
     # To invalidate caching
-    version: int = field(init=False, repr=True, default=1)
+    version: int = field(init=False, repr=True, default=2)
 
     def __post_init__(self):
         from fare.utils.nltk import download_nltk_dependencies
@@ -42,14 +43,6 @@ class TextGenerationStanceTagger(Transformer):
         cache_path = CONFIG.cache_directory_path / "text-generation" / self.model
         return Cache(str(cache_path))
 
-    @staticmethod
-    def _task_pro(sentence: str, object: str) -> str:
-        return f"{sentence}\n\nIs this sentence pro {object}? yes or no"
-
-    @staticmethod
-    def _task_con(sentence: str, object: str) -> str:
-        return f"{sentence}\n\nIs this sentence against {object}? yes or no"
-
     def _generate(self, task: str) -> str:
         if task not in self._cache:
             answer = self._pipeline(task)[0]["generated_text"].strip().lower()
@@ -59,11 +52,15 @@ class TextGenerationStanceTagger(Transformer):
     def _sentence_stance_single_target(
             self,
             sentence: str,
-            object: str,
+            comparative_object: str,
     ) -> float:
-        task_pro = self._task_pro(sentence, object)
+        if comparative_object not in sentence:
+            return nan
+        task_pro = f"{sentence}\n\n" \
+                   f"Is this sentence pro {comparative_object}? yes or no"
         answer_pro = self._generate(task_pro)
-        task_con = self._task_con(sentence, object)
+        task_con = f"{sentence}\n\n" \
+                   f"Is this sentence against {comparative_object}? yes or no"
         answer_con = self._generate(task_con)
         is_pro = (
                 ("yes" in answer_pro or "pro" in answer_pro) and
@@ -73,12 +70,14 @@ class TextGenerationStanceTagger(Transformer):
                 ("yes" in answer_con or "con" in answer_con) and
                 "no" not in answer_con
         )
-        if is_pro and not is_con:
+        if is_pro and is_con:
+            return 0
+        elif is_pro and not is_con:
             return 1
         elif is_con and not is_pro:
             return -1
         else:
-            return 0
+            return nan
 
     def _sentence_stance_multi_target(
             self,
@@ -88,7 +87,14 @@ class TextGenerationStanceTagger(Transformer):
     ) -> float:
         stance_a = self._sentence_stance_single_target(sentence, object_first)
         stance_b = self._sentence_stance_single_target(sentence, object_second)
-        return stance_a - stance_b
+        if isnan(stance_a) and isnan(stance_b):
+            return nan
+        elif isnan(stance_a):
+            return -stance_b
+        elif isnan(stance_b):
+            return stance_a
+        else:
+            return stance_a - stance_b
 
     def _stance_multi_target(self, row: Series) -> float:
         object_first = row["object_first"]
