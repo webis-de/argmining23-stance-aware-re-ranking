@@ -50,15 +50,15 @@ measuresQuality:
 - nDCG@5
 measuresStance:
 - F1
+- F1_Touche
 #- rND(group_col='stance_label',tie_breaking='group-ascending')@5
 #- rKL(group_col='stance_label',tie_breaking='group-ascending')@5
 #- rRD(group_col='stance_label',tie_breaking='group-ascending')@5
 - rND(group_col='stance_label',tie_breaking='group-ascending',groups='FIRST,SECOND,NEUTRAL')@5
 - rKL(group_col='stance_label',tie_breaking='group-ascending',groups='FIRST,SECOND,NEUTRAL')@5
 - rRD(group_col='stance_label',tie_breaking='group-ascending',groups='FIRST,SECOND,NEUTRAL')@5
-measuresDiversity:
-- alpha_nDCG@5
-measuresPerQuery: false
+#measuresDiversity:
+#- alpha_nDCG@5
 #measuresPerQuery: true
 
 significanceLevel: 0.05
