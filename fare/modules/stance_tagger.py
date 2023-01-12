@@ -1,7 +1,10 @@
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from enum import Enum
 from functools import cached_property
+from statistics import mean
 
+from diskcache import Cache
+from nltk import sent_tokenize
 from pandas import DataFrame, Series, read_csv, merge
 from pyterrier.transformer import Transformer, IdentityTransformer
 from torch.cuda import is_available
@@ -18,6 +21,13 @@ class TextGenerationStanceTagger(Transformer):
     model: str
     verbose: bool = False
 
+    # To invalidate caching
+    version: int = field(init=False, repr=True, default=1)
+
+    def __post_init__(self):
+        from fare.utils.nltk import download_nltk_dependencies
+        download_nltk_dependencies("punkt")
+
     @cached_property
     def _pipeline(self) -> Pipeline:
         return Text2TextGenerationPipeline(
@@ -26,40 +36,35 @@ class TextGenerationStanceTagger(Transformer):
             device="cuda:0" if is_available() else "cpu"
         )
 
-    @staticmethod
-    def _task_pro(row: Series, object_col: str) -> str:
-        return (
-            f"{row['text']}\n\n"
-            f"Is this sentence pro {row[object_col]}? yes or no"
-        )
+    @cached_property
+    def _cache(self) -> Cache:
+        from fare.config import CONFIG
+        cache_path = CONFIG.cache_directory_path / "text-generation" / self.model
+        return Cache(str(cache_path))
 
     @staticmethod
-    def _task_con(row: Series, object_col: str) -> str:
-        return (
-            f"{row['text']}\n\n"
-            f"Is this sentence against {row[object_col]}? yes or no"
-        )
+    def _task_pro(sentence: str, object: str) -> str:
+        return f"{sentence}\n\nIs this sentence pro {object}? yes or no"
 
     @staticmethod
-    def _tasks(row: Series) -> list[str]:
-        return [
-            TextGenerationStanceTagger._task_pro(row, "object_first"),
-            TextGenerationStanceTagger._task_pro(row, "object_second"),
-            TextGenerationStanceTagger._task_con(row, "object_first"),
-            TextGenerationStanceTagger._task_con(row, "object_second"),
-        ]
+    def _task_con(sentence: str, object: str) -> str:
+        return f"{sentence}\n\nIs this sentence against {object}? yes or no"
 
-    def _stance_single_target(
+    def _generate(self, task: str) -> str:
+        if task not in self._cache:
+            answer = self._pipeline(task)[0]["generated_text"].strip().lower()
+            self._cache[task] = answer
+        return self._cache[task]
+
+    def _sentence_stance_single_target(
             self,
-            row: Series,
-            object_col: str,
+            sentence: str,
+            object: str,
     ) -> float:
-        task_pro = self._task_pro(row, object_col)
-        answer_pro = self._pipeline(task_pro)[0]["generated_text"] \
-            .strip().lower()
-        task_con = self._task_con(row, object_col)
-        answer_con = self._pipeline(task_con)[0]["generated_text"] \
-            .strip().lower()
+        task_pro = self._task_pro(sentence, object)
+        answer_pro = self._generate(task_pro)
+        task_con = self._task_con(sentence, object)
+        answer_con = self._generate(task_con)
         is_pro = (
                 ("yes" in answer_pro or "pro" in answer_pro) and
                 "no" not in answer_pro
@@ -75,13 +80,29 @@ class TextGenerationStanceTagger(Transformer):
         else:
             return 0
 
-    def _stance_multi_target(
+    def _sentence_stance_multi_target(
             self,
-            row: Series
+            sentence: str,
+            object_first: str,
+            object_second: str,
     ) -> float:
-        stance_a = self._stance_single_target(row, "object_first")
-        stance_b = self._stance_single_target(row, "object_second")
+        stance_a = self._sentence_stance_single_target(sentence, object_first)
+        stance_b = self._sentence_stance_single_target(sentence, object_second)
         return stance_a - stance_b
+
+    def _stance_multi_target(self, row: Series) -> float:
+        object_first = row["object_first"]
+        object_second = row["object_second"]
+        sentences = sent_tokenize(row["text"])
+        stances = [
+            self._sentence_stance_multi_target(
+                sentence,
+                object_first,
+                object_second,
+            )
+            for sentence in sentences
+        ]
+        return mean(stances)
 
     def transform(self, ranking: DataFrame) -> DataFrame:
         ranking = ranking.copy()
