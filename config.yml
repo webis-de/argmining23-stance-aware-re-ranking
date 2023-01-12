@@ -26,10 +26,10 @@ runs:
 - stanceTagger: original
   stanceReranker: original
   fairnessReranker: original
-#- stanceTagger: google/flan-t5-base
-#  stanceTaggerCutoff: 20
-#  stanceReranker: original
-#  fairnessReranker: original
+- stanceTagger: google/flan-t5-base
+  stanceTaggerCutoff: 100
+  stanceReranker: original
+  fairnessReranker: original
 - stanceTagger: ground-truth
   stanceReranker: original
   fairnessReranker: original
