@@ -62,30 +62,30 @@ class Config:
         metadata=config(encoder=str, decoder=Path)
     )
 
-    max_teams: Optional[int]
-    max_runs_per_team: Optional[int]
+    max_teams: Optional[int] = None
+    max_runs_per_team: Optional[int] = None
 
-    runs: List[RunConfig]
+    runs: List[RunConfig] = field(default_factory=list)
 
     measures_relevance: list[Measure] = field(metadata=config(
         decoder=lambda metrics: [parse_measure(metric) for metric in metrics]
-    ))
+    ), default_factory=list)
     measures_quality: list[Measure] = field(metadata=config(
         decoder=lambda metrics: [parse_measure(metric) for metric in metrics]
-    ))
+    ), default_factory=list)
     measures_stance: list[Measure] = field(metadata=config(
         decoder=lambda metrics: [parse_measure(metric) for metric in metrics]
-    ))
+    ), default_factory=list)
     measures_diversity: list[Measure] = field(metadata=config(
         decoder=lambda metrics: [parse_measure(metric) for metric in metrics]
-    ))
-    measures_per_query: bool
+    ), default_factory=list)
+    measures_per_query: bool = False
 
-    significance_level: Optional[float]
+    significance_level: float = 0.05
 
-    filter_by_qrels: bool
+    filter_by_qrels: bool = False
 
-    offline: bool
+    offline: bool = False
 
     def __post_init__(self):
         self.cache_directory_path.mkdir(exist_ok=True)
