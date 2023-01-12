@@ -62,12 +62,10 @@ def _run(
                    ) ^ pipeline
     pipeline = ~pipeline
 
-    if run_config.stance_tagger == StanceTagger.GROUND_TRUTH:
-        names.append("true stance")
-    elif run_config.stance_tagger != StanceTagger.ORIGINAL:
+    if run_config.stance_tagger != StanceTagger.ORIGINAL:
         name = run_config.stance_tagger.value
-        if run_config.stance_filter_threshold > 0:
-            name += f"({run_config.stance_filter_threshold}:f)"
+        if run_config.stance_tagger_threshold > 0:
+            name += f"({run_config.stance_tagger_threshold}:f)"
         if run_config.stance_tagger_cutoff is not None:
             name += f"@{run_config.stance_tagger_cutoff}"
         names.append(name)
@@ -104,7 +102,7 @@ def _run(
                    ) ^ pipeline
     pipeline = ~pipeline
 
-    if (run_config.fairness_reranker != StanceReranker.ORIGINAL and
+    if (run_config.fairness_reranker != FairnessReranker.ORIGINAL and
             (run_config.fairness_reranker_cutoff is None or
              run_config.fairness_reranker_cutoff > 0)):
         name = run_config.fairness_reranker.value
