@@ -3,11 +3,12 @@ from pathlib import Path
 from typing import Optional, List
 
 from dataclasses_json import dataclass_json, LetterCase, config
-from ir_measures import parse_measure, Measure
+from ir_measures import Measure
 from yaml import safe_load
 
 # noinspection PyUnresolvedReferences
 import fare.metric.fairness
+from fare.metric import parse_measure
 from fare.modules.fairness_reranker import FairnessReranker
 from fare.modules.stance_reranker import StanceReranker
 from fare.modules.stance_tagger import StanceTagger

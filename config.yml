@@ -51,6 +51,7 @@ measuresRelevance:
 measuresQuality:
 - nDCG@5
 measuresStance:
+- F1
 #- rND(group_col='stance_label',tie_breaking='group-ascending')@5
 #- rKL(group_col='stance_label',tie_breaking='group-ascending')@5
 #- rRD(group_col='stance_label',tie_breaking='group-ascending')@5
