@@ -213,6 +213,13 @@ def main() -> None:
         filter_by_qrels=CONFIG.filter_by_qrels,
         verbose=True,
         perquery=True,
+    ).pivot_table(
+        index=["qid", "name"],
+        columns="measure",
+        values="value",
+        aggfunc="first",
+    ).reset_index(
+        drop=False
     ) if len(CONFIG.measures_relevance) > 0 else empty_experiment
     print("Compute quality measures.")
     # noinspection PyTypeChecker
@@ -225,6 +232,13 @@ def main() -> None:
         filter_by_qrels=CONFIG.filter_by_qrels,
         verbose=True,
         perquery=True,
+    ).pivot_table(
+        index=["qid", "name"],
+        columns="measure",
+        values="value",
+        aggfunc="first",
+    ).reset_index(
+        drop=False
     ) if len(CONFIG.measures_quality) > 0 else empty_experiment
     print("Compute stance measures.")
     # noinspection PyTypeChecker
@@ -237,26 +251,14 @@ def main() -> None:
         filter_by_qrels=CONFIG.filter_by_qrels,
         verbose=True,
         perquery=True,
+    ).pivot_table(
+        index=["qid", "name"],
+        columns="measure",
+        values="value",
+        aggfunc="first",
+    ).reset_index(
+        drop=False
     ) if len(CONFIG.measures_stance) > 0 else empty_experiment
-
-    relevance = relevance.pivot_table(
-        index=["qid", "name"],
-        columns="measure",
-        values="value",
-        aggfunc="first",
-    )
-    quality = quality.pivot_table(
-        index=["qid", "name"],
-        columns="measure",
-        values="value",
-        aggfunc="first",
-    )
-    stance = stance.pivot_table(
-        index=["qid", "name"],
-        columns="measure",
-        values="value",
-        aggfunc="first",
-    )
 
     experiment = merge(
         merge(
