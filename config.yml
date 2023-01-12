@@ -41,9 +41,7 @@ runs:
   fairnessReranker: alternating-stance
   fairnessRerankerCutoff: 20
 
-maxTeams: null
 #maxTeams: 3
-maxRunsPerTeam: null
 #maxRunsPerTeam: 2
 
 measuresRelevance:
@@ -70,8 +68,7 @@ metricsOutputFilePath: data/metrics.csv
 
 # Remove documents without judgments before evaluation.
 #filterByQrels: true
-filterByQrels: false
 
 # Attempt to work offline.
 # Won't work unless PyTerrier and NLTK dependencies have previously been downloaded.
-offline: true
+#offline: true
