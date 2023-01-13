@@ -1,17 +1,19 @@
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from enum import Enum
 from functools import cached_property
 from math import nan, isnan
 from statistics import mean
 
 from diskcache import Cache
-from nltk import sent_tokenize
+from nltk import sent_tokenize, word_tokenize
 from pandas import DataFrame, Series, read_csv, merge
 from pyterrier.transformer import Transformer, IdentityTransformer
 from torch.cuda import is_available
 from tqdm.auto import tqdm
 from transformers import (
-    Pipeline, Text2TextGenerationPipeline, AutoTokenizer, AutoModelForSeq2SeqLM
+    Pipeline, Text2TextGenerationPipeline, AutoTokenizer,
+    AutoModelForSeq2SeqLM, AutoModelForSequenceClassification,
+    ZeroShotClassificationPipeline
 )
 
 from fare.utils.stance import stance_value, stance_label
@@ -21,9 +23,6 @@ from fare.utils.stance import stance_value, stance_label
 class TextGenerationStanceTagger(Transformer):
     model: str
     verbose: bool = False
-
-    # To invalidate caching
-    version: int = field(init=False, repr=True, default=2)
 
     def __post_init__(self):
         from fare.utils.nltk import download_nltk_dependencies
@@ -40,7 +39,8 @@ class TextGenerationStanceTagger(Transformer):
     @cached_property
     def _cache(self) -> Cache:
         from fare.config import CONFIG
-        cache_path = CONFIG.cache_directory_path / "text-generation" / self.model
+        cache_path = CONFIG.cache_directory_path / "text-generation" / \
+                     self.model
         return Cache(str(cache_path))
 
     def _generate(self, task: str) -> str:
@@ -108,7 +108,139 @@ class TextGenerationStanceTagger(Transformer):
             )
             for sentence in sentences
         ]
+        stances = [stance for stance in stances if not isnan(stance)]
+        if len(stances) == 0:
+            return nan
         return mean(stances)
+
+    def transform(self, ranking: DataFrame) -> DataFrame:
+        ranking = ranking.copy()
+        if "stance_value" in ranking.columns:
+            ranking.rename({"stance_value": "stance_value_original"})
+        if "stance_label" in ranking.columns:
+            ranking.rename({"stance_label": "stance_label_original"})
+
+        rows = ranking.iterrows()
+        if self.verbose:
+            rows = tqdm(
+                rows,
+                total=len(ranking),
+                desc=f"Tag stance with {self.model}",
+                unit="document",
+            )
+        ranking["stance_value"] = [
+            self._stance_multi_target(row)
+            for _, row in rows
+        ]
+        ranking["stance_label"] = ranking["stance_value"].map(stance_label)
+        return ranking
+
+
+@dataclass(frozen=True)
+class ZeroShotClassificationStanceTagger(Transformer):
+    model: str
+    verbose: bool = False
+    threshold: float = 0.25
+
+    def __post_init__(self):
+        from fare.utils.nltk import download_nltk_dependencies
+        download_nltk_dependencies("punkt")
+
+    @cached_property
+    def _pipeline(self) -> ZeroShotClassificationPipeline:
+        return ZeroShotClassificationPipeline(
+            model=AutoModelForSequenceClassification.from_pretrained(
+                self.model,
+            ),
+            tokenizer=AutoTokenizer.from_pretrained(self.model),
+            device="cuda:0" if is_available() else "cpu",
+            multi_label=True,
+        )
+
+    @cached_property
+    def _cache(self) -> Cache:
+        from fare.config import CONFIG
+        cache_path = CONFIG.cache_directory_path / "text-classification" / \
+                     self.model
+        return Cache(str(cache_path))
+
+    def _sentence_stance_multi_target(
+            self,
+            sentence: str,
+            object_first: str,
+            object_second: str,
+    ) -> float:
+        object_words = {
+            *word_tokenize(object_first),
+            *word_tokenize(object_second),
+        }
+        if not any(word in sentence for word in object_words):
+            return nan
+
+        cache_key = (sentence, object_first, object_second)
+        if cache_key not in self._cache:
+            result = self._pipeline(
+                sentence,
+                candidate_labels=[
+                    f"pro {object_first}",
+                    f"con {object_first}",
+                    f"pro {object_second}",
+                    f"con {object_second}",
+                ]
+            )
+            label_scores = {
+                label: score
+                for label, score in zip(result["labels"], result["scores"])
+            }
+            self._cache[cache_key] = label_scores
+        else:
+            label_scores = self._cache[cache_key]
+
+        pro_first = label_scores[f"pro {object_first}"]
+        con_first = label_scores[f"con {object_first}"]
+        pro_second = label_scores[f"pro {object_second}"]
+        con_second = label_scores[f"con {object_second}"]
+
+        stance_first: float
+        if pro_first < self.threshold and con_first < self.threshold:
+            stance_first = nan
+        else:
+            stance_first = pro_first - con_first
+
+        stance_second: float
+        if pro_second < self.threshold and con_second < self.threshold:
+            stance_second = nan
+        else:
+            stance_second = pro_second - con_second
+
+        stance: float
+        if isnan(stance_first) and isnan(stance_second):
+            stance = nan
+        elif isnan(stance_first):
+            stance = -stance_second
+        elif isnan(stance_second):
+            stance = stance_first
+        else:
+            stance = stance_first - stance_second
+        return stance
+
+    def _stance_multi_target(self, row: Series) -> float:
+        object_first = row["object_first"]
+        object_second = row["object_second"]
+        sentences = sent_tokenize(row["text"])
+        stances = [
+            self._sentence_stance_multi_target(
+                sentence,
+                object_first,
+                object_second,
+            )
+            for sentence in sentences
+        ]
+        stances = [stance for stance in stances if not isnan(stance)]
+        if len(stances) == 0:
+            return nan
+        stance = mean(stances)
+        return stance
 
     def transform(self, ranking: DataFrame) -> DataFrame:
         ranking = ranking.copy()
@@ -166,6 +298,7 @@ class StanceTagger(Transformer, Enum):
     T0pp = "bigscience/T0pp"
     T0_3B = "bigscience/T0_3B"
     FLAN_T5_BASE = "google/flan-t5-base"
+    BART_LARGE_MNLI = "facebook/bart-large-mnli"
     GROUND_TRUTH = "ground-truth"
 
     value: str
@@ -179,6 +312,9 @@ class StanceTagger(Transformer, Enum):
         elif self in _TEXT_GENERATION_MODELS:
             # noinspection PyTypeChecker
             return TextGenerationStanceTagger(self.value, verbose=True)
+        elif self in _ZERO_SHOT_CLASSIFICATION_MODELS:
+            # noinspection PyTypeChecker
+            return ZeroShotClassificationStanceTagger(self.value, verbose=True)
         else:
             raise ValueError(f"Unknown stance tagger: {self}")
 
@@ -191,4 +327,8 @@ _TEXT_GENERATION_MODELS = {
     StanceTagger.T0pp,
     StanceTagger.T0_3B,
     StanceTagger.FLAN_T5_BASE
+}
+
+_ZERO_SHOT_CLASSIFICATION_MODELS = {
+    StanceTagger.BART_LARGE_MNLI
 }
