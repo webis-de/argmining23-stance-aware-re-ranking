@@ -65,7 +65,7 @@ def _run(
     if run_config.stance_tagger != StanceTagger.ORIGINAL:
         name = run_config.stance_tagger.value
         if run_config.stance_tagger_threshold > 0:
-            name += f"({run_config.stance_tagger_threshold}:f)"
+            name += f"({run_config.stance_tagger_threshold:f})"
         if run_config.stance_tagger_cutoff is not None:
             name += f"@{run_config.stance_tagger_cutoff}"
         names.append(name)
