@@ -285,6 +285,13 @@ def main() -> None:
 
     experiment.columns = experiment.columns.map(rename_column)
 
+    def fix_name_order(df: DataFrame) -> DataFrame:
+        df = df.set_index("name")
+        df = df.loc[all_names]
+        return df.reset_index(drop=False)
+
+    experiment = experiment.groupby("qid").apply(fix_name_order)
+
     experiment["run"] = experiment["name"].apply(
         lambda name: name.split(" + ")[0]
     )
