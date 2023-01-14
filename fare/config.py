@@ -66,6 +66,7 @@ class Config:
     max_runs_per_team: Optional[int] = None
 
     runs: List[RunConfig] = field(default_factory=list)
+    stance_tagger_zero_shot_score_threshold: float = 0.0
 
     measures_relevance: list[Measure] = field(metadata=config(
         decoder=lambda metrics: [parse_measure(metric) for metric in metrics]

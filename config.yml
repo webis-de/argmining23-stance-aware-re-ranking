@@ -26,20 +26,38 @@ runs:
 - stanceTagger: original
   stanceReranker: original
   fairnessReranker: original
-- stanceTagger: google/flan-t5-base
-  stanceTaggerCutoff: 100
+- stanceTagger: ground-truth
   stanceReranker: original
   fairnessReranker: original
-- stanceTagger: ground-truth
+- stanceTagger: facebook/bart-large-mnli
+  stanceTaggerThreshold: 0.25
+  stanceTaggerCutoff: 20
   stanceReranker: original
   fairnessReranker: original
 - stanceTagger: ground-truth
   stanceReranker: stance-first
+  stanceRerankerCutoff: 20
+  fairnessReranker: original
+- stanceTagger: facebook/bart-large-mnli
+  stanceTaggerThreshold: 0.25
+  stanceTaggerCutoff: 20
+  stanceReranker: stance-first
+  stanceRerankerCutoff: 20
   fairnessReranker: original
 - stanceTagger: ground-truth
   stanceReranker: stance-first
+  stanceRerankerCutoff: 20
   fairnessReranker: alternating-stance
   fairnessRerankerCutoff: 20
+- stanceTagger: facebook/bart-large-mnli
+  stanceTaggerThreshold: 0.25
+  stanceTaggerCutoff: 20
+  stanceReranker: stance-first
+  stanceRerankerCutoff: 20
+  fairnessReranker: alternating-stance
+  fairnessRerankerCutoff: 20
+
+stanceTaggerZeroShotThreshold: 0.25
 
 #maxTeams: 3
 #maxRunsPerTeam: 2
@@ -49,8 +67,13 @@ measuresRelevance:
 measuresQuality:
 - nDCG@5
 measuresStance:
-- F1
+- F1@20
 - F1_Touche
+#- PropFirst@20
+#- PropSecond@20
+#- PropNeutral@20
+#- PropNo@20
+#- Confidence
 #- rND(group_col='stance_label',tie_breaking='group-ascending')@5
 #- rKL(group_col='stance_label',tie_breaking='group-ascending')@5
 #- rRD(group_col='stance_label',tie_breaking='group-ascending')@5

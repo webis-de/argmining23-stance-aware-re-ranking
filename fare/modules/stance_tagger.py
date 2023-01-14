@@ -140,7 +140,6 @@ class TextGenerationStanceTagger(Transformer):
 class ZeroShotClassificationStanceTagger(Transformer):
     model: str
     verbose: bool = False
-    threshold: float = 0.25
 
     def __post_init__(self):
         from fare.utils.nltk import download_nltk_dependencies
@@ -170,6 +169,8 @@ class ZeroShotClassificationStanceTagger(Transformer):
             object_first: str,
             object_second: str,
     ) -> float:
+        from fare.config import CONFIG
+
         object_words = {
             *word_tokenize(object_first),
             *word_tokenize(object_second),
@@ -201,14 +202,16 @@ class ZeroShotClassificationStanceTagger(Transformer):
         pro_second = label_scores[f"pro {object_second}"]
         con_second = label_scores[f"con {object_second}"]
 
+        threshold = CONFIG.stance_tagger_zero_shot_score_threshold
+
         stance_first: float
-        if pro_first < self.threshold and con_first < self.threshold:
+        if pro_first < threshold and con_first < threshold:
             stance_first = nan
         else:
             stance_first = pro_first - con_first
 
         stance_second: float
-        if pro_second < self.threshold and con_second < self.threshold:
+        if pro_second < threshold and con_second < threshold:
             stance_second = nan
         else:
             stance_second = pro_second - con_second
