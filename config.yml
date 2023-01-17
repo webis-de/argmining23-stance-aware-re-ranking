@@ -68,7 +68,8 @@ measuresQuality:
 - nDCG@5
 measuresStance:
 - F1@20
-- F1_Touche
+- F1All
+- JudgedAll
 #- PropFirst@20
 #- PropSecond@20
 #- PropNeutral@20

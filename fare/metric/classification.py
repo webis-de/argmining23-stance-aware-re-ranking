@@ -45,7 +45,26 @@ def _f1_score_touche(
 
 F1 = define(_f1_score, name="F1", support_cutoff=True)
 
-F1_Touche = define(_f1_score_touche, name="F1_Touche", support_cutoff=True)
+F1All = define(_f1_score_touche, name="F1All", support_cutoff=True)
+
+
+def _judged_stance(
+        qrels: DataFrame,
+        run: DataFrame,
+) -> Iterable[Tuple[str, float]]:
+    df = merge(
+        qrels,
+        run,
+        on=["query_id", "doc_id"],
+        how="inner",
+        suffixes=("_qrels", "_run"),
+    )
+    judged = len(df)
+    for qid in df["query_id"].unique():
+        yield qid, judged
+
+
+JudgedAll = define(_judged_stance, name="JudgedAll", support_cutoff=True)
 
 
 def _confidence(
@@ -55,7 +74,7 @@ def _confidence(
     for qid, df in run.groupby("query_id", sort=False):
         stance = df["stance_value"] \
             .replace(0, nan) \
-            .dropna()\
+            .dropna() \
             .abs()
         yield qid, stance.mean()
 
