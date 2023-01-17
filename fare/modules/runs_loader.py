@@ -25,6 +25,10 @@ class RunLoader(Transformer):
         return ranking
 
     @cached_property
+    def name(self) -> str:
+        return self._ranking["name"].unique()[0]
+
+    @cached_property
     def _transformer(self) -> Transformer:
         return Transformer.from_df(self._ranking)
 

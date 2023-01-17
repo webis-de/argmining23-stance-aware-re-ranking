@@ -40,7 +40,7 @@ def _run(
     team_directory_path = run_file_path.parent.parent
 
     pipeline = RunLoader(run_file_path)
-    names = [f"{team_directory_path.stem} {run_file_path.stem}"]
+    names = [f"{team_directory_path.stem} {pipeline.name}"]
 
     # Load text contents.
     pipeline = pipeline >> TextLoader()
