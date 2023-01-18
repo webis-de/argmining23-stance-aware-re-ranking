@@ -33,6 +33,7 @@ scipy = "*"
 ir-measures = "*"
 openpyxl = "*"
 scikit-learn = "*"
+openai = "*"
 
 [dev-packages]
 
