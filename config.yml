@@ -26,39 +26,38 @@ runs:
 #  fairnessReranker: inverse-stance-gain
 #  fairnessReranker: boost-minority-stance
 #  fairnessRerankerCutoff: 20
-- stanceTagger: original
-  stanceReranker: original
-  fairnessReranker: original
+
+#- stanceTagger: original
+#  stanceReranker: original
+#  fairnessReranker: original
+#- stanceTagger: ground-truth
+#  stanceReranker: original
+#  fairnessReranker: original
+#- stanceTagger: text-davinci-003
+#  stanceTaggerCutoff: 5
+#  stanceReranker: original
+#  fairnessReranker: original
+#- stanceTagger: google/flan-t5-base
+#  stanceTaggerThreshold: 0.4
+#  stanceTaggerCutoff: 20
+#  stanceReranker: original
+#  fairnessReranker: original
+#- stanceTagger: facebook/bart-large-mnli
+#  stanceTaggerThreshold: 0.25
+#  stanceTaggerCutoff: 20
+
 - stanceTagger: ground-truth
-  stanceReranker: original
-  fairnessReranker: original
-- stanceTagger: facebook/bart-large-mnli
-  stanceTaggerThreshold: 0.25
-  stanceTaggerCutoff: 20
   stanceReranker: original
   fairnessReranker: original
 - stanceTagger: ground-truth
   stanceReranker: stance-first
-  stanceRerankerCutoff: 20
-  fairnessReranker: original
-- stanceTagger: facebook/bart-large-mnli
-  stanceTaggerThreshold: 0.25
-  stanceTaggerCutoff: 20
-  stanceReranker: stance-first
-  stanceRerankerCutoff: 20
   fairnessReranker: original
 - stanceTagger: ground-truth
-  stanceReranker: stance-first
-  stanceRerankerCutoff: 20
+  stanceReranker: original
   fairnessReranker: alternating-stance
-  fairnessRerankerCutoff: 20
-- stanceTagger: facebook/bart-large-mnli
-  stanceTaggerThreshold: 0.25
-  stanceTaggerCutoff: 20
+- stanceTagger: ground-truth
   stanceReranker: stance-first
-  stanceRerankerCutoff: 20
   fairnessReranker: alternating-stance
-  fairnessRerankerCutoff: 20
 
 stanceTaggerZeroShotThreshold: 0.25
 
