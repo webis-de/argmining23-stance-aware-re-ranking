@@ -451,43 +451,55 @@ class StanceTagger(Transformer, Enum):
     FLAN_T5_BASE = "google/flan-t5-base"
     BART_LARGE_MNLI = "facebook/bart-large-mnli"
     GPT_3_TEXT_DAVINCI_003 = "text-davinci-003"
+    FLAN_T5_BASE_GPT_3_TEXT_DAVINCI_003 = "google/flan-t5-base & text-davinci-003"
     GROUND_TRUTH = "ground-truth"
 
     value: str
 
     @cached_property
-    def transformer(self) -> Transformer:
+    def _transformer(self) -> Transformer:
         if self == StanceTagger.ORIGINAL:
             return IdentityTransformer()
         elif self == StanceTagger.GROUND_TRUTH:
             return GroundTruthStanceTagger()
-        elif self in _TEXT_GENERATION_MODELS:
+        elif self == StanceTagger.FLAN_T5_BASE_GPT_3_TEXT_DAVINCI_003:
+            return CombinedStanceTagger(
+                TextGenerationStanceTagger(
+                    "google/flan-t5-base",
+                    verbose=True,
+                ),
+                OpenAiStanceTagger(
+                    "text-davinci-003",
+                    verbose=True,
+                ),
+                max_difference=0.3,
+            )
+        elif self in (
+                StanceTagger.T0,
+                StanceTagger.T0pp,
+                StanceTagger.T0_3B,
+                StanceTagger.FLAN_T5_BASE,
+        ):
             # noinspection PyTypeChecker
             return TextGenerationStanceTagger(self.value, verbose=True)
-        elif self in _ZERO_SHOT_CLASSIFICATION_MODELS:
+        elif self in (
+                StanceTagger.BART_LARGE_MNLI,
+        ):
             # noinspection PyTypeChecker
             return ZeroShotClassificationStanceTagger(self.value, verbose=True)
-        elif self in _OPEN_AI_MODELS:
+        elif self in (
+                StanceTagger.GPT_3_TEXT_DAVINCI_003,
+        ):
             # noinspection PyTypeChecker
             return OpenAiStanceTagger(self.value, verbose=True)
         else:
             raise ValueError(f"Unknown stance tagger: {self}")
 
     def transform(self, ranking: DataFrame) -> DataFrame:
-        return self.transformer.transform(ranking)
+        return self._transformer.transform(ranking)
 
+    def __str__(self) -> str:
+        return str(self._transformer)
 
-_TEXT_GENERATION_MODELS = {
-    StanceTagger.T0,
-    StanceTagger.T0pp,
-    StanceTagger.T0_3B,
-    StanceTagger.FLAN_T5_BASE
-}
-
-_ZERO_SHOT_CLASSIFICATION_MODELS = {
-    StanceTagger.BART_LARGE_MNLI
-}
-
-_OPEN_AI_MODELS = {
-    StanceTagger.GPT_3_TEXT_DAVINCI_003
-}
+    def __repr__(self) -> str:
+        return repr(self._transformer)
