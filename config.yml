@@ -8,10 +8,13 @@ cacheDirectoryPath: data/cache/
 
 runs:
 #- stanceTagger: original
-#  stanceTagger: ground-truth
-#  stanceTagger: bigscience/T0
-#  stanceTagger: bigscience/T0pp
-#  stanceTagger: bigscience/T0_3B
+#- stanceTagger: ground-truth
+#- stanceTagger: bigscience/T0
+#- stanceTagger: bigscience/T0pp
+#- stanceTagger: bigscience/T0_3B
+#- stanceTagger: facebook/bart-large-mnli
+#- stanceTagger: google/flan-t5-base
+#- stanceTagger: text-davinci-003
 #  stanceTaggerThreshold: 0.00
 #  stanceTaggerCutoff: 20
 #  stanceReranker: stance-first # FIRST, SECOND, or NEUTRAL
