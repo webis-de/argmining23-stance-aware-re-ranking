@@ -27,37 +27,42 @@ runs:
 #  fairnessReranker: boost-minority-stance
 #  fairnessRerankerCutoff: 20
 
-#- stanceTagger: original
-#  stanceReranker: original
-#  fairnessReranker: original
-#- stanceTagger: ground-truth
-#  stanceReranker: original
-#  fairnessReranker: original
-#- stanceTagger: text-davinci-003
-#  stanceTaggerCutoff: 5
-#  stanceReranker: original
-#  fairnessReranker: original
-#- stanceTagger: google/flan-t5-base
-#  stanceTaggerThreshold: 0.4
-#  stanceTaggerCutoff: 20
-#  stanceReranker: original
-#  fairnessReranker: original
-#- stanceTagger: facebook/bart-large-mnli
-#  stanceTaggerThreshold: 0.25
-#  stanceTaggerCutoff: 20
+- {} # original
+- stanceTagger: ground-truth
+- stanceTagger: text-davinci-003
+  stanceTaggerCutoff: 5
+- stanceTagger: google/flan-t5-base
+  stanceTaggerThreshold: 0.4
+  stanceTaggerCutoff: 20
+- stanceTagger: facebook/bart-large-mnli
+  stanceTaggerThreshold: 0.25
+  stanceTaggerCutoff: 20
 
 - stanceTagger: ground-truth
-  stanceReranker: original
-  fairnessReranker: original
+  fairnessReranker: alternating-stance
+  fairnessRerankerCutoff: 20
 - stanceTagger: ground-truth
   stanceReranker: stance-first
-  fairnessReranker: original
-- stanceTagger: ground-truth
-  stanceReranker: original
-  fairnessReranker: alternating-stance
 - stanceTagger: ground-truth
   stanceReranker: stance-first
   fairnessReranker: alternating-stance
+  fairnessRerankerCutoff: 20
+
+- stanceTagger: google/flan-t5-base
+  stanceTaggerThreshold: 0.4
+  stanceTaggerCutoff: 20
+  fairnessReranker: alternating-stance
+  fairnessRerankerCutoff: 20
+- stanceTagger: google/flan-t5-base
+  stanceTaggerThreshold: 0.4
+  stanceTaggerCutoff: 20
+  stanceReranker: stance-first
+- stanceTagger: google/flan-t5-base
+  stanceTaggerThreshold: 0.4
+  stanceTaggerCutoff: 20
+  stanceReranker: stance-first
+  fairnessReranker: alternating-stance
+  fairnessRerankerCutoff: 20
 
 stanceTaggerZeroShotThreshold: 0.25
 
@@ -69,25 +74,27 @@ measuresRelevance:
 measuresQuality:
 - nDCG@5
 measuresStance:
-- F1@20
-- F1All
-- JudgedAll
-#- PropFirst@20
-#- PropSecond@20
-#- PropNeutral@20
-#- PropNo@20
-#- Confidence
 #- rND(group_col='stance_label',tie_breaking='group-ascending')@5
 #- rKL(group_col='stance_label',tie_breaking='group-ascending')@5
 #- rRD(group_col='stance_label',tie_breaking='group-ascending')@5
 - rND(group_col='stance_label',tie_breaking='group-ascending',groups='FIRST,SECOND,NEUTRAL')@5
 - rKL(group_col='stance_label',tie_breaking='group-ascending',groups='FIRST,SECOND,NEUTRAL')@5
 - rRD(group_col='stance_label',tie_breaking='group-ascending',groups='FIRST,SECOND,NEUTRAL')@5
-#measuresDiversity:
-#- alpha_nDCG@5
+- F1
+- F1@5
+- NumJudged
+- NumJudged@5
+- FreqFirst
+- FreqSecond
+- FreqNeutral
+- FreqNo
+measuresDiversityRelevance:
+- alpha_nDCG@5
+measuresDiversityQuality:
+- alpha_nDCG@5
 #measuresPerQuery: true
 
-significanceLevel: 0.05
+#significanceLevel: 0.05
 
 metricsOutputFilePath: data/metrics.csv
 #metricsOutputFilePath: data/metrics.xlsx
@@ -98,3 +105,5 @@ metricsOutputFilePath: data/metrics.csv
 # Attempt to work offline.
 # Won't work unless PyTerrier and NLTK dependencies have previously been downloaded.
 #offline: true
+
+openAiApiKey: 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
