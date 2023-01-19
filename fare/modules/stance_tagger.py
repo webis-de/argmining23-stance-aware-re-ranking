@@ -396,6 +396,53 @@ class GroundTruthStanceTagger(Transformer):
         return ranking
 
 
+@dataclass
+class CombinedStanceTagger(Transformer):
+    tagger1: Transformer
+    tagger2: Transformer
+    max_difference: float = 0.5
+
+    def _combine(self, row: Series) -> float:
+        stance1: float = row["stance_value_1"]
+        stance2: float = row["stance_value_2"]
+        if stance1 == stance2:
+            return stance1
+        elif isnan(stance1):
+            return stance2
+        elif isnan(stance2):
+            return stance1
+        elif (stance1 < 0 and stance2 < 0) or (stance1 > 0 and stance2 > 0):
+            return max(
+                stance1, stance2,
+                key=lambda stance: abs(stance)
+            )
+        else:
+            return 0
+
+    def transform(self, ranking: DataFrame) -> DataFrame:
+        stance1 = self.tagger1.transform(ranking)
+        stance1 = stance1[["qid", "docno", "stance_value"]]
+        stance2 = self.tagger2.transform(ranking)
+        stance2 = stance2[["qid", "docno", "stance_value"]]
+        stance = merge(
+            stance1, stance2,
+            how="outer",
+            on=["qid", "docno"],
+            suffixes=("_1", "_2"),
+        )
+        ranking = ranking.merge(
+            stance,
+            how="left",
+            on=["qid", "docno"],
+        )
+        ranking["stance_value"] = [
+            self._combine(row)
+            for _, row in ranking.iterrows()
+        ]
+
+        return ranking
+
+
 class StanceTagger(Transformer, Enum):
     ORIGINAL = "original"
     T0 = "bigscience/T0"
