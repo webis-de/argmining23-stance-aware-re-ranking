@@ -172,7 +172,7 @@ class FairnessReranker(Transformer, Enum):
     BOOST_MINORITY_STANCE = "boost-minority-stance"
 
     @cached_property
-    def transformer(self) -> Transformer:
+    def _transformer(self) -> Transformer:
         if self == FairnessReranker.ORIGINAL:
             return IdentityTransformer()
         elif self == FairnessReranker.ALTERNATING_STANCE:
@@ -187,4 +187,10 @@ class FairnessReranker(Transformer, Enum):
             raise ValueError(f"Unknown fairness re-ranker: {self}")
 
     def transform(self, ranking: DataFrame) -> DataFrame:
-        return self.transformer.transform(ranking)
+        return self._transformer.transform(ranking)
+
+    def __str__(self) -> str:
+        return str(self._transformer)
+
+    def __repr__(self) -> str:
+        return repr(self._transformer)
