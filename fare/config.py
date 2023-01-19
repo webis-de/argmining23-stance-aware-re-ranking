@@ -82,7 +82,7 @@ class Config:
     ), default_factory=list)
     measures_per_query: bool = False
 
-    significance_level: float = 0.05
+    significance_level: Optional[float] = None
 
     filter_by_qrels: bool = False
 

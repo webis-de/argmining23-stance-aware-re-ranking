@@ -123,6 +123,20 @@ def _run(
     return NamedPipeline(names, pipeline)
 
 
+def is_significant(
+        experiment: DataFrame,
+        significance_level: float,
+        name1: str,
+        name2: str,
+        measure: str,
+) -> bool:
+    experiment1 = experiment[experiment["name"] == name1]
+    experiment2 = experiment[experiment["name"] == name2]
+    t_test = ttest_rel(experiment1[measure], experiment2[measure])
+    significant = t_test.pvalue < significance_level
+    return significant
+
+
 def _pairwise_t_test(experiment: DataFrame) -> DataFrame:
     experiment = experiment.copy()
 
@@ -132,41 +146,41 @@ def _pairwise_t_test(experiment: DataFrame) -> DataFrame:
 
     experiment["name_index"] = experiment["name"].map(name_index)
 
-    significance_level = CONFIG.significance_level
-    if len(name_pairs) > 0:
-        # Bonferroni correction.
-        significance_level /= len(name_pairs)
-
-    def is_significant(name1: str, name2: str, measure: str) -> bool:
-        experiment1 = experiment[experiment["name"] == name1]
-        experiment2 = experiment[experiment["name"] == name2]
-        t_test = ttest_rel(experiment1[measure], experiment2[measure])
-        significant = t_test.pvalue < significance_level
-        return significant
-
     measure_columns = [
         measure
         for measure in experiment.columns
         if measure not in ("qid", "run", "name", "name_index", "index")
     ]
 
-    for measure in measure_columns:
-        pairwise_significance: dict[str, set[int]] = defaultdict(set)
-        for run1, run2 in name_pairs:
-            if is_significant(run1, run2, measure):
-                pairwise_significance[run1].add(name_index[run2])
-                pairwise_significance[run2].add(name_index[run1])
+    significance_level = CONFIG.significance_level
+    if significance_level is not None:
+        if len(name_pairs) > 0:
+            # Bonferroni correction.
+            significance_level /= len(name_pairs)
 
-        experiment[f"{measure} t-test"] = experiment["name"].map(
-            lambda name: ",".join(
-                map(str, sorted(pairwise_significance[name]))
+        for measure in measure_columns:
+            pairwise_significance: dict[str, set[int]] = defaultdict(set)
+            for run1, run2 in name_pairs:
+                if is_significant(
+                        experiment,
+                        significance_level,
+                        run1, run2,
+                        measure,
+                ):
+                    pairwise_significance[run1].add(name_index[run2])
+                    pairwise_significance[run2].add(name_index[run1])
+
+            experiment[f"{measure} t-test"] = experiment["name"].map(
+                lambda name: ",".join(
+                    map(str, sorted(pairwise_significance[name]))
+                )
             )
-        )
 
     new_columns = ["qid", "run", "name", "name_index"]
     for measure in measure_columns:
         new_columns.append(measure)
-        new_columns.append(f"{measure} t-test")
+        if significance_level is not None:
+            new_columns.append(f"{measure} t-test")
     return experiment[new_columns]
 
 
