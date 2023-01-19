@@ -386,14 +386,14 @@ class FairnessMeasure(Measure, ABC):
         :return:
         """
         group_col = self._group_col_param
+        qrels = qrels[["query_id", "doc_id", group_col]]
+        run = run[["query_id", "doc_id", group_col]]
         run = run.merge(
             qrels,
             how="left",
             on=["query_id", "doc_id"],
             suffixes=("_original", None),
         )
-        qrels = qrels[["query_id", group_col]]
-        run = run[["query_id", group_col]]
 
         groups = self._groups(qrels[group_col])
         if len(groups) == 0:
