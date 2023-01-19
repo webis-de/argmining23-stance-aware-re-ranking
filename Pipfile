@@ -34,6 +34,7 @@ ir-measures = "*"
 openpyxl = "*"
 scikit-learn = "*"
 openai = "*"
+ratelimit = "*"
 
 [dev-packages]
 
