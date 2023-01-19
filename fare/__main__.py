@@ -47,20 +47,23 @@ def _run(
     pipeline = ~pipeline
 
     # Tag stance.
-    stance_tagger = (
-            run_config.stance_tagger >>
-            StanceFilter(run_config.stance_tagger_threshold)
-    )
     if run_config.stance_tagger_cutoff is None:
-        pipeline = pipeline >> stance_tagger
+        pipeline = ~(
+                ~(
+                        pipeline >>
+                        run_config.stance_tagger
+                ) >>
+                StanceFilter(run_config.stance_tagger_threshold)
+        )
     elif run_config.stance_tagger_cutoff > 0:
         # noinspection PyTypeChecker
-        pipeline = (
-                           pipeline %
-                           run_config.stance_tagger_cutoff >>
-                           stance_tagger
-                   ) ^ pipeline
-    pipeline = ~pipeline
+        pipeline = ~(
+                ~(
+                        pipeline %
+                        run_config.stance_tagger_cutoff >>
+                        run_config.stance_tagger
+                ) >> StanceFilter(run_config.stance_tagger_threshold)
+        ) ^ pipeline
 
     if run_config.stance_tagger != StanceTagger.ORIGINAL:
         name = run_config.stance_tagger.value
@@ -72,15 +75,17 @@ def _run(
 
     # Re-rank stance/subjective first.
     if run_config.stance_reranker_cutoff is None:
-        pipeline = pipeline >> run_config.stance_reranker
+        pipeline = ~(
+                pipeline >>
+                run_config.stance_reranker
+        )
     elif run_config.stance_reranker_cutoff > 0:
         # noinspection PyTypeChecker
-        pipeline = (
-                           pipeline %
-                           run_config.stance_reranker_cutoff >>
-                           run_config.stance_reranker
-                   ) ^ pipeline
-    pipeline = ~pipeline
+        pipeline = ~(
+                pipeline %
+                run_config.stance_reranker_cutoff >>
+                run_config.stance_reranker
+        ) ^ pipeline
 
     if (run_config.stance_reranker != StanceReranker.ORIGINAL and
             (run_config.stance_reranker_cutoff is None or
@@ -92,15 +97,17 @@ def _run(
 
     # Fair re-ranking.
     if run_config.fairness_reranker_cutoff is None:
-        pipeline = pipeline >> run_config.fairness_reranker
+        pipeline = ~(
+                pipeline >>
+                run_config.fairness_reranker
+        )
     elif run_config.fairness_reranker_cutoff > 0:
         # noinspection PyTypeChecker
-        pipeline = (
-                           pipeline %
-                           run_config.fairness_reranker_cutoff >>
-                           run_config.fairness_reranker
-                   ) ^ pipeline
-    pipeline = ~pipeline
+        pipeline = ~(
+                pipeline %
+                run_config.fairness_reranker_cutoff >>
+                run_config.fairness_reranker
+        ) ^ pipeline
 
     if (run_config.fairness_reranker != FairnessReranker.ORIGINAL and
             (run_config.fairness_reranker_cutoff is None or
