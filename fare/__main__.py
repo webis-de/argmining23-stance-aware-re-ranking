@@ -1,3 +1,6 @@
+from functools import cache
+
+from ir_measures import Measure
 from pyterrier import init
 
 from fare.config import CONFIG
@@ -184,6 +187,77 @@ def _pairwise_t_test(experiment: DataFrame) -> DataFrame:
     return experiment[new_columns]
 
 
+@cache
+def _diversity_label(label: float, stance: str, subtopic: str) -> float:
+    if subtopic == stance:
+        return label
+    if subtopic in ("FIRST", "SECOND") and stance == "NEUTRAL":
+        return label / 2
+    if subtopic == "NEUTRAL" and stance in ("FIRST", "SECOND"):
+        return label / 2
+    else:
+        return 0
+
+
+def _diversity_qrels(
+        effectiveness_qrels: DataFrame,
+        stance_qrels: DataFrame,
+) -> DataFrame:
+    qrels = effectiveness_qrels.merge(
+        stance_qrels,
+        on=["qid", "docno"],
+        how="inner",
+        suffixes=(None, "_stance"),
+    )
+    return DataFrame([
+        {
+            "qid": row["qid"],
+            "docno": row["docno"],
+            "iteration": subtopic,
+            "label": _diversity_label(
+                row["label"],
+                row["label_stance"],
+                subtopic,
+            ),
+        }
+        for _, row in qrels.iterrows()
+        for subtopic in {"FIRST", "SECOND", "NEUTRAL"}
+    ])
+
+
+def _run_experiment(
+        runs: list[NamedPipeline],
+        topics: DataFrame,
+        qrels: DataFrame,
+        measures: list[Measure],
+) -> DataFrame:
+    all_names: list[str] = [run.name for run in runs]
+    all_systems: list[Transformer] = [run.pipeline for run in runs]
+    if len(measures) == 0:
+        return merge(
+            topics["qid"],
+            Series(all_names, name="name"),
+            how="cross",
+        )
+    return Experiment(
+        retr_systems=all_systems,
+        topics=topics,
+        qrels=qrels,
+        eval_metrics=measures,
+        names=all_names,
+        filter_by_qrels=CONFIG.filter_by_qrels,
+        verbose=True,
+        perquery=True,
+    ).pivot_table(
+        index=["qid", "name"],
+        columns="measure",
+        values="value",
+        aggfunc="first",
+    ).reset_index(
+        drop=False
+    )
+
+
 def main() -> None:
     topics: DataFrame = parse_topics()
     qrels_relevance: DataFrame = read_qrels(
@@ -196,6 +270,8 @@ def main() -> None:
         str(CONFIG.qrels_stance_file_path.absolute())
     )
     qrels_stance["stance_label"] = qrels_stance["label"]
+    qrels_diversity_relevance = _diversity_qrels(qrels_relevance, qrels_stance)
+    qrels_diversity_quality = _diversity_qrels(qrels_relevance, qrels_stance)
 
     max_teams = CONFIG.max_teams \
         if CONFIG.max_teams is not None else None
@@ -217,80 +293,64 @@ def main() -> None:
     all_names: list[str] = [run.name for run in runs]
     all_systems: list[Transformer] = [run.pipeline for run in runs]
 
-    empty_experiment: DataFrame = merge(
-        topics["qid"],
-        Series(all_names, name="name"),
-        how="cross",
+
+    print("Compute relevance effectiveness measures.")
+    effectiveness_relevance = _run_experiment(
+        runs,
+        topics,
+        qrels_relevance,
+        CONFIG.measures_relevance,
+    )
+    print("Compute quality effectiveness measures.")
+    effectiveness_quality = _run_experiment(
+        runs,
+        topics,
+        qrels_quality,
+        CONFIG.measures_quality,
+    )
+    effectiveness = effectiveness_relevance.merge(
+        effectiveness_quality,
+        on=["qid", "name"],
+        suffixes=(" relevance", " quality")
     )
 
-    print("Compute relevance measures.")
-    # noinspection PyTypeChecker
-    relevance = Experiment(
-        retr_systems=all_systems,
-        topics=topics,
-        qrels=qrels_relevance,
-        eval_metrics=CONFIG.measures_relevance,
-        names=all_names,
-        filter_by_qrels=CONFIG.filter_by_qrels,
-        verbose=True,
-        perquery=True,
-    ).pivot_table(
-        index=["qid", "name"],
-        columns="measure",
-        values="value",
-        aggfunc="first",
-    ).reset_index(
-        drop=False
-    ) if len(CONFIG.measures_relevance) > 0 else empty_experiment
-    print("Compute quality measures.")
-    # noinspection PyTypeChecker
-    quality = Experiment(
-        retr_systems=all_systems,
-        topics=topics,
-        qrels=qrels_quality,
-        eval_metrics=CONFIG.measures_quality,
-        names=all_names,
-        filter_by_qrels=CONFIG.filter_by_qrels,
-        verbose=True,
-        perquery=True,
-    ).pivot_table(
-        index=["qid", "name"],
-        columns="measure",
-        values="value",
-        aggfunc="first",
-    ).reset_index(
-        drop=False
-    ) if len(CONFIG.measures_quality) > 0 else empty_experiment
     print("Compute stance measures.")
     # noinspection PyTypeChecker
-    stance = Experiment(
-        retr_systems=all_systems,
-        topics=topics,
-        qrels=qrels_stance,
-        eval_metrics=CONFIG.measures_stance,
-        names=all_names,
-        filter_by_qrels=CONFIG.filter_by_qrels,
-        verbose=True,
-        perquery=True,
-    ).pivot_table(
-        index=["qid", "name"],
-        columns="measure",
-        values="value",
-        aggfunc="first",
-    ).reset_index(
-        drop=False
-    ) if len(CONFIG.measures_stance) > 0 else empty_experiment
+    stance = _run_experiment(
+        runs,
+        topics,
+        qrels_stance,
+        CONFIG.measures_stance,
+    )
 
-    experiment = merge(
-        merge(
-            relevance,
-            quality,
-            on=["qid", "name"],
-            suffixes=(" relevance", " quality")
-        ),
+    print("Compute relevance diversity measures.")
+    diversity_relevance = _run_experiment(
+        runs,
+        topics,
+        qrels_diversity_relevance,
+        CONFIG.measures_diversity_relevance,
+    )
+    print("Compute quality diversity measures.")
+    diversity_quality = _run_experiment(
+        runs,
+        topics,
+        qrels_diversity_quality,
+        CONFIG.measures_diversity_quality,
+    )
+    diversity = diversity_relevance.merge(
+        diversity_quality,
+        on=["qid", "name"],
+        suffixes=(" relevance", " quality")
+    )
+
+    experiment = effectiveness.merge(
         stance,
         on=["qid", "name"],
         suffixes=("", " stance")
+    ).merge(
+        diversity,
+        on=["qid", "name"],
+        suffixes=("", " diversity")
     ).reset_index(drop=False)
 
     def rename_column(column: str) -> str:

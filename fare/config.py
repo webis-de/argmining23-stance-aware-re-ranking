@@ -77,7 +77,10 @@ class Config:
     measures_stance: list[Measure] = field(metadata=config(
         decoder=lambda metrics: [parse_measure(metric) for metric in metrics]
     ), default_factory=list)
-    measures_diversity: list[Measure] = field(metadata=config(
+    measures_diversity_relevance: list[Measure] = field(metadata=config(
+        decoder=lambda metrics: [parse_measure(metric) for metric in metrics]
+    ), default_factory=list)
+    measures_diversity_quality: list[Measure] = field(metadata=config(
         decoder=lambda metrics: [parse_measure(metric) for metric in metrics]
     ), default_factory=list)
     measures_per_query: bool = False
