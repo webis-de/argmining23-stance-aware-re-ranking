@@ -88,8 +88,11 @@ class Config:
 
     offline: bool = False
 
+    open_ai_api_key: Optional[str] = None
+
+
     def __post_init__(self):
-        self.cache_directory_path.mkdir(exist_ok=True)
+        self.cache_directory_path.mkdir(exist_ok=True, parents=True)
 
     @classmethod
     def load(cls, config_path: Path) -> "Config":
