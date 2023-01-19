@@ -2,7 +2,7 @@ from math import nan
 from typing import Tuple, Iterable, Callable
 
 from ir_measures import define
-from pandas import DataFrame, merge
+from pandas import DataFrame
 from sklearn.metrics import f1_score
 
 
@@ -11,8 +11,7 @@ def _f1_score(
         run: DataFrame,
         across_all_queries: bool = False
 ) -> Iterable[Tuple[str, float]]:
-    df = merge(
-        qrels,
+    df = qrels.merge(
         run,
         on=["query_id", "doc_id"],
         how="left",
@@ -52,8 +51,7 @@ def _judged_stance(
         qrels: DataFrame,
         run: DataFrame,
 ) -> Iterable[Tuple[str, float]]:
-    df = merge(
-        qrels,
+    df = qrels.merge(
         run,
         on=["query_id", "doc_id"],
         how="inner",
