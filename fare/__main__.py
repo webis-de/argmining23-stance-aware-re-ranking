@@ -71,7 +71,7 @@ def _run(
     if run_config.stance_tagger != StanceTagger.ORIGINAL:
         name = run_config.stance_tagger.value
         if run_config.stance_tagger_threshold > 0:
-            name += f"({run_config.stance_tagger_threshold:f})"
+            name += f"({run_config.stance_tagger_threshold:.2f})"
         if run_config.stance_tagger_cutoff is not None:
             name += f"@{run_config.stance_tagger_cutoff}"
         names.append(name)
@@ -291,7 +291,6 @@ def main() -> None:
         for run_config in CONFIG.runs
     ]
     all_names: list[str] = [run.name for run in runs]
-    all_systems: list[Transformer] = [run.pipeline for run in runs]
 
 
     print("Compute relevance effectiveness measures.")
