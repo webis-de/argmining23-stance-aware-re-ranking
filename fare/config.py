@@ -17,16 +17,23 @@ from fare.modules.stance_tagger import StanceTagger
 @dataclass_json(letter_case=LetterCase.CAMEL)
 @dataclass
 class RunConfig:
-    stance_tagger: StanceTagger = field(metadata=config(
-        decoder=StanceTagger
-    ))
-    stance_reranker: StanceReranker = field(metadata=config(
-        decoder=StanceReranker
-    ))
+    stance_tagger: StanceTagger = field(
+        metadata=config(
+            decoder=StanceTagger
+        ),
+        default=StanceTagger.ORIGINAL,
+    )
+    stance_reranker: StanceReranker = field(
+        metadata=config(
+            decoder=StanceReranker
+        ),
+        default=StanceReranker.ORIGINAL,
+    )
     fairness_reranker: FairnessReranker = field(
         metadata=config(
             decoder=FairnessReranker
-        )
+        ),
+        default=FairnessReranker.ORIGINAL,
     )
     stance_tagger_threshold: float = 0.0
     stance_tagger_cutoff: Optional[int] = None
@@ -92,7 +99,6 @@ class Config:
     offline: bool = False
 
     open_ai_api_key: Optional[str] = None
-
 
     def __post_init__(self):
         self.cache_directory_path.mkdir(exist_ok=True, parents=True)
