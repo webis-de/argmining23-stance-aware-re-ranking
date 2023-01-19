@@ -4,11 +4,13 @@ from functools import cached_property
 from math import nan, isnan
 from statistics import mean
 from textwrap import dedent
+from time import sleep
 
 import openai
 from diskcache import Cache
 from nltk import sent_tokenize, word_tokenize
 from openai import Completion
+from openai.error import RateLimitError
 from pandas import DataFrame, Series, read_csv, merge
 from pyterrier.transformer import Transformer, IdentityTransformer
 from ratelimit import limits, sleep_and_retry
@@ -43,17 +45,22 @@ class OpenAiStanceTagger(Transformer):
         return Cache(str(cache_path))
 
     @sleep_and_retry
-    @limits(calls=2, period=6)
+    @limits(calls=1, period=3)
     def _generate_no_cache(self, prompt: str) -> str:
-        response = Completion.create(
-            model=self.model,
-            prompt=prompt,
-            temperature=0.7,
-            max_tokens=10,
-            top_p=1,
-            frequency_penalty=0,
-            presence_penalty=0
-        )
+        try:
+            response = Completion.create(
+                model=self.model,
+                prompt=prompt,
+                temperature=0.7,
+                max_tokens=10,
+                top_p=1,
+                frequency_penalty=0,
+                presence_penalty=0
+            )
+        except RateLimitError:
+            logger.warning("Rate limit exceeded, waiting 10 seconds.")
+            sleep(10)
+            return self._generate_no_cache(prompt)
         return response.choices[0]["text"]
 
     def _generate(self, prompt: str) -> str:
