@@ -3,11 +3,15 @@ from enum import Enum
 from functools import cached_property
 from math import nan, isnan
 from statistics import mean
+from textwrap import dedent
 
+import openai
 from diskcache import Cache
 from nltk import sent_tokenize, word_tokenize
+from openai import Completion
 from pandas import DataFrame, Series, read_csv, merge
 from pyterrier.transformer import Transformer, IdentityTransformer
+from ratelimit import limits, sleep_and_retry
 from torch.cuda import is_available
 from tqdm.auto import tqdm
 from transformers import (
@@ -16,7 +20,97 @@ from transformers import (
     ZeroShotClassificationPipeline
 )
 
+from fare import logger
 from fare.utils.stance import stance_value, stance_label
+
+
+@dataclass(frozen=True)
+class OpenAiStanceTagger(Transformer):
+    model: str = "text-davinci-003"
+    verbose: bool = False
+
+    def __post_init__(self):
+        from fare.utils.nltk import download_nltk_dependencies
+        from fare.config import CONFIG
+        download_nltk_dependencies("punkt")
+        openai.api_key = CONFIG.open_ai_api_key
+
+    @cached_property
+    def _cache(self) -> Cache:
+        from fare.config import CONFIG
+        cache_path = CONFIG.cache_directory_path / "text-generation" / \
+                     "openai" / self.model
+        return Cache(str(cache_path))
+
+    @sleep_and_retry
+    @limits(calls=2, period=6)
+    def _generate_no_cache(self, prompt: str) -> str:
+        response = Completion.create(
+            model=self.model,
+            prompt=prompt,
+            temperature=0.7,
+            max_tokens=10,
+            top_p=1,
+            frequency_penalty=0,
+            presence_penalty=0
+        )
+        return response.choices[0]["text"]
+
+    def _generate(self, prompt: str) -> str:
+        if prompt not in self._cache:
+            self._cache[prompt] = self._generate_no_cache(prompt)
+        return self._cache[prompt]
+
+    def _stance(self, row: Series) -> float:
+        object_first = row["object_first"]
+        object_second = row["object_second"]
+        question = row["query"]
+        document = row["text"]
+        prompt = dedent(
+            f"""
+            Given a comparative question, classify a document's stance as either "pro {object_first}", "pro {object_second}", or "neutral".
+            If the document has no personal opinion, recommendation, or pros/cons please return "no stance".
+        
+            Question: {question}
+            Document: {document}
+            Stance:
+            """
+        ).strip()
+        label = self._generate(prompt).strip().lower()
+        if label.startswith(f"pro {object_first.lower()}"):
+            return 1
+        elif label.startswith(f"pro {object_second.lower()}"):
+            return -1
+        elif label.startswith("neutral"):
+            return 0
+        elif label.startswith("no stance"):
+            return nan
+        else:
+            logger.warning(
+                f"Unknown stance label: {label} "
+                f"(available: pro {object_first.lower()}, "
+                f"pro {object_second.lower()}, neutral, no stance)"
+            )
+            return nan
+
+    def transform(self, ranking: DataFrame) -> DataFrame:
+        ranking = ranking.copy()
+        if "stance_value" in ranking.columns:
+            ranking.rename({"stance_value": "stance_value_original"})
+        if "stance_label" in ranking.columns:
+            ranking.rename({"stance_label": "stance_label_original"})
+
+        rows = ranking.iterrows()
+        if self.verbose:
+            rows = tqdm(
+                rows,
+                total=len(ranking),
+                desc=f"Tag stance with GPT-3 {self.model}",
+                unit="document",
+            )
+        ranking["stance_value"] = [self._stance(row) for _, row in rows]
+        ranking["stance_label"] = ranking["stance_value"].map(stance_label)
+        return ranking
 
 
 @dataclass(frozen=True)
@@ -302,6 +396,7 @@ class StanceTagger(Transformer, Enum):
     T0_3B = "bigscience/T0_3B"
     FLAN_T5_BASE = "google/flan-t5-base"
     BART_LARGE_MNLI = "facebook/bart-large-mnli"
+    GPT_3_TEXT_DAVINCI_003 = "text-davinci-003"
     GROUND_TRUTH = "ground-truth"
 
     value: str
@@ -318,6 +413,9 @@ class StanceTagger(Transformer, Enum):
         elif self in _ZERO_SHOT_CLASSIFICATION_MODELS:
             # noinspection PyTypeChecker
             return ZeroShotClassificationStanceTagger(self.value, verbose=True)
+        elif self in _OPEN_AI_MODELS:
+            # noinspection PyTypeChecker
+            return OpenAiStanceTagger(self.value, verbose=True)
         else:
             raise ValueError(f"Unknown stance tagger: {self}")
 
@@ -334,4 +432,8 @@ _TEXT_GENERATION_MODELS = {
 
 _ZERO_SHOT_CLASSIFICATION_MODELS = {
     StanceTagger.BART_LARGE_MNLI
+}
+
+_OPEN_AI_MODELS = {
+    StanceTagger.GPT_3_TEXT_DAVINCI_003
 }
