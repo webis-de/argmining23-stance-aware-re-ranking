@@ -176,9 +176,9 @@ def main() -> None:
     )
     qrels_stance["stance_label"] = qrels_stance["label"]
 
-    max_teams = CONFIG.max_teams + 1 \
+    max_teams = CONFIG.max_teams \
         if CONFIG.max_teams is not None else None
-    max_runs_per_team = CONFIG.max_runs_per_team + 1 \
+    max_runs_per_team = CONFIG.max_runs_per_team \
         if CONFIG.max_runs_per_team is not None else None
     runs: list[NamedPipeline] = [
         _run(run_file_path, run_config)

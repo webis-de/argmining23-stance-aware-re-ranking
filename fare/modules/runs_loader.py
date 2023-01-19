@@ -3,6 +3,7 @@ from functools import cached_property
 from pathlib import Path
 
 from pandas import DataFrame, read_csv
+from pyterrier.model import add_ranks
 from pyterrier.transformer import Transformer
 
 from fare.utils.stance import stance_value
@@ -11,6 +12,7 @@ from fare.utils.stance import stance_value
 @dataclass(frozen=True)
 class RunLoader(Transformer):
     run_file_path: Path
+    _version: int = 1
 
     @cached_property
     def _ranking(self) -> DataFrame:
@@ -22,6 +24,12 @@ class RunLoader(Transformer):
         ranking = ranking.astype({"qid": "str"})
         ranking["stance_label"] = ranking["stance_label"].replace("Q0", "NO")
         ranking["stance_value"] = ranking["stance_label"].map(stance_value)
+        ranking.sort_values(
+            ["qid", "rank"],
+            ascending=[True, True],
+            inplace=True,
+        )
+        ranking = add_ranks(ranking)
         return ranking
 
     @cached_property

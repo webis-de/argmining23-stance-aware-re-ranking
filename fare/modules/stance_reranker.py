@@ -3,6 +3,7 @@ from enum import Enum
 from functools import cached_property
 
 from pandas import DataFrame
+from pyterrier.model import add_ranks
 from pyterrier.transformer import Transformer, IdentityTransformer
 from tqdm.auto import tqdm
 
@@ -27,7 +28,6 @@ class StanceFirstReranker(Transformer):
         del ranking["has_stance"]
 
         # Reset rank and score.
-        ranking["rank"] = list(range(1, len(ranking) + 1))
         ranking["score"] = list(range(len(ranking), 0, -1))
 
         return ranking
@@ -39,7 +39,9 @@ class StanceFirstReranker(Transformer):
             groups = groups.progress_apply(self._rerank_query)
         else:
             groups = groups.apply(self._rerank_query)
-        return groups.reset_index(drop=True)
+        ranking = groups.reset_index(drop=True)
+        ranking = add_ranks(ranking)
+        return ranking
 
 
 @dataclass(frozen=True)
@@ -67,7 +69,6 @@ class SubjectiveStanceFirstReranker(Transformer):
         del ranking["is_subjective"]
 
         # Reset rank and score.
-        ranking["rank"] = list(range(1, len(ranking) + 1))
         ranking["score"] = list(range(len(ranking), 0, -1))
 
         return ranking
@@ -79,7 +80,9 @@ class SubjectiveStanceFirstReranker(Transformer):
             groups = groups.progress_apply(self._rerank_query)
         else:
             groups = groups.apply(self._rerank_query)
-        return groups.reset_index(drop=True)
+        ranking = groups.reset_index(drop=True)
+        ranking = add_ranks(ranking)
+        return ranking
 
 
 class StanceReranker(Transformer, Enum):
