@@ -104,8 +104,5 @@ class StanceReranker(Transformer, Enum):
     def transform(self, ranking: DataFrame) -> DataFrame:
         return self._transformer.transform(ranking)
 
-    def __str__(self) -> str:
-        return str(self._transformer)
-
     def __repr__(self) -> str:
         return repr(self._transformer)
