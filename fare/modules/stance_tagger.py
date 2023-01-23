@@ -2,6 +2,7 @@ from dataclasses import dataclass
 from enum import Enum
 from functools import cached_property
 from math import nan, isnan
+from pathlib import Path
 from statistics import mean
 from textwrap import dedent
 from time import sleep
@@ -370,6 +371,49 @@ class ZeroShotClassificationStanceTagger(Transformer):
 
 
 @dataclass
+class TsvStanceTagger(Transformer):
+    path: Path
+    qid_column: str
+    docno_column: str
+    stance_label_column: str
+    fillna: bool = False
+
+    @cached_property
+    def _tsv_stance(self) -> DataFrame:
+        df = read_csv(
+            str(self.path),
+            sep="\t",
+            dtype=str
+        )
+        df = df[[
+            self.qid_column,
+            self.docno_column,
+            self.stance_label_column,
+        ]]
+        if self.fillna:
+            df[self.stance_label_column].fillna("NO", inplace=True)
+        else:
+            df = df[df[self.stance_label_column].notna()]
+        df.rename(columns={
+            self.qid_column: "qid",
+            self.docno_column: "docno",
+            self.stance_label_column: "stance_label",
+        }, inplace=True)
+        df["stance_value"] = df["stance_label"].map(stance_value)
+        return df
+
+    def transform(self, ranking: DataFrame) -> DataFrame:
+        ranking = ranking.copy()
+        ranking = merge(
+            ranking, self._tsv_stance,
+            how="inner",
+            on=["qid", "docno"],
+            suffixes=("_original", None),
+        )
+        return ranking
+
+
+@dataclass
 class GroundTruthStanceTagger(Transformer):
 
     @cached_property
@@ -402,7 +446,8 @@ class CombinedStanceTagger(Transformer):
     tagger2: Transformer
     max_difference: float = 0.5
 
-    def _combine(self, row: Series) -> float:
+    @staticmethod
+    def _combine(row: Series) -> float:
         stance1: float = row["stance_value_1"]
         stance2: float = row["stance_value_2"]
         if stance1 == stance2:
