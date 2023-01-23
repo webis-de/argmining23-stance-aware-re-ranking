@@ -495,6 +495,7 @@ class StanceTagger(Transformer, Enum):
     T0_3B = "bigscience/T0_3B"
     FLAN_T5_BASE = "google/flan-t5-base"
     BART_LARGE_MNLI = "facebook/bart-large-mnli"
+    GPT_3_TSV = "gpt3-tsv"
     GPT_3_TEXT_DAVINCI_003 = "text-davinci-003"
     FLAN_T5_BASE_GPT_3_TEXT_DAVINCI_003 = "google/flan-t5-base & text-davinci-003"
     GROUND_TRUTH = "ground-truth"
@@ -507,6 +508,14 @@ class StanceTagger(Transformer, Enum):
             return IdentityTransformer()
         elif self == StanceTagger.GROUND_TRUTH:
             return GroundTruthStanceTagger()
+        elif self == StanceTagger.GPT_3_TSV:
+            return TsvStanceTagger(
+                path=Path("data/stance_gpt.tsv"),
+                qid_column="qid",
+                docno_column="ID",
+                stance_label_column="gpt_pred_conv",
+                fillna=True,
+            )
         elif self == StanceTagger.FLAN_T5_BASE_GPT_3_TEXT_DAVINCI_003:
             return CombinedStanceTagger(
                 TextGenerationStanceTagger(
