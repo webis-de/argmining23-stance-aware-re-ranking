@@ -36,6 +36,7 @@ scikit-learn = "*"
 openai = "*"
 ratelimit = "*"
 pyndeval = {git = "https://github.com/seanmacavaney/pyndeval.git"}
+numpy = "*"
 
 [dev-packages]
 
