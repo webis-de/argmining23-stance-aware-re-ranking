@@ -22,6 +22,7 @@ from fare.config import RunConfig
 from fare.modules.fairness_reranker import FairnessReranker
 from fare.modules.runs_loader import RunLoader
 from fare.modules.stance_filter import StanceFilter
+from fare.modules.stance_randomizer import StanceF1Randomizer
 from fare.modules.stance_reranker import StanceReranker
 from fare.modules.stance_tagger import StanceTagger
 from fare.modules.text_loader import TextLoader
@@ -46,8 +47,10 @@ def _run(
     names = [f"{team_directory_path.stem} {pipeline.name}"]
 
     # Load text contents.
-    pipeline = pipeline >> TextLoader()
-    pipeline = ~pipeline
+    pipeline = ~(
+            pipeline >>
+            TextLoader()
+    )
 
     # Tag stance.
     if run_config.stance_tagger_cutoff is None:
@@ -56,22 +59,36 @@ def _run(
                         pipeline >>
                         run_config.stance_tagger
                 ) >>
-                StanceFilter(run_config.stance_tagger_threshold)
+                StanceFilter(run_config.stance_tagger_threshold) >>
+                StanceF1Randomizer(run_config.stance_target_f1)
         )
     elif run_config.stance_tagger_cutoff > 0:
         # noinspection PyTypeChecker
-        pipeline = ~(
+        pipeline = (
                 ~(
-                        pipeline %
-                        run_config.stance_tagger_cutoff >>
-                        run_config.stance_tagger
-                ) >> StanceFilter(run_config.stance_tagger_threshold)
-        ) ^ pipeline
+                        ~(
+                                pipeline %
+                                run_config.stance_tagger_cutoff >>
+                                run_config.stance_tagger
+                        ) >>
+                        StanceFilter(run_config.stance_tagger_threshold) >>
+                        StanceF1Randomizer(run_config.stance_target_f1)
+                ) ^
+                pipeline
+        )
 
     if run_config.stance_tagger != StanceTagger.ORIGINAL:
         name = run_config.stance_tagger.value
-        if run_config.stance_tagger_threshold > 0:
-            name += f"({run_config.stance_tagger_threshold:.2f})"
+        if (run_config.stance_tagger_threshold > 0 or
+                run_config.stance_target_f1 < 1):
+            name += "("
+            if run_config.stance_tagger_threshold > 0:
+                name += f"{run_config.stance_tagger_threshold:.2f}"
+            if run_config.stance_target_f1 < 1:
+                if run_config.stance_tagger_threshold > 0:
+                    name += ","
+                name += f"F1<={run_config.stance_target_f1:.2f}"
+            name += ")"
         if run_config.stance_tagger_cutoff is not None:
             name += f"@{run_config.stance_tagger_cutoff}"
         names.append(name)
@@ -84,11 +101,14 @@ def _run(
         )
     elif run_config.stance_reranker_cutoff > 0:
         # noinspection PyTypeChecker
-        pipeline = ~(
-                pipeline %
-                run_config.stance_reranker_cutoff >>
-                run_config.stance_reranker
-        ) ^ pipeline
+        pipeline = (
+                ~(
+                        pipeline %
+                        run_config.stance_reranker_cutoff >>
+                        run_config.stance_reranker
+                ) ^
+                pipeline
+        )
 
     if (run_config.stance_reranker != StanceReranker.ORIGINAL and
             (run_config.stance_reranker_cutoff is None or
@@ -106,11 +126,14 @@ def _run(
         )
     elif run_config.fairness_reranker_cutoff > 0:
         # noinspection PyTypeChecker
-        pipeline = ~(
-                pipeline %
-                run_config.fairness_reranker_cutoff >>
-                run_config.fairness_reranker
-        ) ^ pipeline
+        pipeline = (
+                ~(
+                        pipeline %
+                        run_config.fairness_reranker_cutoff >>
+                        run_config.fairness_reranker
+                ) ^
+                pipeline
+        )
 
     if (run_config.fairness_reranker != FairnessReranker.ORIGINAL and
             (run_config.fairness_reranker_cutoff is None or
@@ -292,7 +315,6 @@ def main() -> None:
     ]
     all_names: list[str] = [run.name for run in runs]
 
-
     print("Compute relevance effectiveness measures.")
     effectiveness_relevance = _run_experiment(
         runs,
@@ -310,7 +332,7 @@ def main() -> None:
     effectiveness = effectiveness_relevance.merge(
         effectiveness_quality,
         on=["qid", "name"],
-        suffixes=(" relevance", " quality")
+        suffixes=(" rel.", " qual.")
     )
 
     print("Compute stance measures.")
@@ -339,7 +361,7 @@ def main() -> None:
     diversity = diversity_relevance.merge(
         diversity_quality,
         on=["qid", "name"],
-        suffixes=(" relevance", " quality")
+        suffixes=(" rel.", " qual.")
     )
 
     experiment = effectiveness.merge(
@@ -359,7 +381,7 @@ def main() -> None:
         column = column.replace("(,", "(")
         column = column.replace(",)", ")")
         column = column.replace("()", "")
-        column = column.replace("(groups='FIRST,SECOND,NEUTRAL')",
+        column = column.replace("(groups='FIRST,NEUTRAL,SECOND')",
                                 "(FIRST,SECOND,NEUTRAL)")
         return column
 

@@ -35,8 +35,9 @@ class RunConfig:
         ),
         default=FairnessReranker.ORIGINAL,
     )
-    stance_tagger_threshold: float = 0.0
     stance_tagger_cutoff: Optional[int] = None
+    stance_tagger_threshold: float = 0.0
+    stance_target_f1: float = 1.0
     stance_reranker_cutoff: Optional[int] = None
     fairness_reranker_cutoff: Optional[int] = None
 
