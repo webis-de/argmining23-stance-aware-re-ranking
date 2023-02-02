@@ -25,7 +25,11 @@ def _f1_score(
         yield qid, score
 
 
-F1 = define(_f1_score, name="F1", support_cutoff=True)
+F1 = define(
+    _f1_score,
+    name="F1",
+    support_cutoff=True,
+)
 
 
 def _judged_stance(
@@ -43,7 +47,11 @@ def _judged_stance(
         yield qid, judged
 
 
-NumJudged = define(_judged_stance, name="NumJudged", support_cutoff=True)
+NumJudged = define(
+    _judged_stance,
+    name="NumJudged",
+    support_cutoff=True,
+)
 
 
 def _frequency(
@@ -60,9 +68,23 @@ def _frequency(
     return _wrapped
 
 
-FreqFirst = define(_frequency("FIRST"), name="FreqFirst", support_cutoff=True)
-FreqSecond = define(_frequency("SECOND"), name="FreqSecond",
-                    support_cutoff=True)
-FreqNeutral = define(_frequency("NEUTRAL"), name="FreqNeutral",
-                     support_cutoff=True)
-FreqNo = define(_frequency("NO"), name="FreqNo", support_cutoff=True)
+FreqFirst = define(
+    _frequency("FIRST"),
+    name="FreqFirst",
+    support_cutoff=True,
+)
+FreqSecond = define(
+    _frequency("SECOND"),
+    name="FreqSecond",
+    support_cutoff=True,
+)
+FreqNeutral = define(
+    _frequency("NEUTRAL"),
+    name="FreqNeutral",
+    support_cutoff=True,
+)
+FreqNo = define(
+    _frequency("NO"),
+    name="FreqNo",
+    support_cutoff=True,
+)
