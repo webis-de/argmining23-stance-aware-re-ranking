@@ -423,7 +423,7 @@ class FairnessMeasure(Measure, ABC):
             group_col = repr(self._group_col_param)
         groups = None
         if self._groups_param is not None:
-            groups = repr(",".join(self._groups_param))
+            groups = repr(",".join(sorted(self._groups_param)))
         protected_group_param = self._protected_group_param
         protected_group = None
         if isinstance(protected_group_param, ProtectedGroupStrategy):
