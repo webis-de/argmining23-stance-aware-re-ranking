@@ -122,16 +122,18 @@ class OpenAiStanceTagger(Transformer):
 
 
 @dataclass(frozen=True)
-class TextGenerationStanceTagger(Transformer):
+class Text2TextGenerationStanceTagger(Transformer):
     model: str
     verbose: bool = False
+
+    revision: int = 1
 
     def __post_init__(self):
         from fare.utils.nltk import download_nltk_dependencies
         download_nltk_dependencies("punkt")
 
     @cached_property
-    def _pipeline(self) -> Pipeline:
+    def _pipeline(self) -> Text2TextGenerationPipeline:
         return Text2TextGenerationPipeline(
             model=AutoModelForSeq2SeqLM.from_pretrained(self.model),
             tokenizer=AutoTokenizer.from_pretrained(self.model),
@@ -141,7 +143,7 @@ class TextGenerationStanceTagger(Transformer):
     @cached_property
     def _cache(self) -> Cache:
         from fare.config import CONFIG
-        cache_path = CONFIG.cache_directory_path / "text-generation" / \
+        cache_path = CONFIG.cache_directory_path / "text2text-generation" / \
                      self.model
         return Cache(str(cache_path))
 
@@ -378,6 +380,8 @@ class TsvStanceTagger(Transformer):
     stance_label_column: str
     fillna: bool = False
 
+    revision: int = 7
+
     @cached_property
     def _tsv_stance(self) -> DataFrame:
         df = read_csv(
@@ -403,10 +407,9 @@ class TsvStanceTagger(Transformer):
         return df
 
     def transform(self, ranking: DataFrame) -> DataFrame:
-        ranking = ranking.copy()
-        ranking = merge(
-            ranking, self._tsv_stance,
-            how="inner",
+        ranking = ranking.merge(
+            self._tsv_stance,
+            how="left",
             on=["qid", "docno"],
             suffixes=("_original", None),
         )
@@ -431,8 +434,8 @@ class GroundTruthStanceTagger(Transformer):
 
     def transform(self, ranking: DataFrame) -> DataFrame:
         ranking = ranking.copy()
-        ranking = merge(
-            ranking, self.qrels_stance,
+        ranking = ranking.merge(
+            self.qrels_stance,
             how="left",
             on=["qid", "docno"],
             suffixes=("_original", None),
@@ -494,10 +497,10 @@ class StanceTagger(Transformer, Enum):
     T0pp = "bigscience/T0pp"
     T0_3B = "bigscience/T0_3B"
     FLAN_T5_BASE = "google/flan-t5-base"
+    LONG_T5_TGLOBAL_BASE = "google/long-t5-tglobal-base"
     BART_LARGE_MNLI = "facebook/bart-large-mnli"
-    GPT_3_TSV = "gpt3-tsv"
-    GPT_3_TEXT_DAVINCI_003 = "text-davinci-003"
-    FLAN_T5_BASE_GPT_3_TEXT_DAVINCI_003 = "google/flan-t5-base & text-davinci-003"
+    GPT3_TSV = "gpt3-tsv"
+    GPT3_TEXT_DAVINCI_003 = "text-davinci-003"
     GROUND_TRUTH = "ground-truth"
 
     value: str
@@ -508,7 +511,7 @@ class StanceTagger(Transformer, Enum):
             return IdentityTransformer()
         elif self == StanceTagger.GROUND_TRUTH:
             return GroundTruthStanceTagger()
-        elif self == StanceTagger.GPT_3_TSV:
+        elif self == StanceTagger.GPT3_TSV:
             return TsvStanceTagger(
                 path=Path("data/stance_gpt.tsv"),
                 qid_column="qid",
@@ -516,33 +519,22 @@ class StanceTagger(Transformer, Enum):
                 stance_label_column="gpt_pred_conv",
                 fillna=True,
             )
-        elif self == StanceTagger.FLAN_T5_BASE_GPT_3_TEXT_DAVINCI_003:
-            return CombinedStanceTagger(
-                TextGenerationStanceTagger(
-                    "google/flan-t5-base",
-                    verbose=True,
-                ),
-                OpenAiStanceTagger(
-                    "text-davinci-003",
-                    verbose=True,
-                ),
-                max_difference=0.3,
-            )
         elif self in (
                 StanceTagger.T0,
                 StanceTagger.T0pp,
                 StanceTagger.T0_3B,
                 StanceTagger.FLAN_T5_BASE,
+                StanceTagger.LONG_T5_TGLOBAL_BASE,
         ):
             # noinspection PyTypeChecker
-            return TextGenerationStanceTagger(self.value, verbose=True)
+            return Text2TextGenerationStanceTagger(self.value, verbose=True)
         elif self in (
                 StanceTagger.BART_LARGE_MNLI,
         ):
             # noinspection PyTypeChecker
             return ZeroShotClassificationStanceTagger(self.value, verbose=True)
         elif self in (
-                StanceTagger.GPT_3_TEXT_DAVINCI_003,
+                StanceTagger.GPT3_TEXT_DAVINCI_003,
         ):
             # noinspection PyTypeChecker
             return OpenAiStanceTagger(self.value, verbose=True)
