@@ -374,7 +374,10 @@ def main() -> None:
         suffixes=("", " diversity")
     ).reset_index(drop=False)
 
+    old_column_name_mapping = {}
+
     def rename_column(column: str) -> str:
+        old_column_name = column
         column = column.replace("group_col='stance_label'", "")
         column = column.replace("tie_breaking='group-ascending'", "")
         column = column.replace(",,", ",")
@@ -383,6 +386,7 @@ def main() -> None:
         column = column.replace("()", "")
         column = column.replace("(groups='FIRST,NEUTRAL,SECOND')",
                                 "(FIRST,SECOND,NEUTRAL)")
+        old_column_name_mapping[old_column_name] = column
         return column
 
     experiment.columns = experiment.columns.map(rename_column)
@@ -416,7 +420,7 @@ def main() -> None:
             .groupby(by=["name", "name_index"], sort=False, group_keys=True) \
             .aggregate(aggregations)
 
-        # Export results.
+    # Export results.
     output_path = CONFIG.metrics_output_file_path
     if CONFIG.measures_per_query:
         output_path = output_path.with_suffix(
@@ -426,6 +430,37 @@ def main() -> None:
         experiment.to_csv(output_path, index=False, float_format="%.3f")
     if output_path.suffix == ".xlsx":
         experiment.to_excel(output_path, index=False)
+    if output_path.suffix == ".tex":
+        measures = [
+            *CONFIG.measures_relevance,
+            *CONFIG.measures_quality,
+            *CONFIG.measures_diversity_relevance,
+            *CONFIG.measures_diversity_quality,
+            *CONFIG.measures_stance,
+        ]
+        measures = [str(measure) for measure in measures]
+        with open(output_path, "w") as file:
+            file.write("\\begin{tabular}{" + "l" * (len(measures) + 2) + "}\n")
+            file.write("\\toprule\n")
+            line = ["Run", "\\#", *measures]
+            file.write(" & ".join(line) + " \\\\\n")
+            file.write("\\midrule\n")
+            for _, row in experiment.iterrows():
+                line = [
+                    row["name"].replace("_", "\\_"),
+                    str(row["name_index"]),
+                ]
+                for measure in measures:
+                    column_name = old_column_name_mapping[measure]
+                    metric = row[column_name]
+                    if CONFIG.significance_level is not None:
+                        significant = row[f"{column_name} t-test"]
+                        line.append(f"{metric:.3f}\\(^{{{significant}}}\\)")
+                    else:
+                        line.append(f"{metric:.3f}")
+                file.write(" & ".join(line) + " \\\\\n")
+            file.write("\\bottomrule\n")
+            file.write("\\end{tabular}\n")
 
 
 if __name__ == '__main__':
