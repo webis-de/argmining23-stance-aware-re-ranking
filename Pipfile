@@ -39,6 +39,7 @@ pyndeval = {git = "https://github.com/seanmacavaney/pyndeval.git"}
 numpy = "*"
 seaborn = "*"
 jupyter = "*"
+matplotlib = "*"
 
 [dev-packages]
 
