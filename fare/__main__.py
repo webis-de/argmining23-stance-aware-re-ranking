@@ -7,8 +7,6 @@ from fare.config import CONFIG
 
 init(no_download=CONFIG.offline)
 
-from collections import defaultdict
-from itertools import combinations
 from pathlib import Path
 from typing import NamedTuple
 
@@ -17,6 +15,7 @@ from pyterrier.io import read_qrels
 from pyterrier.pipelines import Experiment
 from pyterrier.transformer import Transformer
 from scipy.stats import ttest_rel
+from statsmodels.sandbox.stats.multicomp import MultiComparison
 
 from fare.config import RunConfig
 from fare.modules.fairness_reranker import FairnessReranker
@@ -149,28 +148,20 @@ def _run(
     return NamedPipeline(names, pipeline)
 
 
-def is_significant(
-        experiment: DataFrame,
-        significance_level: float,
-        name1: str,
-        name2: str,
-        measure: str,
-) -> bool:
-    experiment1 = experiment[experiment["name"] == name1]
-    experiment2 = experiment[experiment["name"] == name2]
-    t_test = ttest_rel(experiment1[measure], experiment2[measure])
-    significant = t_test.pvalue < significance_level
-    return significant
-
-
-def _pairwise_t_test(experiment: DataFrame) -> DataFrame:
-    experiment = experiment.copy()
-
+def _name_index(experiment: DataFrame) -> DataFrame:
     names = experiment["name"].unique()
     name_index = {name: i + 1 for i, name in enumerate(names)}
-    name_pairs = list(combinations(names, 2))
-
+    columns = experiment.columns.tolist()
     experiment["name_index"] = experiment["name"].map(name_index)
+    columns.insert(1, "name_index")
+    columns.remove("index")
+    return experiment[columns]
+
+
+def _significance_test(experiment: DataFrame) -> DataFrame:
+    significance_level = CONFIG.significance_level
+    if significance_level is None:
+        return experiment
 
     measure_columns = [
         measure
@@ -178,35 +169,43 @@ def _pairwise_t_test(experiment: DataFrame) -> DataFrame:
         if measure not in ("qid", "run", "name", "name_index", "index")
     ]
 
-    significance_level = CONFIG.significance_level
-    if significance_level is not None:
-        if len(name_pairs) > 0:
-            # Bonferroni correction.
-            significance_level /= len(name_pairs)
+    for measure in measure_columns:
+        comparison = MultiComparison(
+            experiment[measure],
+            experiment["name_index"],
+        )
+        _, _, results = comparison.allpairtest(
+            ttest_rel,
+            significance_level,
+            "bonf",
+        )
+        results = DataFrame([
+            {
+                "index1": result[0],
+                "index2": result[1],
+                "statistic": result[2],
+                "pvalue": result[3],
+                "pvalue_corrected": result[4],
+                "reject": result[5],
+            }
+            for result in results
+        ])
 
-        for measure in measure_columns:
-            pairwise_significance: dict[str, set[int]] = defaultdict(set)
-            for run1, run2 in name_pairs:
-                if is_significant(
-                        experiment,
-                        significance_level,
-                        run1, run2,
-                        measure,
-                ):
-                    pairwise_significance[run1].add(name_index[run2])
-                    pairwise_significance[run2].add(name_index[run1])
+        def significant_to(index: str) -> str:
+            df = results
+            df = df[(df["index1"] == index) | (df["index2"] == index)]
+            df = df.loc[results["reject"]]
+            significant = {*df["index1"], *df["index2"]} - {index}
+            indices = sorted(significant)
+            return ",".join(map(str, indices))
 
-            experiment[f"{measure} t-test"] = experiment["name"].map(
-                lambda name: ",".join(
-                    map(str, sorted(pairwise_significance[name]))
-                )
-            )
+        experiment[f"{measure} test"] = \
+            experiment["name_index"].map(significant_to)
 
     new_columns = ["qid", "run", "name", "name_index"]
     for measure in measure_columns:
         new_columns.append(measure)
-        if significance_level is not None:
-            new_columns.append(f"{measure} t-test")
+        new_columns.append(f"{measure} test")
     return experiment[new_columns]
 
 
@@ -293,8 +292,10 @@ def main() -> None:
         str(CONFIG.qrels_stance_file_path.absolute())
     )
     qrels_stance["stance_label"] = qrels_stance["label"]
-    qrels_diversity_relevance = _diversity_qrels(qrels_relevance, qrels_stance)
-    qrels_diversity_quality = _diversity_qrels(qrels_relevance, qrels_stance)
+    qrels_diversity_relevance = _diversity_qrels(qrels_relevance,
+                                                 qrels_stance)
+    qrels_diversity_quality = _diversity_qrels(qrels_relevance,
+                                               qrels_stance)
 
     max_teams = CONFIG.max_teams \
         if CONFIG.max_teams is not None else None
@@ -313,6 +314,15 @@ def main() -> None:
         )[:max_runs_per_team]
         for run_config in CONFIG.runs
     ]
+    if CONFIG.team_runs is not None:
+        runs = [
+            run
+            for run in runs
+            if any(
+                run.name.startswith(team_run)
+                for team_run in CONFIG.team_runs
+            )
+        ]
     all_names: list[str] = [run.name for run in runs]
 
     print("Compute relevance effectiveness measures.")
@@ -402,7 +412,9 @@ def main() -> None:
         lambda name: name.split(" + ")[0]
     )
     experiment = experiment.groupby(by="run", sort=False, group_keys=False) \
-        .apply(_pairwise_t_test)
+        .apply(_name_index).reset_index(drop=True)
+    experiment = experiment.groupby(by="run", sort=False, group_keys=False) \
+        .apply(_significance_test)
     del experiment["run"]
 
     # Aggregate results.
@@ -410,14 +422,15 @@ def main() -> None:
         aggregations = {
             column:
                 "first"
-                if (column.endswith("t-test") or column == "run"
+                if (column.endswith(" test") or column == "run"
                     or column == "name" or column == "name_index")
                 else "mean"
             for column in experiment.columns
             if column != "qid"
         }
         experiment = experiment \
-            .groupby(by=["name", "name_index"], sort=False, group_keys=True) \
+            .groupby(by=["name", "name_index"], sort=False,
+                     group_keys=True) \
             .aggregate(aggregations)
 
     # Export results.
@@ -431,18 +444,24 @@ def main() -> None:
     if output_path.suffix == ".xlsx":
         experiment.to_excel(output_path, index=False)
     if output_path.suffix == ".tex":
-        measures = [
-            *CONFIG.measures_relevance,
-            *CONFIG.measures_quality,
-            *CONFIG.measures_diversity_relevance,
-            *CONFIG.measures_diversity_quality,
-            *CONFIG.measures_stance,
+        measures_suffixes = [
+            (CONFIG.measures_relevance, " rel."),
+            (CONFIG.measures_quality, " qual."),
+            (CONFIG.measures_diversity_relevance, " rel."),
+            (CONFIG.measures_diversity_quality, " qual."),
+            (CONFIG.measures_stance, ""),
         ]
-        measures = [str(measure) for measure in measures]
+        measure_names = [
+            str(measure).replace("_", "\\_") + suffix
+            for measures, suffix in measures_suffixes
+            for measure in measures
+        ]
         with open(output_path, "w") as file:
-            file.write("\\begin{tabular}{" + "l" * (len(measures) + 2) + "}\n")
+            file.write(
+                "\\begin{tabular}{" + "l" * (
+                        len(measure_names) + 2) + "}\n")
             file.write("\\toprule\n")
-            line = ["Run", "\\#", *measures]
+            line = ["Run", "\\#", *measure_names]
             file.write(" & ".join(line) + " \\\\\n")
             file.write("\\midrule\n")
             for _, row in experiment.iterrows():
@@ -450,14 +469,18 @@ def main() -> None:
                     row["name"].replace("_", "\\_"),
                     str(row["name_index"]),
                 ]
-                for measure in measures:
-                    column_name = old_column_name_mapping[measure]
-                    metric = row[column_name]
-                    if CONFIG.significance_level is not None:
-                        significant = row[f"{column_name} t-test"]
-                        line.append(f"{metric:.3f}\\(^{{{significant}}}\\)")
-                    else:
-                        line.append(f"{metric:.3f}")
+                for measures, suffix in measures_suffixes:
+                    for measure in measures:
+                        column_name = old_column_name_mapping[
+                            f"{measure}{suffix}"
+                        ]
+                        metric = row[column_name]
+                        if CONFIG.significance_level is not None:
+                            significant = row[f"{column_name} test"]
+                            line.append(
+                                f"{metric:.3f}\\(^{{{significant}}}\\)")
+                        else:
+                            line.append(f"{metric:.3f}")
                 file.write(" & ".join(line) + " \\\\\n")
             file.write("\\bottomrule\n")
             file.write("\\end{tabular}\n")

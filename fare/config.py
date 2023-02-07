@@ -72,6 +72,9 @@ class Config:
 
     max_teams: Optional[int] = None
     max_runs_per_team: Optional[int] = None
+    team_runs: Optional[set[str]] = field(metadata=config(
+        decoder=set,
+    ), default=None)
 
     runs: List[RunConfig] = field(default_factory=list)
     stance_tagger_zero_shot_score_threshold: float = 0.0

@@ -6,98 +6,222 @@ runsDirectoryPath: data/runs/
 corpusFilePath: data/corpus/touche-task2-passages-version-002.jsonl
 cacheDirectoryPath: data/cache/
 
+# Re-ranking with ground-truth stance labels:
+teamRuns:
+- Aldo-Nadi seupd2122-kueri_rrf_reranked
+- Asuna asuna-run-5
+- Captain-Levi levirank_dense_initial_retrieval
+- Captain-Tempesta hextech_run_1
+- Grimjack grimjack-fair-reranking-argumentative-axioms
+- Katana Colbert edinburg
+- Olivier-Armstrong tfid_arg_similarity
+- Puss-in-Boots BM25-Baseline
 runs:
-#- stanceTagger: original
-#- stanceTagger: ground-truth
-#- stanceTagger: bigscience/T0
-#- stanceTagger: bigscience/T0pp
-#- stanceTagger: bigscience/T0_3B
-#- stanceTagger: facebook/bart-large-mnli
-#- stanceTagger: google/flan-t5-base
-#- stanceTagger: text-davinci-003
-#  stanceTaggerThreshold: 0.00
-#  stanceTaggerCutoff: 20
-#  stanceReranker: stance-first # FIRST, SECOND, or NEUTRAL
-#  stanceReranker: subjective-stance-first # FIRST or SECOND
-#  stanceReranker: original
-#  stanceRerankerCutoff: 20
-#  fairnessReranker: original
-#  fairnessReranker: alternating-stance
-#  fairnessReranker: inverse-stance-gain
-#  fairnessReranker: boost-minority-stance
-#  fairnessRerankerCutoff: 20
-
 - {} # original
 - stanceTagger: ground-truth
-- stanceTagger: text-davinci-003
-  stanceTaggerCutoff: 5
-- stanceTagger: google/flan-t5-base
-  stanceTaggerThreshold: 0.4
-  stanceTaggerCutoff: 20
-- stanceTagger: facebook/bart-large-mnli
-  stanceTaggerThreshold: 0.25
-  stanceTaggerCutoff: 20
-
+  stanceReranker: stance-first
+  stanceRerankerCutoff: 5
 - stanceTagger: ground-truth
   fairnessReranker: alternating-stance
-  fairnessRerankerCutoff: 20
+  fairnessRerankerCutoff: 5
 - stanceTagger: ground-truth
   stanceReranker: stance-first
-- stanceTagger: ground-truth
-  stanceReranker: stance-first
+  stanceRerankerCutoff: 5
   fairnessReranker: alternating-stance
-  fairnessRerankerCutoff: 20
-
-- stanceTagger: google/flan-t5-base
-  stanceTaggerThreshold: 0.4
-  stanceTaggerCutoff: 20
-  fairnessReranker: alternating-stance
-  fairnessRerankerCutoff: 20
-- stanceTagger: google/flan-t5-base
-  stanceTaggerThreshold: 0.4
-  stanceTaggerCutoff: 20
-  stanceReranker: stance-first
-- stanceTagger: google/flan-t5-base
-  stanceTaggerThreshold: 0.4
-  stanceTaggerCutoff: 20
-  stanceReranker: stance-first
-  fairnessReranker: alternating-stance
-  fairnessRerankerCutoff: 20
-
-stanceTaggerZeroShotThreshold: 0.25
-
-#maxTeams: 3
-#maxRunsPerTeam: 2
-
+  fairnessRerankerCutoff: 5
 measuresRelevance:
 - nDCG@5
 measuresQuality:
 - nDCG@5
 measuresStance:
-#- rND(group_col='stance_label',tie_breaking='group-ascending')@5
-#- rKL(group_col='stance_label',tie_breaking='group-ascending')@5
-#- rRD(group_col='stance_label',tie_breaking='group-ascending')@5
 - rND(group_col='stance_label',tie_breaking='group-ascending',groups='FIRST,SECOND,NEUTRAL')@5
 - rKL(group_col='stance_label',tie_breaking='group-ascending',groups='FIRST,SECOND,NEUTRAL')@5
 - rRD(group_col='stance_label',tie_breaking='group-ascending',groups='FIRST,SECOND,NEUTRAL')@5
-- F1
-- F1@5
-- NumJudged
-- NumJudged@5
-- FreqFirst
-- FreqSecond
-- FreqNeutral
-- FreqNo
 measuresDiversityRelevance:
 - alpha_nDCG@5
 measuresDiversityQuality:
 - alpha_nDCG@5
+significanceLevel: 0.05
+#metricsOutputFilePath: data/metrics-reranking-ground-truth.csv
+metricsOutputFilePath: data/metrics-reranking-ground-truth.tex
+
+# Effect of stance tagger F1 score on improvements:
+#teamRuns:
+#- Aldo-Nadi seupd2122-kueri_rrf_reranked
+#- Asuna asuna-run-5
+#- Captain-Levi levirank_dense_initial_retrieval
+#- Captain-Tempesta hextech_run_1
+#- Grimjack grimjack-fair-reranking-argumentative-axioms
+#- Katana Colbert edinburg
+#- Olivier-Armstrong tfid_arg_similarity
+#- Puss-in-Boots BM25-Baseline
+#runs:
+#- {} # original
+#- stanceTagger: ground-truth
+#  stanceTargetF1: 1.0
+#  stanceReranker: stance-first
+#  stanceRerankerCutoff: 5
+#  fairnessReranker: alternating-stance
+#  fairnessRerankerCutoff: 5
+#- stanceTagger: ground-truth
+#  stanceTargetF1: 0.9
+#  stanceReranker: stance-first
+#  stanceRerankerCutoff: 5
+#  fairnessReranker: alternating-stance
+#  fairnessRerankerCutoff: 5
+#- stanceTagger: ground-truth
+#  stanceTargetF1: 0.8
+#  stanceReranker: stance-first
+#  stanceRerankerCutoff: 5
+#  fairnessReranker: alternating-stance
+#  fairnessRerankerCutoff: 5
+#- stanceTagger: ground-truth
+#  stanceTargetF1: 0.7
+#  stanceReranker: stance-first
+#  stanceRerankerCutoff: 5
+#  fairnessReranker: alternating-stance
+#  fairnessRerankerCutoff: 5
+#- stanceTagger: ground-truth
+#  stanceTargetF1: 0.6
+#  stanceReranker: stance-first
+#  stanceRerankerCutoff: 5
+#  fairnessReranker: alternating-stance
+#  fairnessRerankerCutoff: 5
+#- stanceTagger: ground-truth
+#  stanceTargetF1: 0.5
+#  stanceReranker: stance-first
+#  stanceRerankerCutoff: 5
+#  fairnessReranker: alternating-stance
+#  fairnessRerankerCutoff: 5
+#- stanceTagger: ground-truth
+#  stanceTargetF1: 0.4
+#  stanceReranker: stance-first
+#  stanceRerankerCutoff: 5
+#  fairnessReranker: alternating-stance
+#  fairnessRerankerCutoff: 5
+#- stanceTagger: ground-truth
+#  stanceTargetF1: 0.3
+#  stanceReranker: stance-first
+#  stanceRerankerCutoff: 5
+#  fairnessReranker: alternating-stance
+#  fairnessRerankerCutoff: 5
+#measuresRelevance:
+#- nDCG@5
+#measuresQuality:
+#- nDCG@5
+#measuresStance:
+#- F1
+#- rND(group_col='stance_label',tie_breaking='group-ascending',groups='FIRST,SECOND,NEUTRAL')@5
+#- rKL(group_col='stance_label',tie_breaking='group-ascending',groups='FIRST,SECOND,NEUTRAL')@5
+#- rRD(group_col='stance_label',tie_breaking='group-ascending',groups='FIRST,SECOND,NEUTRAL')@5
+#measuresDiversityRelevance:
+#- alpha_nDCG@5
+#measuresDiversityQuality:
+#- alpha_nDCG@5
 #measuresPerQuery: true
+#metricsOutputFilePath: data/metrics-reranking-f1.csv
+
+# Stance tagging:
+#teamRuns:
+#- Aldo-Nadi seupd2122-kueri_rrf_reranked
+#- Asuna asuna-run-5
+#- Captain-Levi levirank_dense_initial_retrieval
+#- Captain-Tempesta hextech_run_1
+#- Grimjack grimjack-fair-reranking-argumentative-axioms
+#- Katana Colbert edinburg
+#- Olivier-Armstrong tfid_arg_similarity
+#- Puss-in-Boots BM25-Baseline
+#runs:
+##- { } # original
+#- stanceTagger: ground-truth
+#- stanceTagger: google/flan-t5-base
+#  stanceTaggerThreshold: 0.5
+#  stanceTaggerCutoff: 5
+#- stanceTagger: gpt3-tsv
+#measuresStance:
+#- F1
+#- NumJudged
+#- F1@5
+#- NumJudged@5
+##- FreqFirst
+##- FreqSecond
+##- FreqNeutral
+##- FreqNo
+##metricsOutputFilePath: data/metrics-stance-tagging.csv
+#metricsOutputFilePath: data/metrics-stance-tagging.tex
+
+# Re-ranking with predicted GPT-3 stance labels:
+#teamRuns:
+#- Aldo-Nadi seupd2122-kueri_rrf_reranked
+#- Asuna asuna-run-5
+#- Captain-Levi levirank_dense_initial_retrieval
+#- Captain-Tempesta hextech_run_1
+#- Grimjack grimjack-fair-reranking-argumentative-axioms
+#- Katana Colbert edinburg
+#- Olivier-Armstrong tfid_arg_similarity
+#- Puss-in-Boots BM25-Baseline
+#runs:
+#- { } # original
+#- stanceTagger: gpt3-tsv
+#  stanceReranker: stance-first
+#  stanceRerankerCutoff: 5
+#- stanceTagger: gpt3-tsv
+#  fairnessReranker: alternating-stance
+#  fairnessRerankerCutoff: 5
+#- stanceTagger: gpt3-tsv
+#  stanceReranker: stance-first
+#  stanceRerankerCutoff: 5
+#  fairnessReranker: alternating-stance
+#  fairnessRerankerCutoff: 5
+#measuresRelevance:
+#- nDCG@5
+#measuresQuality:
+#- nDCG@5
+#measuresStance:
+#- rND(group_col='stance_label',tie_breaking='group-ascending',groups='FIRST,SECOND,NEUTRAL')@5
+#- rKL(group_col='stance_label',tie_breaking='group-ascending',groups='FIRST,SECOND,NEUTRAL')@5
+#- rRD(group_col='stance_label',tie_breaking='group-ascending',groups='FIRST,SECOND,NEUTRAL')@5
+#measuresDiversityRelevance:
+#- alpha_nDCG@5
+#measuresDiversityQuality:
+#- alpha_nDCG@5
+#significanceLevel: 0.05
+##metricsOutputFilePath: data/metrics-reranking-gpt3.csv
+#metricsOutputFilePath: data/metrics-reranking-gpt3.tex
+
+# Other options:
+#maxTeams: 3
+#maxRunsPerTeam: 2
+#teamRuns:
+#- Aldo-Nadi seupd2122-kueri_kueristopv2_BM2_false_porter
+#- Aldo-Nadi seupd2122-kueri_kueristopv2_BM2_false_porter_reranked
+#- Aldo-Nadi seupd2122-kueri_RF_reranked
+#- Aldo-Nadi seupd2122-kueri_rrf
+#- Aldo-Nadi seupd2122-kueri_rrf_reranked
+#- Asuna asuna-run-5
+#- Captain-Levi levirank_voting_retrieval
+#- Captain-Levi levirank_psuedo_relevance_feedback
+#- Captain-Levi levirank_baseline_large_duo_t5
+#- Captain-Levi levirank_dense_initial_retrieval
+#- Captain-Levi levirank_psuedo_relevance_feedback+voting
+#- Captain-Tempesta hextech_run_1
+#- Captain-Tempesta hextech_run_2
+#- Captain-Tempesta hextech_run_3
+#- Captain-Tempesta hextech_run_4
+#- Captain-Tempesta hextech_run_5
+#- Grimjack grimjack-baseline
+#- Grimjack grimjack-argumentative-axioms
+#- Grimjack grimjack-fair-reranking-argumentative-axioms
+#- Grimjack grimjack-all-you-need-is-t0
+#- Grimjack grimjack-fair-argumentative-reranking-with-t0
+#- Katana Colbert fine tune on touche data
+#- Katana Colbert trained by me
+#- Katana Colbert edinburg
+#- Olivier-Armstrong tfid_arg_similarity
+#- Puss-in-Boots BM25-Baseline
 
 #significanceLevel: 0.05
 
-metricsOutputFilePath: data/metrics.csv
-#metricsOutputFilePath: data/metrics.xlsx
 
 # Remove documents without judgments before evaluation.
 #filterByQrels: true
@@ -106,4 +230,4 @@ metricsOutputFilePath: data/metrics.csv
 # Won't work unless PyTerrier and NLTK dependencies have previously been downloaded.
 #offline: true
 
-openAiApiKey: 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
+openAiApiKey: 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
