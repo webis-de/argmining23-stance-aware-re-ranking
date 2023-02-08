@@ -15,13 +15,17 @@ from openai.error import RateLimitError
 from pandas import DataFrame, Series, read_csv, merge
 from pyterrier.transformer import Transformer, IdentityTransformer
 from ratelimit import limits, sleep_and_retry
+from torch import Tensor
 from torch.cuda import is_available
+from torch.nn.functional import softmax
 from tqdm.auto import tqdm
 from transformers import (
-    Pipeline, Text2TextGenerationPipeline, AutoTokenizer,
+    Text2TextGenerationPipeline, AutoTokenizer,
     AutoModelForSeq2SeqLM, AutoModelForSequenceClassification,
-    ZeroShotClassificationPipeline
+    ZeroShotClassificationPipeline, AutoModelForCausalLM, PreTrainedModel,
+    PreTrainedTokenizer
 )
+from transformers.modeling_outputs import CausalLMOutput
 
 from fare import logger
 from fare.utils.stance import stance_value, stance_label
@@ -443,6 +447,170 @@ class GroundTruthStanceTagger(Transformer):
         return ranking
 
 
+@dataclass(frozen=True)
+class TextGenerationStanceTagger(Transformer):
+    model: str
+    verbose: bool = False
+
+    revision: int = 2
+
+    def __post_init__(self):
+        from fare.utils.nltk import download_nltk_dependencies
+        download_nltk_dependencies("punkt")
+
+    @cached_property
+    def _model(self) -> PreTrainedModel:
+        model: PreTrainedModel = AutoModelForCausalLM.from_pretrained(
+            self.model)
+        model.to("cuda:0" if is_available() else "cpu")
+        model.eval()
+        return model
+
+    @cached_property
+    def _tokenizer(self) -> PreTrainedTokenizer:
+        return AutoTokenizer.from_pretrained(self.model)
+
+    @cached_property
+    def _cache(self) -> Cache:
+        from fare.config import CONFIG
+        cache_path = CONFIG.cache_directory_path / "text-generation" / \
+                     self.model
+        return Cache(str(cache_path))
+
+    def _label_token(self, label: str) -> int:
+        tokens = self._tokenizer.encode(label, add_special_tokens=False)
+        if len(tokens) > 1:
+            logger.warning(
+                f"Label '{label}' should be a single token, "
+                f"but was {tokens}."
+            )
+        return tokens[0]
+
+    @cached_property
+    def _token_yes(self) -> int:
+        return self._label_token("yes")
+
+    @cached_property
+    def _token_no(self) -> int:
+        return self._label_token("no")
+
+    @cached_property
+    def _token_pro(self) -> int:
+        return self._label_token("pro")
+
+    @cached_property
+    def _token_con(self) -> int:
+        return self._label_token("con")
+
+    def _score(
+            self,
+            task: str,
+            positive_tokens: list[int],
+            negative_tokens: list[int],
+    ) -> float:
+        if task not in self._cache:
+            encoded = self._tokenizer(
+                task,
+                return_tensors="pt",
+                truncation=True,
+            )
+            output: CausalLMOutput = self._model(**encoded)
+            label_tokens = sorted([*positive_tokens, *negative_tokens])
+            logits: Tensor = output.logits[:, 0, label_tokens]
+            probabilities = softmax(logits, dim=1)
+            scores = {
+                token: probabilities[:, i].cpu().item()
+                for i, token in enumerate(label_tokens)
+            }
+            return sum(scores[token] for token in positive_tokens)
+        return self._cache[task]
+
+    def _sentence_stance_single_target(
+            self,
+            sentence: str,
+            comparative_object: str,
+    ) -> float:
+        if comparative_object not in sentence:
+            return nan
+
+        task_pro = f"{sentence} " \
+                   f"Is {comparative_object} good? yes or no?"
+        score_pro = self._score(
+            task_pro,
+            [self._token_yes, self._token_pro],
+            [self._token_no, self._token_con],
+        )
+
+        task_con = f"{sentence} " \
+                   f"Is {comparative_object} bad? yes or no?"
+        score_con = self._score(
+            task_con,
+            [self._token_yes, self._token_con],
+            [self._token_no, self._token_pro],
+        )
+        if score_pro < 0.25 and score_con < 0.25:
+            return nan
+        else:
+            return score_pro - score_con
+
+    def _sentence_stance_multi_target(
+            self,
+            sentence: str,
+            object_first: str,
+            object_second: str,
+    ) -> float:
+        stance_a = self._sentence_stance_single_target(sentence, object_first)
+        stance_b = self._sentence_stance_single_target(sentence, object_second)
+        if isnan(stance_a) and isnan(stance_b):
+            return nan
+        elif isnan(stance_a):
+            return -stance_b
+        elif isnan(stance_b):
+            return stance_a
+        else:
+            return stance_a - stance_b
+
+    def _stance_multi_target(self, row: Series) -> float:
+        object_first = row["object_first"]
+        object_second = row["object_second"]
+        sentences = sent_tokenize(row["text"])
+        stances = [
+            self._sentence_stance_multi_target(
+                sentence,
+                object_first,
+                object_second,
+            )
+            for sentence in sentences
+        ]
+        stances = [stance for stance in stances if not isnan(stance)]
+        if len(stances) == 0:
+            return nan
+        stance = mean(stances)
+        return stance
+
+    def transform(self, ranking: DataFrame) -> DataFrame:
+        ranking = ranking.copy()
+        if "stance_value" in ranking.columns:
+            ranking.rename({"stance_value": "stance_value_original"})
+        if "stance_label" in ranking.columns:
+            ranking.rename({"stance_label": "stance_label_original"})
+
+        rows = ranking.iterrows()
+        if self.verbose:
+            rows = tqdm(
+                rows,
+                total=len(ranking),
+                desc=f"Tag stance with {self.model}",
+                unit="document",
+            )
+        ranking["stance_value"] = [
+            self._stance_multi_target(row)
+            for _, row in rows
+        ]
+        ranking["stance_label"] = ranking["stance_value"].map(stance_label)
+        return ranking
+
+
 @dataclass
 class CombinedStanceTagger(Transformer):
     tagger1: Transformer
@@ -493,6 +661,7 @@ class CombinedStanceTagger(Transformer):
 
 class StanceTagger(Transformer, Enum):
     ORIGINAL = "original"
+    GPT2 = "gpt2"
     T0 = "bigscience/T0"
     T0pp = "bigscience/T0pp"
     T0_3B = "bigscience/T0_3B"
@@ -538,6 +707,11 @@ class StanceTagger(Transformer, Enum):
         ):
             # noinspection PyTypeChecker
             return OpenAiStanceTagger(self.value, verbose=True)
+        elif self in (
+                StanceTagger.GPT2,
+        ):
+            # noinspection PyTypeChecker
+            return TextGenerationStanceTagger(self.value, verbose=True)
         else:
             raise ValueError(f"Unknown stance tagger: {self}")
 
