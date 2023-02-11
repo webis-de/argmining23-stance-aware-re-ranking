@@ -73,7 +73,7 @@ class Config:
     max_teams: Optional[int] = None
     max_runs_per_team: Optional[int] = None
     team_runs: Optional[set[str]] = field(metadata=config(
-        decoder=set,
+        decoder=lambda runs: set(runs) if runs is not None else None
     ), default=None)
 
     runs: List[RunConfig] = field(default_factory=list)
