@@ -4,6 +4,7 @@ from ir_measures import Measure
 from pyterrier import init
 
 from fare.config import CONFIG
+from fare.modules.diversity_reranker import DiversityReranker
 
 init(no_download=CONFIG.offline)
 
@@ -22,7 +23,7 @@ from fare.modules.fairness_reranker import FairnessReranker
 from fare.modules.runs_loader import RunLoader
 from fare.modules.stance_filter import StanceFilter
 from fare.modules.stance_randomizer import StanceF1Randomizer
-from fare.modules.stance_reranker import StanceReranker
+from fare.modules.effectiveness_reranker import EffectivenessReranker
 from fare.modules.stance_tagger import StanceTagger
 from fare.modules.text_loader import TextLoader
 from fare.modules.topics_loader import parse_topics
@@ -92,32 +93,57 @@ def _run(
             name += f"@{run_config.stance_tagger_cutoff}"
         names.append(name)
 
-    # Re-rank stance/subjective first.
-    if run_config.stance_reranker_cutoff is None:
+    # Re-rank for effectiveness.
+    if run_config.effectiveness_reranker_cutoff is None:
         pipeline = ~(
                 pipeline >>
-                run_config.stance_reranker
+                run_config.effectiveness_reranker
         )
-    elif run_config.stance_reranker_cutoff > 0:
+    elif run_config.effectiveness_reranker_cutoff > 0:
         # noinspection PyTypeChecker
         pipeline = (
                 ~(
                         pipeline %
-                        run_config.stance_reranker_cutoff >>
-                        run_config.stance_reranker
+                        run_config.effectiveness_reranker_cutoff >>
+                        run_config.effectiveness_reranker
                 ) ^
                 pipeline
         )
 
-    if (run_config.stance_reranker != StanceReranker.ORIGINAL and
-            (run_config.stance_reranker_cutoff is None or
-             run_config.stance_reranker_cutoff > 0)):
-        name = run_config.stance_reranker.value
-        if run_config.stance_reranker_cutoff is not None:
-            name += f"@{run_config.stance_reranker_cutoff}"
+    if (run_config.effectiveness_reranker != EffectivenessReranker.ORIGINAL and
+            (run_config.effectiveness_reranker_cutoff is None or
+             run_config.effectiveness_reranker_cutoff > 0)):
+        name = run_config.effectiveness_reranker.value
+        if run_config.effectiveness_reranker_cutoff is not None:
+            name += f"@{run_config.effectiveness_reranker_cutoff}"
         names.append(name)
 
-    # Fair re-ranking.
+    # Re-rank for diversity.
+    if run_config.diversity_reranker_cutoff is None:
+        pipeline = ~(
+                pipeline >>
+                run_config.diversity_reranker
+        )
+    elif run_config.diversity_reranker_cutoff > 0:
+        # noinspection PyTypeChecker
+        pipeline = (
+                ~(
+                        pipeline %
+                        run_config.diversity_reranker_cutoff >>
+                        run_config.diversity_reranker
+                ) ^
+                pipeline
+        )
+
+    if (run_config.diversity_reranker != DiversityReranker.ORIGINAL and
+            (run_config.diversity_reranker_cutoff is None or
+             run_config.diversity_reranker_cutoff > 0)):
+        name = run_config.diversity_reranker.value
+        if run_config.diversity_reranker_cutoff is not None:
+            name += f"@{run_config.diversity_reranker_cutoff}"
+        names.append(name)
+
+    # Re-rank for fairness.
     if run_config.fairness_reranker_cutoff is None:
         pipeline = ~(
                 pipeline >>
@@ -292,10 +318,12 @@ def main() -> None:
         str(CONFIG.qrels_stance_file_path.absolute())
     )
     qrels_stance["stance_label"] = qrels_stance["label"]
-    qrels_diversity_relevance = _diversity_qrels(qrels_relevance,
-                                                 qrels_stance)
-    qrels_diversity_quality = _diversity_qrels(qrels_relevance,
-                                               qrels_stance)
+    qrels_diversity_relevance = _diversity_qrels(
+        qrels_relevance, qrels_stance
+    )
+    qrels_diversity_quality = _diversity_qrels(
+        qrels_relevance, qrels_stance
+    )
 
     max_teams = CONFIG.max_teams \
         if CONFIG.max_teams is not None else None
@@ -345,15 +373,6 @@ def main() -> None:
         suffixes=(" rel.", " qual.")
     )
 
-    print("Compute stance measures.")
-    # noinspection PyTypeChecker
-    stance = _run_experiment(
-        runs,
-        topics,
-        qrels_stance,
-        CONFIG.measures_stance,
-    )
-
     print("Compute relevance diversity measures.")
     diversity_relevance = _run_experiment(
         runs,
@@ -374,12 +393,21 @@ def main() -> None:
         suffixes=(" rel.", " qual.")
     )
 
+    print("Compute stance measures.")
+    # noinspection PyTypeChecker
+    stance = _run_experiment(
+        runs,
+        topics,
+        qrels_stance,
+        CONFIG.measures_stance,
+    )
+
     experiment = effectiveness.merge(
-        stance,
+        diversity,
         on=["qid", "name"],
         suffixes=("", " stance")
     ).merge(
-        diversity,
+        stance,
         on=["qid", "name"],
         suffixes=("", " diversity")
     ).reset_index(drop=False)

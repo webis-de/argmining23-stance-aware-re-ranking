@@ -9,8 +9,9 @@ from yaml import safe_load
 # noinspection PyUnresolvedReferences
 import fare.metric.fairness
 from fare.metric import parse_measure
+from fare.modules.diversity_reranker import DiversityReranker
 from fare.modules.fairness_reranker import FairnessReranker
-from fare.modules.stance_reranker import StanceReranker
+from fare.modules.effectiveness_reranker import EffectivenessReranker
 from fare.modules.stance_tagger import StanceTagger
 
 
@@ -23,22 +24,29 @@ class RunConfig:
         ),
         default=StanceTagger.ORIGINAL,
     )
-    stance_reranker: StanceReranker = field(
+    stance_tagger_cutoff: Optional[int] = None
+    stance_tagger_threshold: float = 0.0
+    stance_target_f1: float = 1.0
+    effectiveness_reranker: EffectivenessReranker = field(
         metadata=config(
-            decoder=StanceReranker
+            decoder=EffectivenessReranker
         ),
-        default=StanceReranker.ORIGINAL,
+        default=EffectivenessReranker.ORIGINAL,
     )
+    effectiveness_reranker_cutoff: Optional[int] = None
+    diversity_reranker: DiversityReranker = field(
+        metadata=config(
+            decoder=DiversityReranker
+        ),
+        default=DiversityReranker.ORIGINAL,
+    )
+    diversity_reranker_cutoff: Optional[int] = None
     fairness_reranker: FairnessReranker = field(
         metadata=config(
             decoder=FairnessReranker
         ),
         default=FairnessReranker.ORIGINAL,
     )
-    stance_tagger_cutoff: Optional[int] = None
-    stance_tagger_threshold: float = 0.0
-    stance_target_f1: float = 1.0
-    stance_reranker_cutoff: Optional[int] = None
     fairness_reranker_cutoff: Optional[int] = None
 
 

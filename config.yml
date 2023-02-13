@@ -22,13 +22,10 @@ cacheDirectoryPath: data/cache/
 #  stanceReranker: stance-first
 #  stanceRerankerCutoff: 5
 #- stanceTagger: ground-truth
-#  fairnessReranker: alternating-stance
-#  fairnessRerankerCutoff: 5
-#- stanceTagger: ground-truth
 #  stanceReranker: stance-first
 #  stanceRerankerCutoff: 5
-#  fairnessReranker: alternating-stance
-#  fairnessRerankerCutoff: 5
+#  diversityReranker: alternating-stance
+#  diversityRerankerCutoff: 5
 #measuresRelevance:
 #- nDCG@5
 #measuresQuality:
@@ -42,8 +39,8 @@ cacheDirectoryPath: data/cache/
 #measuresDiversityQuality:
 #- alpha_nDCG@5
 #significanceLevel: 0.05
-##metricsOutputFilePath: data/metrics-reranking-ground-truth.csv
-#metricsOutputFilePath: data/metrics-reranking-ground-truth.tex
+#metricsOutputFilePath: data/metrics-reranking-ground-truth.csv
+##metricsOutputFilePath: data/metrics-reranking-ground-truth.tex
 
 # Re-ranking all with ground-truth stance labels:
 #runs:
@@ -52,13 +49,10 @@ cacheDirectoryPath: data/cache/
 #  stanceReranker: stance-first
 #  stanceRerankerCutoff: 5
 #- stanceTagger: ground-truth
-#  fairnessReranker: alternating-stance
-#  fairnessRerankerCutoff: 5
-#- stanceTagger: ground-truth
 #  stanceReranker: stance-first
 #  stanceRerankerCutoff: 5
-#  fairnessReranker: alternating-stance
-#  fairnessRerankerCutoff: 5
+#  diversityReranker: alternating-stance
+#  diversityRerankerCutoff: 5
 #measuresRelevance:
 #- nDCG@5
 #measuresQuality:
@@ -88,12 +82,10 @@ cacheDirectoryPath: data/cache/
 #- {} # original
 #- stanceReranker: stance-first
 #  stanceRerankerCutoff: 5
-#- fairnessReranker: alternating-stance
-#  fairnessRerankerCutoff: 5
 #- stanceReranker: stance-first
 #  stanceRerankerCutoff: 5
-#  fairnessReranker: alternating-stance
-#  fairnessRerankerCutoff: 5
+#  diversityReranker: alternating-stance
+#  diversityRerankerCutoff: 5
 #measuresRelevance:
 #- nDCG@5
 #measuresQuality:
@@ -115,12 +107,10 @@ cacheDirectoryPath: data/cache/
 #- {} # original
 #- stanceReranker: stance-first
 #  stanceRerankerCutoff: 5
-#- fairnessReranker: alternating-stance
-#  fairnessRerankerCutoff: 5
 #- stanceReranker: stance-first
 #  stanceRerankerCutoff: 5
-#  fairnessReranker: alternating-stance
-#  fairnessRerankerCutoff: 5
+#  diversityReranker: alternating-stance
+#  diversityRerankerCutoff: 5
 #measuresRelevance:
 #- nDCG@5
 #measuresQuality:
@@ -143,62 +133,62 @@ cacheDirectoryPath: data/cache/
 #  stanceTargetF1: 1.0
 #  stanceReranker: stance-first
 #  stanceRerankerCutoff: 5
-#  fairnessReranker: alternating-stance
-#  fairnessRerankerCutoff: 5
+#  diversityReranker: alternating-stance
+#  diversityRerankerCutoff: 5
 #- stanceTagger: ground-truth
 #  stanceTargetF1: 0.9
 #  stanceReranker: stance-first
 #  stanceRerankerCutoff: 5
-#  fairnessReranker: alternating-stance
-#  fairnessRerankerCutoff: 5
+#  diversityReranker: alternating-stance
+#  diversityRerankerCutoff: 5
 #- stanceTagger: ground-truth
 #  stanceTargetF1: 0.8
 #  stanceReranker: stance-first
 #  stanceRerankerCutoff: 5
-#  fairnessReranker: alternating-stance
-#  fairnessRerankerCutoff: 5
+#  diversityReranker: alternating-stance
+#  diversityRerankerCutoff: 5
 #- stanceTagger: ground-truth
 #  stanceTargetF1: 0.7
 #  stanceReranker: stance-first
 #  stanceRerankerCutoff: 5
-#  fairnessReranker: alternating-stance
-#  fairnessRerankerCutoff: 5
+#  diversityReranker: alternating-stance
+#  diversityRerankerCutoff: 5
 #- stanceTagger: ground-truth
 #  stanceTargetF1: 0.6
 #  stanceReranker: stance-first
 #  stanceRerankerCutoff: 5
-#  fairnessReranker: alternating-stance
-#  fairnessRerankerCutoff: 5
+#  diversityReranker: alternating-stance
+#  diversityRerankerCutoff: 5
 #- stanceTagger: ground-truth
 #  stanceTargetF1: 0.5
 #  stanceReranker: stance-first
 #  stanceRerankerCutoff: 5
-#  fairnessReranker: alternating-stance
-#  fairnessRerankerCutoff: 5
+#  diversityReranker: alternating-stance
+#  diversityRerankerCutoff: 5
 #- stanceTagger: ground-truth
 #  stanceTargetF1: 0.4
 #  stanceReranker: stance-first
 #  stanceRerankerCutoff: 5
-#  fairnessReranker: alternating-stance
-#  fairnessRerankerCutoff: 5
+#  diversityReranker: alternating-stance
+#  diversityRerankerCutoff: 5
 #- stanceTagger: ground-truth
 #  stanceTargetF1: 0.3
 #  stanceReranker: stance-first
 #  stanceRerankerCutoff: 5
-#  fairnessReranker: alternating-stance
-#  fairnessRerankerCutoff: 5
+#  diversityReranker: alternating-stance
+#  diversityRerankerCutoff: 5
 #- stanceTagger: ground-truth
 #  stanceTargetF1: 0.2
 #  stanceReranker: stance-first
 #  stanceRerankerCutoff: 5
-#  fairnessReranker: alternating-stance
-#  fairnessRerankerCutoff: 5
+#  diversityReranker: alternating-stance
+#  diversityRerankerCutoff: 5
 #- stanceTagger: ground-truth
 #  stanceTargetF1: 0.1
 #  stanceReranker: stance-first
 #  stanceRerankerCutoff: 5
-#  fairnessReranker: alternating-stance
-#  fairnessRerankerCutoff: 5
+#  diversityReranker: alternating-stance
+#  diversityRerankerCutoff: 5
 #measuresRelevance:
 #- nDCG@5
 #measuresQuality:
@@ -216,32 +206,33 @@ cacheDirectoryPath: data/cache/
 #metricsOutputFilePath: data/metrics-reranking-f1.csv
 
 # Stance tagging:
-#teamRuns:
-#- Aldo-Nadi seupd2122-kueri_rrf_reranked
-#- Asuna asuna-run-5
-#- Captain-Levi levirank_dense_initial_retrieval
-#- Captain-Tempesta hextech_run_1
-#- Grimjack grimjack-fair-reranking-argumentative-axioms
-#- Katana Colbert edinburg
-#- Olivier-Armstrong tfid_arg_similarity
-#- Puss-in-Boots BM25-Baseline
-#runs:
-##- { } # original
-#- stanceTagger: ground-truth
-#- stanceTagger: google/flan-t5-base
-#  stanceTaggerThreshold: 0.5
-#  stanceTaggerCutoff: 5
-#- stanceTagger: gpt3-tsv
-#measuresStance:
-#- F1
-#- NumJudged
-#- F1@5
-#- NumJudged@5
-##- FreqFirst
-##- FreqSecond
-##- FreqNeutral
-##- FreqNo
-##metricsOutputFilePath: data/metrics-stance-tagging.csv
+teamRuns:
+- Aldo-Nadi seupd2122-kueri_rrf_reranked
+- Asuna asuna-run-5
+- Captain-Levi levirank_dense_initial_retrieval
+- Captain-Tempesta hextech_run_1
+- Grimjack grimjack-fair-reranking-argumentative-axioms
+- Katana Colbert edinburg
+- Olivier-Armstrong tfid_arg_similarity
+- Puss-in-Boots BM25-Baseline
+runs:
+#- { } # original
+- stanceTagger: ground-truth
+- stanceTagger: google/flan-t5-base
+  stanceTaggerThreshold: 0.5
+  stanceTaggerCutoff: 5
+- stanceTagger: gpt3-tsv
+- stanceTagger: roberta-csv
+measuresStance:
+- F1
+- NumJudged
+- F1@5
+- NumJudged@5
+#- FreqFirst
+#- FreqSecond
+#- FreqNeutral
+#- FreqNo
+metricsOutputFilePath: data/metrics-stance-tagging.csv
 #metricsOutputFilePath: data/metrics-stance-tagging.tex
 
 # Re-ranking with predicted GPT-3 stance labels:
@@ -260,13 +251,10 @@ cacheDirectoryPath: data/cache/
 #  stanceReranker: stance-first
 #  stanceRerankerCutoff: 5
 #- stanceTagger: gpt3-tsv
-#  fairnessReranker: alternating-stance
-#  fairnessRerankerCutoff: 5
-#- stanceTagger: gpt3-tsv
 #  stanceReranker: stance-first
 #  stanceRerankerCutoff: 5
-#  fairnessReranker: alternating-stance
-#  fairnessRerankerCutoff: 5
+#  diversityReranker: alternating-stance
+#  diversityRerankerCutoff: 5
 #measuresRelevance:
 #- nDCG@5
 #measuresQuality:
@@ -290,13 +278,10 @@ cacheDirectoryPath: data/cache/
 #  stanceReranker: stance-first
 #  stanceRerankerCutoff: 5
 #- stanceTagger: gpt3-tsv
-#  fairnessReranker: alternating-stance
-#  fairnessRerankerCutoff: 5
-#- stanceTagger: gpt3-tsv
 #  stanceReranker: stance-first
 #  stanceRerankerCutoff: 5
-#  fairnessReranker: alternating-stance
-#  fairnessRerankerCutoff: 5
+#  diversityReranker: alternating-stance
+#  diversityRerankerCutoff: 5
 #measuresRelevance:
 #- nDCG@5
 #measuresQuality:

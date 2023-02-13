@@ -2,68 +2,12 @@ from collections import defaultdict
 from dataclasses import dataclass
 from enum import Enum
 from functools import cached_property
-from math import nan
-from typing import List, Sequence
+from typing import Sequence
 
-from numpy import arange
 from pandas import DataFrame, Series
 from pyterrier.model import add_ranks
-from pyterrier.transformer import Transformer, IdentityTransformer
+from pyterrier.transformer import Transformer
 from tqdm.auto import tqdm
-
-
-@dataclass(frozen=True)
-class AlternatingStanceReranker(Transformer):
-    verbose: bool = False
-
-    @staticmethod
-    def _transform_query(ranking: DataFrame) -> DataFrame:
-        ranking = ranking.copy()
-        new_rows: List[Series] = []
-        last_stance: float = nan
-        while len(ranking) > 0:
-            candidates: DataFrame
-            if last_stance > 0:
-                # Last document was pro A.
-                # Find first pro B or neutral document next.
-                candidates = ranking[ranking["stance_value"] <= 0]
-            elif last_stance < 0:
-                # Last document was pro B.
-                # Find first pro A or neutral document next.
-                candidates = ranking[ranking["stance_value"] >= 0]
-            else:
-                # Last document was neutral.
-                # Find any document next, regardless of stance.
-                candidates = ranking
-
-            if len(candidates) == 0:
-                # No candidate for the stance was found,
-                # choose any document next,
-                # regardless of stance.
-                last_stance = nan
-                continue
-
-            index = candidates.index.tolist()[0]
-            document: Series = candidates.iloc[0]
-            last_stance: float = document["stance_value"]
-            new_rows.append(document)
-            ranking.drop(index=index, inplace=True)
-        ranking = DataFrame(data=new_rows, columns=ranking.columns)
-
-        # Reset score.
-        ranking["score"] = arange(len(ranking), 0, -1)
-        return ranking
-
-    def transform(self, ranking: DataFrame) -> DataFrame:
-        groups = ranking.groupby("qid", sort=False, group_keys=False)
-        if self.verbose:
-            tqdm.pandas(desc="Rerank alternating stance", unit="query")
-            groups = groups.progress_apply(self._transform_query)
-        else:
-            groups = groups.apply(self._transform_query)
-        ranking = groups.reset_index(drop=True)
-        ranking = add_ranks(ranking)
-        return ranking
 
 
 def _normalize_scores(ranking: DataFrame, inplace: bool = False) -> DataFrame:
@@ -80,7 +24,7 @@ def _normalize_scores(ranking: DataFrame, inplace: bool = False) -> DataFrame:
 
 
 @dataclass(frozen=True)
-class InverseStanceGainReranker(Transformer):
+class InverseStanceGainFairnessReranker(Transformer):
     stances: Sequence[str] = ("FIRST", "SECOND", "NEUTRAL", "NO")
     alpha: float = 0.5
     verbose: bool = False
@@ -128,7 +72,7 @@ class InverseStanceGainReranker(Transformer):
 
 
 @dataclass(frozen=True)
-class BoostMinorityStanceReranker(Transformer):
+class BoostMinorityStanceFairnessReranker(Transformer):
     boost: float
     stances: Sequence[str] = ("FIRST", "SECOND", "NEUTRAL", "NO")
     verbose: bool = False
@@ -167,22 +111,19 @@ class BoostMinorityStanceReranker(Transformer):
 
 class FairnessReranker(Transformer, Enum):
     ORIGINAL = "original"
-    ALTERNATING_STANCE = "alternating-stance"
     INVERSE_STANCE_GAIN = "inverse-stance-gain"
     BOOST_MINORITY_STANCE = "boost-minority-stance"
 
     @cached_property
     def _transformer(self) -> Transformer:
         if self == FairnessReranker.ORIGINAL:
-            return IdentityTransformer()
-        elif self == FairnessReranker.ALTERNATING_STANCE:
-            return AlternatingStanceReranker()
+            return Transformer.identity()
         elif self == FairnessReranker.INVERSE_STANCE_GAIN:
-            return InverseStanceGainReranker(
+            return InverseStanceGainFairnessReranker(
                 stances=("FIRST", "SECOND", "NEUTRAL")
             )
         elif self == FairnessReranker.BOOST_MINORITY_STANCE:
-            return BoostMinorityStanceReranker(boost=2)
+            return BoostMinorityStanceFairnessReranker(boost=2)
         else:
             raise ValueError(f"Unknown fairness re-ranker: {self}")
 

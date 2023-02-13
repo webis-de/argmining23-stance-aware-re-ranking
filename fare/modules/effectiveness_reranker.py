@@ -4,12 +4,12 @@ from functools import cached_property
 
 from pandas import DataFrame
 from pyterrier.model import add_ranks
-from pyterrier.transformer import Transformer, IdentityTransformer
+from pyterrier.transformer import Transformer
 from tqdm.auto import tqdm
 
 
 @dataclass(frozen=True)
-class StanceFirstReranker(Transformer):
+class StanceFirstEffectivenessReranker(Transformer):
     verbose: bool = False
 
     @staticmethod
@@ -45,7 +45,7 @@ class StanceFirstReranker(Transformer):
 
 
 @dataclass(frozen=True)
-class SubjectiveStanceFirstReranker(Transformer):
+class SubjectiveStanceFirstEffectivenessReranker(Transformer):
     verbose: bool = False
 
     @staticmethod
@@ -85,21 +85,21 @@ class SubjectiveStanceFirstReranker(Transformer):
         return ranking
 
 
-class StanceReranker(Transformer, Enum):
+class EffectivenessReranker(Transformer, Enum):
     ORIGINAL = "original"
     STANCE_FIRST = "stance-first"
     SUBJECTIVE_STANCE_FIRST = "subjective-stance-first"
 
     @cached_property
     def _transformer(self) -> Transformer:
-        if self == StanceReranker.ORIGINAL:
-            return IdentityTransformer()
-        elif self == StanceReranker.STANCE_FIRST:
-            return StanceFirstReranker()
-        elif self == StanceReranker.SUBJECTIVE_STANCE_FIRST:
-            return SubjectiveStanceFirstReranker()
+        if self == EffectivenessReranker.ORIGINAL:
+            return Transformer.identity()
+        elif self == EffectivenessReranker.STANCE_FIRST:
+            return StanceFirstEffectivenessReranker()
+        elif self == EffectivenessReranker.SUBJECTIVE_STANCE_FIRST:
+            return SubjectiveStanceFirstEffectivenessReranker()
         else:
-            raise ValueError(f"Unknown stance re-ranker: {self}")
+            raise ValueError(f"Unknown effectiveness re-ranker: {self}")
 
     def transform(self, ranking: DataFrame) -> DataFrame:
         return self._transformer.transform(ranking)
