@@ -17,7 +17,6 @@ class AlternatingStanceDiversityReranker(Transformer):
 
     @staticmethod
     def _transform_query(ranking: DataFrame) -> DataFrame:
-        ranking = ranking.copy()
         new_rows: List[Series] = []
         last_stance: float = nan
         while len(ranking) > 0:

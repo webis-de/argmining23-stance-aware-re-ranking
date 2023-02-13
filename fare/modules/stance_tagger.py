@@ -106,7 +106,6 @@ class OpenAiStanceTagger(Transformer):
             return nan
 
     def transform(self, ranking: DataFrame) -> DataFrame:
-        ranking = ranking.copy()
         if "stance_value" in ranking.columns:
             ranking.rename({"stance_value": "stance_value_original"})
         if "stance_label" in ranking.columns:
@@ -222,7 +221,6 @@ class Text2TextGenerationStanceTagger(Transformer):
         return mean(stances)
 
     def transform(self, ranking: DataFrame) -> DataFrame:
-        ranking = ranking.copy()
         if "stance_value" in ranking.columns:
             ranking.rename({"stance_value": "stance_value_original"})
         if "stance_label" in ranking.columns:
@@ -354,7 +352,6 @@ class ZeroShotClassificationStanceTagger(Transformer):
         return stance
 
     def transform(self, ranking: DataFrame) -> DataFrame:
-        ranking = ranking.copy()
         if "stance_value" in ranking.columns:
             ranking.rename({"stance_value": "stance_value_original"})
         if "stance_label" in ranking.columns:
@@ -483,7 +480,6 @@ class GroundTruthStanceTagger(Transformer):
         return qrels
 
     def transform(self, ranking: DataFrame) -> DataFrame:
-        ranking = ranking.copy()
         ranking = ranking.merge(
             self.qrels_stance,
             how="left",
@@ -635,7 +631,6 @@ class TextGenerationStanceTagger(Transformer):
         return stance
 
     def transform(self, ranking: DataFrame) -> DataFrame:
-        ranking = ranking.copy()
         if "stance_value" in ranking.columns:
             ranking.rename({"stance_value": "stance_value_original"})
         if "stance_label" in ranking.columns:

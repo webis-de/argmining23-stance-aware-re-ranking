@@ -26,7 +26,6 @@ class StanceFractionRandomizer(Transformer):
         if self.fraction == 0:
             return ranking
 
-        ranking = ranking.copy()
         ranking_stance_notna = ranking[ranking["stance_label"].notna()]
         to_be_randomized = ranking_stance_notna.sample(
             frac=self.fraction,
@@ -77,8 +76,6 @@ class StanceF1Randomizer(Transformer):
     def transform(self, ranking: DataFrame) -> DataFrame:
         if self.max_f1 == 1:
             return ranking
-
-        ranking = ranking.copy()
 
         # Add randomly generated stances.
         labels = self.qrels_stance["stance_label"].unique()

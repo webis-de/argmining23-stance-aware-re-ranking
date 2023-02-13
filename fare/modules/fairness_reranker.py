@@ -11,7 +11,6 @@ from tqdm.auto import tqdm
 
 
 def _normalize_scores(ranking: DataFrame, inplace: bool = False) -> DataFrame:
-    ranking = ranking.copy()
     min_score = ranking["score"].min()
     max_score = ranking["score"].max()
     if not inplace:
@@ -37,7 +36,6 @@ class InverseStanceGainFairnessReranker(Transformer):
         )
 
     def _rerank_query(self, ranking: DataFrame) -> DataFrame:
-        ranking = ranking.copy()
         ranking["stance_label"].fillna("NO", inplace=True)
 
         # Boost by inverse discounted gain per stance.

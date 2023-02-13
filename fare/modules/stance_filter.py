@@ -9,7 +9,6 @@ class StanceFilter(Transformer):
     threshold: float = 0.5
 
     def transform(self, ranking: DataFrame) -> DataFrame:
-        ranking = ranking.copy()
         ranking.loc[
             ranking["stance_value"].abs() < self.threshold,
             "stance_value"

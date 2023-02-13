@@ -14,7 +14,6 @@ class StanceFirstEffectivenessReranker(Transformer):
 
     @staticmethod
     def _rerank_query(ranking: DataFrame) -> DataFrame:
-        ranking = ranking.copy()
         ranking["has_stance"] = ranking["stance_label"].isin({
             "FIRST",
             "SECOND",
@@ -50,7 +49,6 @@ class SubjectiveStanceFirstEffectivenessReranker(Transformer):
 
     @staticmethod
     def _rerank_query(ranking: DataFrame) -> DataFrame:
-        ranking = ranking.copy()
         ranking["has_stance"] = ranking["stance_label"].isin({
             "FIRST",
             "SECOND",

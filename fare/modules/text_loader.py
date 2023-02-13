@@ -13,7 +13,6 @@ class TextLoader(Transformer):
     verbose: bool = False
 
     def transform(self, ranking: DataFrame) -> DataFrame:
-        ranking = ranking.copy()
         document_ids: set[str] = set(ranking["docno"].tolist())
         document_texts: dict[str, str] = {}
         with CONFIG.corpus_file_path.open("r") as lines:
