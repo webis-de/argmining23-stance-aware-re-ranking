@@ -34,9 +34,9 @@ cacheDirectoryPath: data/cache/
 #measuresQuality:
 #- nDCG@5
 #measuresStance:
-#- rND(group_col='stance_label',tie_breaking='group-ascending',groups='FIRST,SECOND,NEUTRAL')@5
-#- rKL(group_col='stance_label',tie_breaking='group-ascending',groups='FIRST,SECOND,NEUTRAL')@5
-#- rRD(group_col='stance_label',tie_breaking='group-ascending',groups='FIRST,SECOND,NEUTRAL')@5
+#- rND(group_col='stance_label',tie_breaking='SECOND,FIRST,NEUTRAL,NO',groups='FIRST,SECOND,NEUTRAL')@5
+#- rKL(group_col='stance_label',tie_breaking='SECOND,FIRST,NEUTRAL,NO',groups='FIRST,SECOND,NEUTRAL')@5
+#- rRD(group_col='stance_label',tie_breaking='SECOND,FIRST,NEUTRAL,NO',groups='FIRST,SECOND,NEUTRAL')@5
 #measuresDiversityRelevance:
 #- alpha_nDCG@5
 #measuresDiversityQuality:
@@ -64,9 +64,9 @@ cacheDirectoryPath: data/cache/
 #measuresQuality:
 #- nDCG@5
 #measuresStance:
-#- rND(group_col='stance_label',tie_breaking='group-ascending',groups='FIRST,SECOND,NEUTRAL')@5
-#- rKL(group_col='stance_label',tie_breaking='group-ascending',groups='FIRST,SECOND,NEUTRAL')@5
-#- rRD(group_col='stance_label',tie_breaking='group-ascending',groups='FIRST,SECOND,NEUTRAL')@5
+#- rND(group_col='stance_label',tie_breaking='SECOND,FIRST,NEUTRAL,NO',groups='FIRST,SECOND,NEUTRAL')@5
+#- rKL(group_col='stance_label',tie_breaking='SECOND,FIRST,NEUTRAL,NO',groups='FIRST,SECOND,NEUTRAL')@5
+#- rRD(group_col='stance_label',tie_breaking='SECOND,FIRST,NEUTRAL,NO',groups='FIRST,SECOND,NEUTRAL')@5
 #measuresDiversityRelevance:
 #- alpha_nDCG@5
 #measuresDiversityQuality:
@@ -99,9 +99,9 @@ cacheDirectoryPath: data/cache/
 #measuresQuality:
 #- nDCG@5
 #measuresStance:
-#- rND(group_col='stance_label',tie_breaking='group-ascending',groups='FIRST,SECOND,NEUTRAL')@5
-#- rKL(group_col='stance_label',tie_breaking='group-ascending',groups='FIRST,SECOND,NEUTRAL')@5
-#- rRD(group_col='stance_label',tie_breaking='group-ascending',groups='FIRST,SECOND,NEUTRAL')@5
+#- rND(group_col='stance_label',tie_breaking='SECOND,FIRST,NEUTRAL,NO',groups='FIRST,SECOND,NEUTRAL')@5
+#- rKL(group_col='stance_label',tie_breaking='SECOND,FIRST,NEUTRAL,NO',groups='FIRST,SECOND,NEUTRAL')@5
+#- rRD(group_col='stance_label',tie_breaking='SECOND,FIRST,NEUTRAL,NO',groups='FIRST,SECOND,NEUTRAL')@5
 #measuresDiversityRelevance:
 #- alpha_nDCG@5
 #measuresDiversityQuality:
@@ -126,9 +126,9 @@ cacheDirectoryPath: data/cache/
 #measuresQuality:
 #- nDCG@5
 #measuresStance:
-#- rND(group_col='stance_label',tie_breaking='group-ascending',groups='FIRST,SECOND,NEUTRAL')@5
-#- rKL(group_col='stance_label',tie_breaking='group-ascending',groups='FIRST,SECOND,NEUTRAL')@5
-#- rRD(group_col='stance_label',tie_breaking='group-ascending',groups='FIRST,SECOND,NEUTRAL')@5
+#- rND(group_col='stance_label',tie_breaking='SECOND,FIRST,NEUTRAL,NO',groups='FIRST,SECOND,NEUTRAL')@5
+#- rKL(group_col='stance_label',tie_breaking='SECOND,FIRST,NEUTRAL,NO',groups='FIRST,SECOND,NEUTRAL')@5
+#- rRD(group_col='stance_label',tie_breaking='SECOND,FIRST,NEUTRAL,NO',groups='FIRST,SECOND,NEUTRAL')@5
 #measuresDiversityRelevance:
 #- alpha_nDCG@5
 #measuresDiversityQuality:
@@ -137,15 +137,6 @@ cacheDirectoryPath: data/cache/
 #metricsOutputFilePath: data/metrics-reranking-all-original.csv
 
 # Effect of stance tagger F1 score on improvements:
-#teamRuns:
-#- Aldo-Nadi seupd2122-kueri_rrf_reranked
-#- Asuna asuna-run-5
-#- Captain-Levi levirank_dense_initial_retrieval
-#- Captain-Tempesta hextech_run_1
-#- Grimjack grimjack-fair-reranking-argumentative-axioms
-#- Katana Colbert edinburg
-#- Olivier-Armstrong tfid_arg_similarity
-#- Puss-in-Boots BM25-Baseline
 #runs:
 #- {} # original
 #- stanceTagger: ground-truth
@@ -196,70 +187,33 @@ cacheDirectoryPath: data/cache/
 #  stanceRerankerCutoff: 5
 #  fairnessReranker: alternating-stance
 #  fairnessRerankerCutoff: 5
+#- stanceTagger: ground-truth
+#  stanceTargetF1: 0.2
+#  stanceReranker: stance-first
+#  stanceRerankerCutoff: 5
+#  fairnessReranker: alternating-stance
+#  fairnessRerankerCutoff: 5
+#- stanceTagger: ground-truth
+#  stanceTargetF1: 0.1
+#  stanceReranker: stance-first
+#  stanceRerankerCutoff: 5
+#  fairnessReranker: alternating-stance
+#  fairnessRerankerCutoff: 5
 #measuresRelevance:
 #- nDCG@5
 #measuresQuality:
 #- nDCG@5
 #measuresStance:
 #- F1
-#- rND(group_col='stance_label',tie_breaking='group-ascending',groups='FIRST,SECOND,NEUTRAL')@5
-#- rKL(group_col='stance_label',tie_breaking='group-ascending',groups='FIRST,SECOND,NEUTRAL')@5
-#- rRD(group_col='stance_label',tie_breaking='group-ascending',groups='FIRST,SECOND,NEUTRAL')@5
+#- rND(group_col='stance_label',tie_breaking='SECOND,FIRST,NEUTRAL,NO',groups='FIRST,SECOND,NEUTRAL')@5
+#- rKL(group_col='stance_label',tie_breaking='SECOND,FIRST,NEUTRAL,NO',groups='FIRST,SECOND,NEUTRAL')@5
+#- rRD(group_col='stance_label',tie_breaking='SECOND,FIRST,NEUTRAL,NO',groups='FIRST,SECOND,NEUTRAL')@5
 #measuresDiversityRelevance:
 #- alpha_nDCG@5
 #measuresDiversityQuality:
 #- alpha_nDCG@5
 #measuresPerQuery: true
 #metricsOutputFilePath: data/metrics-reranking-f1.csv
-
-# Effect of stance tagger F1 score on improvements:
-#runs:
-#- {} # original
-#- stanceTagger: ground-truth
-#  stanceTargetF1: 1.00
-#  stanceReranker: stance-first
-#  stanceRerankerCutoff: 5
-#  fairnessReranker: alternating-stance
-#  fairnessRerankerCutoff: 5
-#- stanceTagger: ground-truth
-#  stanceTargetF1: 0.95
-#  stanceReranker: stance-first
-#  stanceRerankerCutoff: 5
-#  fairnessReranker: alternating-stance
-#  fairnessRerankerCutoff: 5
-#- stanceTagger: ground-truth
-#  stanceTargetF1: 0.90
-#  stanceReranker: stance-first
-#  stanceRerankerCutoff: 5
-#  fairnessReranker: alternating-stance
-#  fairnessRerankerCutoff: 5
-#- stanceTagger: ground-truth
-#  stanceTargetF1: 0.85
-#  stanceReranker: stance-first
-#  stanceRerankerCutoff: 5
-#  fairnessReranker: alternating-stance
-#  fairnessRerankerCutoff: 5
-#- stanceTagger: ground-truth
-#  stanceTargetF1: 0.80
-#  stanceReranker: stance-first
-#  stanceRerankerCutoff: 5
-#  fairnessReranker: alternating-stance
-#  fairnessRerankerCutoff: 5
-#measuresRelevance:
-#- nDCG@5
-#measuresQuality:
-#- nDCG@5
-#measuresStance:
-#- F1
-#- rND(group_col='stance_label',tie_breaking='group-ascending',groups='FIRST,SECOND,NEUTRAL')@5
-#- rKL(group_col='stance_label',tie_breaking='group-ascending',groups='FIRST,SECOND,NEUTRAL')@5
-#- rRD(group_col='stance_label',tie_breaking='group-ascending',groups='FIRST,SECOND,NEUTRAL')@5
-#measuresDiversityRelevance:
-#- alpha_nDCG@5
-#measuresDiversityQuality:
-#- alpha_nDCG@5
-#significanceLevel: 0.05
-#metricsOutputFilePath: data/metrics-reranking-all-f1.csv
 
 # Stance tagging:
 #teamRuns:
@@ -318,9 +272,9 @@ cacheDirectoryPath: data/cache/
 #measuresQuality:
 #- nDCG@5
 #measuresStance:
-#- rND(group_col='stance_label',tie_breaking='group-ascending',groups='FIRST,SECOND,NEUTRAL')@5
-#- rKL(group_col='stance_label',tie_breaking='group-ascending',groups='FIRST,SECOND,NEUTRAL')@5
-#- rRD(group_col='stance_label',tie_breaking='group-ascending',groups='FIRST,SECOND,NEUTRAL')@5
+#- rND(group_col='stance_label',tie_breaking='SECOND,FIRST,NEUTRAL,NO',groups='FIRST,SECOND,NEUTRAL')@5
+#- rKL(group_col='stance_label',tie_breaking='SECOND,FIRST,NEUTRAL,NO',groups='FIRST,SECOND,NEUTRAL')@5
+#- rRD(group_col='stance_label',tie_breaking='SECOND,FIRST,NEUTRAL,NO',groups='FIRST,SECOND,NEUTRAL')@5
 #measuresDiversityRelevance:
 #- alpha_nDCG@5
 #measuresDiversityQuality:
@@ -330,33 +284,33 @@ cacheDirectoryPath: data/cache/
 #metricsOutputFilePath: data/metrics-reranking-gpt3.tex
 
 # Re-ranking all with predicted GPT-3 stance labels:
-runs:
-- { } # original
-- stanceTagger: gpt3-tsv
-  stanceReranker: stance-first
-  stanceRerankerCutoff: 5
-- stanceTagger: gpt3-tsv
-  fairnessReranker: alternating-stance
-  fairnessRerankerCutoff: 5
-- stanceTagger: gpt3-tsv
-  stanceReranker: stance-first
-  stanceRerankerCutoff: 5
-  fairnessReranker: alternating-stance
-  fairnessRerankerCutoff: 5
-measuresRelevance:
-- nDCG@5
-measuresQuality:
-- nDCG@5
-measuresStance:
-- rND(group_col='stance_label',tie_breaking='group-ascending',groups='FIRST,SECOND,NEUTRAL')@5
-- rKL(group_col='stance_label',tie_breaking='group-ascending',groups='FIRST,SECOND,NEUTRAL')@5
-- rRD(group_col='stance_label',tie_breaking='group-ascending',groups='FIRST,SECOND,NEUTRAL')@5
-measuresDiversityRelevance:
-- alpha_nDCG@5
-measuresDiversityQuality:
-- alpha_nDCG@5
-significanceLevel: 0.05
-metricsOutputFilePath: data/metrics-reranking-all-gpt3.csv
+#runs:
+#- { } # original
+#- stanceTagger: gpt3-tsv
+#  stanceReranker: stance-first
+#  stanceRerankerCutoff: 5
+#- stanceTagger: gpt3-tsv
+#  fairnessReranker: alternating-stance
+#  fairnessRerankerCutoff: 5
+#- stanceTagger: gpt3-tsv
+#  stanceReranker: stance-first
+#  stanceRerankerCutoff: 5
+#  fairnessReranker: alternating-stance
+#  fairnessRerankerCutoff: 5
+#measuresRelevance:
+#- nDCG@5
+#measuresQuality:
+#- nDCG@5
+#measuresStance:
+#- rND(group_col='stance_label',tie_breaking='SECOND,FIRST,NEUTRAL,NO',groups='FIRST,SECOND,NEUTRAL')@5
+#- rKL(group_col='stance_label',tie_breaking='SECOND,FIRST,NEUTRAL,NO',groups='FIRST,SECOND,NEUTRAL')@5
+#- rRD(group_col='stance_label',tie_breaking='SECOND,FIRST,NEUTRAL,NO',groups='FIRST,SECOND,NEUTRAL')@5
+#measuresDiversityRelevance:
+#- alpha_nDCG@5
+#measuresDiversityQuality:
+#- alpha_nDCG@5
+#significanceLevel: 0.05
+#metricsOutputFilePath: data/metrics-reranking-all-gpt3.csv
 
 # Other options:
 #maxTeams: 3
