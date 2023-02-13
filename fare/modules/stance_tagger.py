@@ -1,4 +1,4 @@
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from enum import Enum
 from functools import cached_property
 from math import nan, isnan
@@ -13,7 +13,7 @@ from nltk import sent_tokenize, word_tokenize
 from openai import Completion
 from openai.error import RateLimitError
 from pandas import DataFrame, Series, read_csv, merge
-from pyterrier.transformer import Transformer, IdentityTransformer
+from pyterrier.transformer import Transformer
 from ratelimit import limits, sleep_and_retry
 from torch import Tensor
 from torch.cuda import is_available
@@ -376,13 +376,13 @@ class ZeroShotClassificationStanceTagger(Transformer):
         return ranking
 
 
-@dataclass
-class TsvStanceTagger(Transformer):
-    path: Path
-    qid_column: str
-    docno_column: str
-    stance_label_column: str
-    fillna: bool = False
+@dataclass(frozen=True)
+class Gpt3TsvStanceTagger(Transformer):
+    path: Path = Path("data/stance-gpt-3.tsv")
+    qid_column: str = "qid"
+    docno_column: str = "ID"
+    stance_label_column: str = "gpt_pred_conv"
+    fillna: bool = True
 
     revision: int = 7
 
@@ -420,7 +420,53 @@ class TsvStanceTagger(Transformer):
         return ranking
 
 
-@dataclass
+@dataclass(frozen=True)
+class RobertaCsvStanceTagger(Transformer):
+    path: Path = Path("data/stance-roberta.csv")
+    qid_column: str = "Topic"
+    docno_column: str = "ID"
+    stance_label_column: str = "preds"
+    stance_label_map: dict[str, str] = field(
+        default_factory=lambda: {
+            "0": "NO",
+            "1": "NEUTRAL",
+            "2": "FIRST",
+            "3": "SECOND",
+        }
+    )
+    revision: int = 1
+
+    @cached_property
+    def _csv_stance(self) -> DataFrame:
+        df = read_csv(
+            str(self.path),
+            dtype=str
+        )
+        df = df[[
+            self.qid_column,
+            self.docno_column,
+            self.stance_label_column,
+        ]]
+        df.rename(columns={
+            self.qid_column: "qid",
+            self.docno_column: "docno",
+            self.stance_label_column: "stance_label",
+        }, inplace=True)
+        df["stance_label"] = df["stance_label"].map(self.stance_label_map)
+        df["stance_value"] = df["stance_label"].map(stance_value)
+        return df
+
+    def transform(self, ranking: DataFrame) -> DataFrame:
+        ranking = ranking.merge(
+            self._csv_stance,
+            how="left",
+            on=["qid", "docno"],
+            suffixes=("_original", None),
+        )
+        return ranking
+
+
+@dataclass(frozen=True)
 class GroundTruthStanceTagger(Transformer):
 
     @cached_property
@@ -670,6 +716,7 @@ class StanceTagger(Transformer, Enum):
     BART_LARGE_MNLI = "facebook/bart-large-mnli"
     GPT3_TSV = "gpt3-tsv"
     GPT3_TEXT_DAVINCI_003 = "text-davinci-003"
+    ROBERTA_CSV = "roberta-csv"
     GROUND_TRUTH = "ground-truth"
 
     value: str
@@ -677,17 +724,13 @@ class StanceTagger(Transformer, Enum):
     @cached_property
     def _transformer(self) -> Transformer:
         if self == StanceTagger.ORIGINAL:
-            return IdentityTransformer()
+            return Transformer.identity()
         elif self == StanceTagger.GROUND_TRUTH:
             return GroundTruthStanceTagger()
         elif self == StanceTagger.GPT3_TSV:
-            return TsvStanceTagger(
-                path=Path("data/stance_gpt.tsv"),
-                qid_column="qid",
-                docno_column="ID",
-                stance_label_column="gpt_pred_conv",
-                fillna=True,
-            )
+            return Gpt3TsvStanceTagger()
+        elif self == StanceTagger.ROBERTA_CSV:
+            return RobertaCsvStanceTagger()
         elif self in (
                 StanceTagger.T0,
                 StanceTagger.T0pp,
