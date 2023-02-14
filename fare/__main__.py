@@ -1,32 +1,30 @@
 from functools import cache
-
-from ir_measures import Measure
-from pyterrier import init
-
-from fare.config import CONFIG
-from fare.modules.diversity_reranker import DiversityReranker
-
-init(no_download=CONFIG.offline)
-
+from math import sqrt, nan
 from pathlib import Path
+from textwrap import dedent
 from typing import NamedTuple
 
+from ir_measures import Measure
 from pandas import DataFrame, merge, Series
+from pyterrier import init
 from pyterrier.io import read_qrels
 from pyterrier.pipelines import Experiment
 from pyterrier.transformer import Transformer
 from scipy.stats import ttest_rel
 from statsmodels.sandbox.stats.multicomp import MultiComparison
 
-from fare.config import RunConfig
+from fare.config import CONFIG, RunConfig
+from fare.modules.diversity_reranker import DiversityReranker
+from fare.modules.effectiveness_reranker import EffectivenessReranker
 from fare.modules.fairness_reranker import FairnessReranker
 from fare.modules.runs_loader import RunLoader
 from fare.modules.stance_filter import StanceFilter
 from fare.modules.stance_randomizer import StanceF1Randomizer
-from fare.modules.effectiveness_reranker import EffectivenessReranker
 from fare.modules.stance_tagger import StanceTagger
 from fare.modules.text_loader import TextLoader
 from fare.modules.topics_loader import parse_topics
+
+init(no_download=CONFIG.offline)
 
 
 class NamedPipeline(NamedTuple):
@@ -199,55 +197,112 @@ def _name_index(experiment: DataFrame) -> DataFrame:
     return experiment[columns]
 
 
-def _significance_test(experiment: DataFrame) -> DataFrame:
-    significance_level = CONFIG.significance_level
-    if significance_level is None:
-        return experiment
-
-    measure_columns = [
-        measure
-        for measure in experiment.columns
-        if measure not in ("qid", "run", "name", "name_index", "index")
+def _measure_cols(df: DataFrame) -> list[str]:
+    effectiveness_relevance_suffix = (
+        " rel." if len(CONFIG.measures_quality) > 0 else "")
+    effectiveness_quality_suffix = (
+        " qual." if len(CONFIG.measures_relevance) > 0 else "")
+    diversity_relevance_suffix = (
+        " rel." if len(CONFIG.measures_diversity_quality) > 0 else "")
+    diversity_quality_suffix = (
+        " qual." if len(CONFIG.measures_diversity_relevance) > 0 else "")
+    columns = []
+    for measure in CONFIG.measures_relevance:
+        column = _rename_column(str(measure))
+        columns.append(f"{column}{effectiveness_relevance_suffix}")
+    for measure in CONFIG.measures_quality:
+        column = _rename_column(str(measure))
+        columns.append(f"{column}{effectiveness_quality_suffix}")
+    for measure in CONFIG.measures_diversity_relevance:
+        column = _rename_column(str(measure))
+        columns.append(f"{column}{diversity_relevance_suffix}")
+    for measure in CONFIG.measures_diversity_quality:
+        column = _rename_column(str(measure))
+        columns.append(f"{column}{diversity_quality_suffix}")
+    for measure in CONFIG.measures_stance:
+        column = _rename_column(str(measure))
+        columns.append(column)
+    return [
+        column
+        for column in columns
+        if column in df.columns
     ]
 
-    for measure in measure_columns:
+
+def _compute_significance(df: DataFrame) -> DataFrame:
+    significance_level = CONFIG.significance_level
+    for measure_col in _measure_cols(df):
         comparison = MultiComparison(
-            experiment[measure],
-            experiment["name_index"],
+            df[measure_col],
+            df["name_index"],
         )
         _, _, results = comparison.allpairtest(
             ttest_rel,
             significance_level,
             "bonf",
         )
-        results = DataFrame([
-            {
-                "index1": result[0],
-                "index2": result[1],
+        lookup = {
+            1: {
+                "p-value": nan,
+                "p-value_corrected": nan,
+                "reject": False,
+            }
+        }
+        for result in results:
+            if result[0] == 1:
+                name_index = result[1]
+            elif result[1] == 1:
+                name_index = result[0]
+            else:
+                continue
+            lookup[name_index] = {
                 "statistic": result[2],
-                "pvalue": result[3],
-                "pvalue_corrected": result[4],
+                "p-value": result[3],
+                "p-value_corrected": result[4],
                 "reject": result[5],
             }
-            for result in results
-        ])
+        df[f"{measure_col} p-value"] = [
+            lookup[row["name_index"]]["p-value"]
+            for _, row in df.iterrows()
+        ]
+        df[f"{measure_col} p-value corrected"] = [
+            lookup[row["name_index"]]["p-value_corrected"]
+            for _, row in df.iterrows()
+        ]
+        df[f"{measure_col} reject"] = [
+            lookup[row["name_index"]]["reject"]
+            for _, row in df.iterrows()
+        ]
 
-        def significant_to(index: str) -> str:
-            df = results
-            df = df[(df["index1"] == index) | (df["index2"] == index)]
-            df = df.loc[results["reject"]]
-            significant = {*df["index1"], *df["index2"]} - {index}
-            indices = sorted(significant)
-            return ",".join(map(str, indices))
+    return df
 
-        experiment[f"{measure} test"] = \
-            experiment["name_index"].map(significant_to)
 
-    new_columns = ["qid", "run", "name", "name_index"]
-    for measure in measure_columns:
-        new_columns.append(measure)
-        new_columns.append(f"{measure} test")
-    return experiment[new_columns]
+def cohen_d(x: Series, y: Series):
+    nx = len(x)
+    ny = len(y)
+    dof = nx + ny - 2
+    return (
+            (x.mean() - y.mean()) /
+            sqrt(
+                (
+                        (nx - 1) * x.std(ddof=1) ** 2 +
+                        (ny - 1) * y.std(ddof=1) ** 2
+                ) / dof
+            )
+    )
+
+
+def _compute_effect(df: DataFrame) -> DataFrame:
+    for measure_col in _measure_cols(df):
+        baseline = df[df["name_index"] == 1][measure_col]
+        for name_index in df["name_index"].unique():
+            compared = df[df["name_index"] == name_index][measure_col]
+            # Cohen's d
+            df.loc[
+                df["name_index"] == name_index,
+                f"{measure_col} effect"
+            ] = cohen_d(compared, baseline)
+    return df
 
 
 @cache
@@ -319,6 +374,18 @@ def _run_experiment(
     ).reset_index(
         drop=False
     )
+
+
+def _rename_column(column: str) -> str:
+    column = column.replace("group_col='stance_label'", "")
+    column = column.replace("tie_breaking='group-ascending'", "")
+    column = column.replace("tie_breaking='SECOND,FIRST,NEUTRAL,NO'", "")
+    column = column.replace("groups='FIRST,NEUTRAL,SECOND'", "")
+    column = column.replace(",,", ",")
+    column = column.replace("(,", "(")
+    column = column.replace(",)", ")")
+    column = column.replace("()", "")
+    return column
 
 
 def main() -> None:
@@ -427,19 +494,7 @@ def main() -> None:
         suffixes=("", " diversity")
     ).reset_index(drop=False)
 
-
-    def rename_column(column: str) -> str:
-        column = column.replace("group_col='stance_label'", "")
-        column = column.replace("tie_breaking='group-ascending'", "")
-        column = column.replace("tie_breaking='SECOND,FIRST,NEUTRAL,NO'", "")
-        column = column.replace("groups='FIRST,NEUTRAL,SECOND'", "")
-        column = column.replace(",,", ",")
-        column = column.replace("(,", "(")
-        column = column.replace(",)", ")")
-        column = column.replace("()", "")
-        return column
-
-    experiment.columns = experiment.columns.map(rename_column)
+    experiment.columns = experiment.columns.map(_rename_column)
 
     def fix_name_order(df: DataFrame) -> DataFrame:
         df = df.set_index("name")
@@ -449,14 +504,27 @@ def main() -> None:
     experiment = experiment.groupby("qid").apply(fix_name_order)
 
     experiment["run"] = experiment["name"].apply(
-        lambda name: name.split(" + ")[0]
-    )
-    experiment = experiment.groupby(by="run", sort=False, group_keys=False) \
-        .apply(_name_index).reset_index(drop=True)
+        lambda name: name.split(" + ")[0])
+
+    # Number names.
+    experiment = experiment \
+        .groupby(by="run", sort=False, group_keys=False) \
+        .apply(_name_index) \
+        .reset_index(drop=True)
+
+    # Compute significance.
     if CONFIG.significance_level is not None:
         print("Compute significance.")
-        experiment = experiment.groupby(by="run", sort=False, group_keys=False) \
-            .apply(_significance_test)
+        experiment = experiment \
+            .groupby(by="run", sort=False, group_keys=False) \
+            .apply(_compute_significance)
+
+    # Compute effect size.
+    if CONFIG.effect_size:
+        print("Compute effect size.")
+        experiment = experiment \
+            .groupby(by="run", sort=False, group_keys=False) \
+            .apply(_compute_effect)
     del experiment["run"]
 
     # Aggregate results.
@@ -488,60 +556,44 @@ def main() -> None:
     if output_path.suffix == ".xlsx":
         experiment.to_excel(output_path, index=False)
     if output_path.suffix == ".tex":
-        measures_suffixes = [
-            (
-                CONFIG.measures_relevance,
-                " rel." if len(CONFIG.measures_quality) > 0 else "",
-            ),
-            (
-                CONFIG.measures_quality,
-                " qual." if len(CONFIG.measures_relevance) > 0 else "",
-            ),
-            (
-                CONFIG.measures_diversity_relevance,
-                " rel." if len(CONFIG.measures_diversity_quality) > 0 else "",
-            ),
-            (
-                CONFIG.measures_diversity_quality,
-                " qual." if len(
-                    CONFIG.measures_diversity_relevance) > 0 else "",
-            ),
-            (
-                CONFIG.measures_stance,
-                "",
-            ),
-        ]
+        measure_cols = _measure_cols(experiment)
         measure_names = [
-            str(measure).replace("_", "\\_") + suffix
-            for measures, suffix in measures_suffixes
-            for measure in measures
-        ]
-        measure_cols = [
-            rename_column(f"{measure}{suffix}")
-            for measures, suffix in measures_suffixes
-            for measure in measures
+            measure_col.replace("_", "\\_")
+            for measure_col in measure_cols
         ]
         with open(output_path, "w") as file:
-            file.write(
-                "\\begin{tabular}{" + "l" * (
-                        len(measure_names) + 2) + "}\n")
+            file.write(dedent(r"""
+            \newcommand{\significant}[1]{\ensuremath{\bm{#1}}}
+            \newcommand{\effectup}[1]{\ensuremath{^{\uparrow#1}}}
+            \newcommand{\effectdown}[1]{\ensuremath{^{\downarrow#1}}}
+            \newcommand{\effectnone}[1]{\ensuremath{^{\phantom{\uparrow#1}}}}
+            """).lstrip())
+            file.write("\\begin{tabular}{l")
+            file.write("c" * len(measure_cols))
+            file.write("}\n")
             file.write("\\toprule\n")
-            line = ["Run", "\\#", *measure_names]
+            line = ["Ranking", *measure_names]
             file.write(" & ".join(line) + " \\\\\n")
             file.write("\\midrule\n")
             for _, row in experiment.iterrows():
                 line = [
-                    row["name"].replace("_", "\\_"),
-                    str(row["name_index"]),
+                    row["name"].replace("_", "\\_")
                 ]
                 for measure_col in measure_cols:
                     metric = row[measure_col]
-                    if CONFIG.significance_level is not None:
-                        significant = row[f"{measure_col} test"]
-                        line.append(
-                            f"{metric:.3f}\\(^{{{significant}}}\\)")
+                    column = f"{metric:.3f}"
+                    significant = (row[f"{measure_col} p-value corrected"] <
+                                   CONFIG.significance_level)
+                    effect = row[f"{measure_col} effect"]
+                    if effect > 0:
+                        column = rf"{column}\effectup{{{effect:.1f}}}"
+                    elif effect < 0:
+                        column = rf"{column}\effectdown{{{-effect:.1f}}}"
                     else:
-                        line.append(f"{metric:.3f}")
+                        column = rf"{column}\effectnone{{0.0}}"
+                    if significant:
+                        column = rf"\significant{{{column}}}"
+                    line.append(column)
                 file.write(" & ".join(line) + " \\\\\n")
             file.write("\\bottomrule\n")
             file.write("\\end{tabular}\n")

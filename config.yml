@@ -39,8 +39,9 @@ cacheDirectoryPath: data/cache/
 #measuresDiversityQuality:
 #- alpha_nDCG@5
 #significanceLevel: 0.05
-#metricsOutputFilePath: data/metrics-reranking-ground-truth.csv
-##metricsOutputFilePath: data/metrics-reranking-ground-truth.tex
+#effectSize: true
+##metricsOutputFilePath: data/metrics-reranking-ground-truth.csv
+#metricsOutputFilePath: data/metrics-reranking-ground-truth.tex
 
 # Re-ranking all with ground-truth stance labels:
 #runs:
@@ -66,6 +67,7 @@ cacheDirectoryPath: data/cache/
 #measuresDiversityQuality:
 #- alpha_nDCG@5
 #significanceLevel: 0.05
+#effectSize: true
 #metricsOutputFilePath: data/metrics-reranking-all-ground-truth.csv
 
 # Re-ranking with team predicted stance labels:
@@ -99,6 +101,7 @@ cacheDirectoryPath: data/cache/
 #measuresDiversityQuality:
 #- alpha_nDCG@5
 #significanceLevel: 0.05
+#effectSize: true
 #metricsOutputFilePath: data/metrics-reranking-original.csv
 ##metricsOutputFilePath: data/metrics-reranking-original.tex
 
@@ -124,6 +127,7 @@ cacheDirectoryPath: data/cache/
 #measuresDiversityQuality:
 #- alpha_nDCG@5
 #significanceLevel: 0.05
+#effectSize: true
 #metricsOutputFilePath: data/metrics-reranking-all-original.csv
 
 # Stance tagging:
@@ -137,7 +141,7 @@ cacheDirectoryPath: data/cache/
 #- Olivier-Armstrong tfid_arg_similarity
 #- Puss-in-Boots BM25-Baseline
 #runs:
-##- { } # original
+#- { } # original
 #- stanceTagger: ground-truth
 #- stanceTagger: google/flan-t5-base
 #  stanceTaggerThreshold: 0.5
@@ -189,6 +193,7 @@ cacheDirectoryPath: data/cache/
 #measuresDiversityQuality:
 #- alpha_nDCG@5
 #significanceLevel: 0.05
+#effectSize: true
 #metricsOutputFilePath: data/metrics-reranking-gpt3.csv
 ##metricsOutputFilePath: data/metrics-reranking-gpt3.tex
 
@@ -216,6 +221,7 @@ cacheDirectoryPath: data/cache/
 #measuresDiversityQuality:
 #- alpha_nDCG@5
 #significanceLevel: 0.05
+#effectSize: true
 #metricsOutputFilePath: data/metrics-reranking-all-gpt3.csv
 
 # Effect of stance tagger F1 score on improvements:
@@ -306,6 +312,7 @@ cacheDirectoryPath: data/cache/
 #- alpha_nDCG@5
 #measuresPerQuery: true
 #significanceLevel: 0.05
+#effectSize: true
 #metricsOutputFilePath: data/metrics-reranking-all-f1.csv
 
 # Other options:
@@ -340,6 +347,7 @@ cacheDirectoryPath: data/cache/
 #- Puss-in-Boots BM25-Baseline
 
 #significanceLevel: 0.05
+#effectSize: true
 
 
 # Remove documents without judgments before evaluation.

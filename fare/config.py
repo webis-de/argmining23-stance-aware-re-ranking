@@ -10,8 +10,8 @@ from yaml import safe_load
 import fare.metric.fairness
 from fare.metric import parse_measure
 from fare.modules.diversity_reranker import DiversityReranker
-from fare.modules.fairness_reranker import FairnessReranker
 from fare.modules.effectiveness_reranker import EffectivenessReranker
+from fare.modules.fairness_reranker import FairnessReranker
 from fare.modules.stance_tagger import StanceTagger
 
 
@@ -94,18 +94,19 @@ class Config:
     measures_quality: list[Measure] = field(metadata=config(
         decoder=lambda metrics: [parse_measure(metric) for metric in metrics]
     ), default_factory=list)
-    measures_stance: list[Measure] = field(metadata=config(
-        decoder=lambda metrics: [parse_measure(metric) for metric in metrics]
-    ), default_factory=list)
     measures_diversity_relevance: list[Measure] = field(metadata=config(
         decoder=lambda metrics: [parse_measure(metric) for metric in metrics]
     ), default_factory=list)
     measures_diversity_quality: list[Measure] = field(metadata=config(
         decoder=lambda metrics: [parse_measure(metric) for metric in metrics]
     ), default_factory=list)
+    measures_stance: list[Measure] = field(metadata=config(
+        decoder=lambda metrics: [parse_measure(metric) for metric in metrics]
+    ), default_factory=list)
     measures_per_query: bool = False
 
     significance_level: Optional[float] = None
+    effect_size: bool = False
 
     filter_by_qrels: bool = False
 
@@ -121,6 +122,7 @@ class Config:
         with config_path.open("r") as config_file:
             config_dict = safe_load(config_file)
             return Config.from_dict(config_dict)
+
 
 
 CONFIG: Config = Config.load(Path(__file__).parent.parent / "config.yml")
