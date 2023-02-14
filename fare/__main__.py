@@ -59,8 +59,7 @@ def _run(
                         pipeline >>
                         run_config.stance_tagger
                 ) >>
-                StanceFilter(run_config.stance_tagger_threshold) >>
-                StanceF1Randomizer(run_config.stance_target_f1)
+                StanceFilter(run_config.stance_tagger_threshold)
         )
     elif run_config.stance_tagger_cutoff > 0:
         # noinspection PyTypeChecker
@@ -71,26 +70,42 @@ def _run(
                                 run_config.stance_tagger_cutoff >>
                                 run_config.stance_tagger
                         ) >>
-                        StanceFilter(run_config.stance_tagger_threshold) >>
-                        StanceF1Randomizer(run_config.stance_target_f1)
+                        StanceFilter(run_config.stance_tagger_threshold)
                 ) ^
                 pipeline
         )
 
     if run_config.stance_tagger != StanceTagger.ORIGINAL:
         name = run_config.stance_tagger.value
-        if (run_config.stance_tagger_threshold > 0 or
-                run_config.stance_target_f1 < 1):
-            name += "("
-            if run_config.stance_tagger_threshold > 0:
-                name += f"{run_config.stance_tagger_threshold:.2f}"
-            if run_config.stance_target_f1 < 1:
-                if run_config.stance_tagger_threshold > 0:
-                    name += ","
-                name += f"F1<={run_config.stance_target_f1:.2f}"
-            name += ")"
+        if run_config.stance_tagger_threshold > 0:
+            name += f"({run_config.stance_tagger_threshold:.2f})"
         if run_config.stance_tagger_cutoff is not None:
             name += f"@{run_config.stance_tagger_cutoff}"
+        names.append(name)
+
+    # Randomize stance.
+    if run_config.stance_randomization_cutoff is None:
+        pipeline = ~(
+                pipeline >>
+                StanceF1Randomizer(run_config.stance_randomization_target_f1)
+        )
+    elif run_config.stance_randomization_cutoff > 0:
+        # noinspection PyTypeChecker
+        pipeline = (
+                ~(
+                        pipeline %
+                        run_config.stance_randomization_cutoff >>
+                        StanceF1Randomizer(
+                            run_config.stance_randomization_target_f1)
+                ) ^
+                pipeline
+        )
+
+    if run_config.stance_randomization_target_f1 < 1:
+        name = "randomize"
+        name += f"(F1<={run_config.stance_randomization_target_f1:.2f})"
+        if run_config.stance_randomization_cutoff is not None:
+            name += f"@{run_config.stance_randomization_cutoff}"
         names.append(name)
 
     # Re-rank for effectiveness.
@@ -412,19 +427,16 @@ def main() -> None:
         suffixes=("", " diversity")
     ).reset_index(drop=False)
 
-    old_column_name_mapping = {}
 
     def rename_column(column: str) -> str:
-        old_column_name = column
         column = column.replace("group_col='stance_label'", "")
         column = column.replace("tie_breaking='group-ascending'", "")
+        column = column.replace("tie_breaking='SECOND,FIRST,NEUTRAL,NO'", "")
+        column = column.replace("groups='FIRST,NEUTRAL,SECOND'", "")
         column = column.replace(",,", ",")
         column = column.replace("(,", "(")
         column = column.replace(",)", ")")
         column = column.replace("()", "")
-        column = column.replace("(groups='FIRST,NEUTRAL,SECOND')",
-                                "(FIRST,SECOND,NEUTRAL)")
-        old_column_name_mapping[old_column_name] = column
         return column
 
     experiment.columns = experiment.columns.map(rename_column)
@@ -441,12 +453,15 @@ def main() -> None:
     )
     experiment = experiment.groupby(by="run", sort=False, group_keys=False) \
         .apply(_name_index).reset_index(drop=True)
-    experiment = experiment.groupby(by="run", sort=False, group_keys=False) \
-        .apply(_significance_test)
+    if CONFIG.significance_level is not None:
+        print("Compute significance.")
+        experiment = experiment.groupby(by="run", sort=False, group_keys=False) \
+            .apply(_significance_test)
     del experiment["run"]
 
     # Aggregate results.
     if not CONFIG.measures_per_query:
+        print("Aggregate results.")
         aggregations = {
             column:
                 "first"
@@ -462,6 +477,7 @@ def main() -> None:
             .aggregate(aggregations)
 
     # Export results.
+    print("Export results.")
     output_path = CONFIG.metrics_output_file_path
     if CONFIG.measures_per_query:
         output_path = output_path.with_suffix(
@@ -473,14 +489,35 @@ def main() -> None:
         experiment.to_excel(output_path, index=False)
     if output_path.suffix == ".tex":
         measures_suffixes = [
-            (CONFIG.measures_relevance, " rel."),
-            (CONFIG.measures_quality, " qual."),
-            (CONFIG.measures_diversity_relevance, " rel."),
-            (CONFIG.measures_diversity_quality, " qual."),
-            (CONFIG.measures_stance, ""),
+            (
+                CONFIG.measures_relevance,
+                " rel." if len(CONFIG.measures_quality) > 0 else "",
+            ),
+            (
+                CONFIG.measures_quality,
+                " qual." if len(CONFIG.measures_relevance) > 0 else "",
+            ),
+            (
+                CONFIG.measures_diversity_relevance,
+                " rel." if len(CONFIG.measures_diversity_quality) > 0 else "",
+            ),
+            (
+                CONFIG.measures_diversity_quality,
+                " qual." if len(
+                    CONFIG.measures_diversity_relevance) > 0 else "",
+            ),
+            (
+                CONFIG.measures_stance,
+                "",
+            ),
         ]
         measure_names = [
             str(measure).replace("_", "\\_") + suffix
+            for measures, suffix in measures_suffixes
+            for measure in measures
+        ]
+        measure_cols = [
+            rename_column(f"{measure}{suffix}")
             for measures, suffix in measures_suffixes
             for measure in measures
         ]
@@ -497,18 +534,14 @@ def main() -> None:
                     row["name"].replace("_", "\\_"),
                     str(row["name_index"]),
                 ]
-                for measures, suffix in measures_suffixes:
-                    for measure in measures:
-                        column_name = old_column_name_mapping[
-                            f"{measure}{suffix}"
-                        ]
-                        metric = row[column_name]
-                        if CONFIG.significance_level is not None:
-                            significant = row[f"{column_name} test"]
-                            line.append(
-                                f"{metric:.3f}\\(^{{{significant}}}\\)")
-                        else:
-                            line.append(f"{metric:.3f}")
+                for measure_col in measure_cols:
+                    metric = row[measure_col]
+                    if CONFIG.significance_level is not None:
+                        significant = row[f"{measure_col} test"]
+                        line.append(
+                            f"{metric:.3f}\\(^{{{significant}}}\\)")
+                    else:
+                        line.append(f"{metric:.3f}")
                 file.write(" & ".join(line) + " \\\\\n")
             file.write("\\bottomrule\n")
             file.write("\\end{tabular}\n")

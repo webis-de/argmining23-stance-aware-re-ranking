@@ -26,7 +26,8 @@ class RunConfig:
     )
     stance_tagger_cutoff: Optional[int] = None
     stance_tagger_threshold: float = 0.0
-    stance_target_f1: float = 1.0
+    stance_randomization_cutoff: Optional[int] = None
+    stance_randomization_target_f1: float = 1.0
     effectiveness_reranker: EffectivenessReranker = field(
         metadata=config(
             decoder=EffectivenessReranker
