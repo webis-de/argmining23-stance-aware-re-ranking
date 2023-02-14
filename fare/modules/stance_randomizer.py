@@ -57,7 +57,8 @@ class StanceFractionRandomizer(Transformer):
 @dataclass(frozen=True)
 class StanceF1Randomizer(Transformer):
     max_f1: float
-    step: int = 100
+    # step: int = 100
+    step: int = 1
 
     revision: int = 2
 
@@ -100,9 +101,9 @@ class StanceF1Randomizer(Transformer):
         ranking = ranking.sample(frac=1, random_state=0, ignore_index=True)
 
         print(f"Randomize stance labels until F1 <= {self.max_f1:.2f}")
-        for cutoff in range(0, len(ranking), self.step):
-            ranking.loc[:cutoff, "stance_label"] = \
-                ranking.loc[:cutoff, "stance_label_random"]
+        for random_proporiton in range(0, len(ranking), self.step):
+            ranking.loc[:random_proporiton, "stance_label"] = \
+                ranking.loc[:random_proporiton, "stance_label_random"]
             ranking_eval = ranking \
                 .dropna(subset=["stance_label", "stance_label_qrels"])
             f1 = f1_score(
@@ -110,8 +111,8 @@ class StanceF1Randomizer(Transformer):
                 ranking_eval["stance_label"].values,
                 average="macro",
             )
-            if cutoff % (10 * self.step) == 0:
-                print(f"Randomized: {cutoff:{ceil(log10(len(ranking)))}d} "
+            if random_proporiton % (10 * self.step) == 0:
+                print(f"Randomized: {random_proporiton:{ceil(log10(len(ranking)))}d} "
                       f"F1: {f1:.2f}")
             if f1 <= self.max_f1:
                 break
