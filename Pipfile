@@ -40,6 +40,7 @@ numpy = "*"
 seaborn = "*"
 jupyter = "*"
 matplotlib = "*"
+jupyterlab = "*"
 
 [dev-packages]
 
