@@ -455,5 +455,5 @@ Thumbs.db
 *.code-workspace
 
 # End of https://www.toptal.com/developers/gitignore/api/latex,vscode,python
-
+.ipynb_checkpoints
 data/cache
