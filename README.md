@@ -1,16 +1,6 @@
-[![CI](https://img.shields.io/github/actions/workflow/status/heinrichreimer/fare/ci.yml?branch=main&style=flat-square)](https://github.com/heinrichreimer/fare/actions/workflows/ci.yml)
-[![Code coverage](https://img.shields.io/codecov/c/github/heinrichreimer/fare?style=flat-square)](https://codecov.io/github/heinrichreimer/fare/)
-[![Issues](https://img.shields.io/github/issues/heinrichreimer/fare?style=flat-square)](https://github.com/heinrichreimer/fare/issues)
-[![Commit activity](https://img.shields.io/github/commit-activity/m/heinrichreimer/fare?style=flat-square)](https://github.com/heinrichreimer/fare/commits)
-[![License](https://img.shields.io/github/license/heinrichreimer/fare?style=flat-square)](LICENSE)
+# 🆚 Stance-Aware Re-ranking for Comparative Queries
 
-# 🆚 fare
-
-Code and resources to reproduce the paper _FARE: Fair Argument Re-ranking for Comparative Questions_ at [ArgMining 2022](https://argmining-org.github.io/2022/).
-
-## TODO
-- RoBerta stance tagger fine-tuning on Touché stance dataset (Sascha)
-- Same side stance detection (later)
+Code and resources to reproduce the paper _Stance-Aware Re-ranking for Comparative Queries_.
 
 ## Usage
 
