@@ -10,7 +10,7 @@ from pyterrier.model import add_ranks
 from pyterrier.transformer import Transformer
 from tqdm.auto import tqdm
 
-from fare.utils.stance import stance_value
+from stare.utils.stance import stance_value
 
 
 def _normalize_scores(ranking: DataFrame, inplace: bool = False) -> DataFrame:
@@ -80,7 +80,7 @@ class BoostMinorityStanceFairnessReranker(Transformer):
 
     @cached_property
     def qrels_stance(self) -> DataFrame:
-        from fare.config import CONFIG
+        from stare.config import CONFIG
         qrels = read_csv(
             str(CONFIG.qrels_stance_file_path.absolute()),
             sep="\\s+",

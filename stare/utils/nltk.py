@@ -1,7 +1,7 @@
 from nltk.downloader import Downloader
 
-from fare import logger
-from fare.config import CONFIG
+from stare import logger
+from stare.config import CONFIG
 
 
 def download_nltk_dependencies(*dependencies: str):

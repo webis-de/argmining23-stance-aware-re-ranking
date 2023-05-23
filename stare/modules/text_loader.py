@@ -5,7 +5,7 @@ from pandas import DataFrame
 from pyterrier.transformer import Transformer
 from tqdm.auto import tqdm
 
-from fare.config import CONFIG
+from stare.config import CONFIG
 
 
 @dataclass

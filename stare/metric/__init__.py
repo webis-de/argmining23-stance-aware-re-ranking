@@ -1,7 +1,7 @@
 from ir_measures import Measure, parse_measure as _parse_measure
 from ir_measures.measures import registry
 
-from fare.metric.classification import (
+from stare.metric.classification import (
     F1, NumJudged, FreqFirst, FreqSecond, FreqNeutral, FreqNo
 )
 

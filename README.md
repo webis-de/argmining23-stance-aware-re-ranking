@@ -1,16 +1,17 @@
-[![CI](https://img.shields.io/github/actions/workflow/status/heinrichreimer/fare/ci.yml?branch=main&style=flat-square)](https://github.com/heinrichreimer/fare/actions/workflows/ci.yml)
-[![Code coverage](https://img.shields.io/codecov/c/github/heinrichreimer/fare?style=flat-square)](https://codecov.io/github/heinrichreimer/fare/)
-[![Issues](https://img.shields.io/github/issues/heinrichreimer/fare?style=flat-square)](https://github.com/heinrichreimer/fare/issues)
-[![Commit activity](https://img.shields.io/github/commit-activity/m/heinrichreimer/fare?style=flat-square)](https://github.com/heinrichreimer/fare/commits)
-[![License](https://img.shields.io/github/license/heinrichreimer/fare?style=flat-square)](LICENSE)
+[![DOI](https://img.shields.io/badge/DOI-TODO-blue?style=flat-square)](https://doi.org/TODO)
+[![arXiv preprint](https://img.shields.io/badge/arXiv-TODO-blue?style=flat-square)](https://arxiv.org/abs/TODO)
+[![Papers with Code](https://img.shields.io/badge/papers%20with%20code-TODO-blue?style=flat-square)](https://paperswithcode.com/paper/TODO)
+[![CI](https://img.shields.io/github/actions/workflow/status/heinrichreimer/stare/ci.yml?branch=main&style=flat-square)](https://github.com/heinrichreimer/stare/actions/workflows/ci.yml)
+[![Code coverage](https://img.shields.io/codecov/c/github/heinrichreimer/stare?style=flat-square)](https://codecov.io/github/heinrichreimer/stare/)
 
-# 🆚 fare
 
-Code and resources to reproduce the paper _FARE: Fair Argument Re-ranking for Comparative Questions_ at [ArgMining 2022](https://argmining-org.github.io/2022/).
+[![Issues](https://img.shields.io/github/issues/heinrichreimer/stare?style=flat-square)](https://github.com/heinrichreimer/stare/issues)
+[![Commit activity](https://img.shields.io/github/commit-activity/m/heinrichreimer/stare?style=flat-square)](https://github.com/heinrichreimer/stare/commits)
+[![License](https://img.shields.io/github/license/heinrichreimer/stare?style=flat-square)](LICENSE)
 
-## TODO
-- RoBerta stance tagger fine-tuning on Touché stance dataset (Sascha)
-- Same side stance detection (later)
+# 🆚 Stance-Aware Re-ranking for Comparative Queries
+
+Code and resources to reproduce the paper _Stance-Aware Re-ranking for Comparative Queries_.
 
 ## Usage
 
@@ -31,9 +32,9 @@ pipenv install
 
 To evaluate the re-ranking pipeline on all runs and all topics, follow these steps:
 1. Modify the configuration in [`config.yml`](config.yml)
-2. Run the `fare` module:
+2. Run the `stare` module:
     ```shell script
-    pipenv run python -m fare
+    pipenv run python -m stare
     ```
 
 ## Testing
@@ -41,9 +42,9 @@ To evaluate the re-ranking pipeline on all runs and all topics, follow these ste
 After [installing](#installation) all dependencies, you can run all unit tests:
 
 ```shell script
-pipenv run flake8 fare
-pipenv run pylint -E fare
-pipenv run pytest fare
+pipenv run flake8 stare
+pipenv run pylint -E stare
+pipenv run pytest stare
 ```
 
 ## License

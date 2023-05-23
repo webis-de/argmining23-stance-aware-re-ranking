@@ -27,8 +27,8 @@ from transformers import (
 )
 from transformers.modeling_outputs import CausalLMOutput
 
-from fare import logger
-from fare.utils.stance import stance_value, stance_label
+from stare import logger
+from stare.utils.stance import stance_value, stance_label
 
 
 @dataclass(frozen=True)
@@ -37,14 +37,14 @@ class OpenAiStanceTagger(Transformer):
     verbose: bool = False
 
     def __post_init__(self):
-        from fare.utils.nltk import download_nltk_dependencies
-        from fare.config import CONFIG
+        from stare.utils.nltk import download_nltk_dependencies
+        from stare.config import CONFIG
         download_nltk_dependencies("punkt")
         openai.api_key = CONFIG.open_ai_api_key
 
     @cached_property
     def _cache(self) -> Cache:
-        from fare.config import CONFIG
+        from stare.config import CONFIG
         cache_path = CONFIG.cache_directory_path / "text-generation" / \
                      "openai" / self.model
         return Cache(str(cache_path))
@@ -132,7 +132,7 @@ class Text2TextGenerationStanceTagger(Transformer):
     revision: int = 1
 
     def __post_init__(self):
-        from fare.utils.nltk import download_nltk_dependencies
+        from stare.utils.nltk import download_nltk_dependencies
         download_nltk_dependencies("punkt")
 
     @cached_property
@@ -145,7 +145,7 @@ class Text2TextGenerationStanceTagger(Transformer):
 
     @cached_property
     def _cache(self) -> Cache:
-        from fare.config import CONFIG
+        from stare.config import CONFIG
         cache_path = CONFIG.cache_directory_path / "text2text-generation" / \
                      self.model
         return Cache(str(cache_path))
@@ -248,7 +248,7 @@ class ZeroShotClassificationStanceTagger(Transformer):
     verbose: bool = False
 
     def __post_init__(self):
-        from fare.utils.nltk import download_nltk_dependencies
+        from stare.utils.nltk import download_nltk_dependencies
         download_nltk_dependencies("punkt")
 
     @cached_property
@@ -264,7 +264,7 @@ class ZeroShotClassificationStanceTagger(Transformer):
 
     @cached_property
     def _cache(self) -> Cache:
-        from fare.config import CONFIG
+        from stare.config import CONFIG
         cache_path = CONFIG.cache_directory_path / "text-classification" / \
                      self.model
         return Cache(str(cache_path))
@@ -275,7 +275,7 @@ class ZeroShotClassificationStanceTagger(Transformer):
             object_first: str,
             object_second: str,
     ) -> float:
-        from fare.config import CONFIG
+        from stare.config import CONFIG
 
         object_words = {
             *word_tokenize(object_first),
@@ -468,7 +468,7 @@ class GroundTruthStanceTagger(Transformer):
 
     @cached_property
     def qrels_stance(self) -> DataFrame:
-        from fare.config import CONFIG
+        from stare.config import CONFIG
         qrels = read_csv(
             str(CONFIG.qrels_stance_file_path.absolute()),
             sep="\\s+",
@@ -497,7 +497,7 @@ class TextGenerationStanceTagger(Transformer):
     revision: int = 2
 
     def __post_init__(self):
-        from fare.utils.nltk import download_nltk_dependencies
+        from stare.utils.nltk import download_nltk_dependencies
         download_nltk_dependencies("punkt")
 
     @cached_property
@@ -514,7 +514,7 @@ class TextGenerationStanceTagger(Transformer):
 
     @cached_property
     def _cache(self) -> Cache:
-        from fare.config import CONFIG
+        from stare.config import CONFIG
         cache_path = CONFIG.cache_directory_path / "text-generation" / \
                      self.model
         return Cache(str(cache_path))

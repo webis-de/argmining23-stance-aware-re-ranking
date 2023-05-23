@@ -7,7 +7,7 @@ from pandas import DataFrame, read_csv
 from pyterrier.transformer import Transformer
 from sklearn.metrics import f1_score
 
-from fare.utils.stance import stance_label, stance_value
+from stare.utils.stance import stance_label, stance_value
 
 
 class StanceFractionRandomizeMethod:
@@ -64,7 +64,7 @@ class StanceF1Randomizer(Transformer):
 
     @cached_property
     def qrels_stance(self) -> DataFrame:
-        from fare.config import CONFIG
+        from stare.config import CONFIG
         qrels = read_csv(
             str(CONFIG.qrels_stance_file_path.absolute()),
             sep="\\s+",

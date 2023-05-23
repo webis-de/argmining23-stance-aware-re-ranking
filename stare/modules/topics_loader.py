@@ -3,8 +3,8 @@ from xml.etree.ElementTree import ElementTree, Element, parse
 
 from pandas import DataFrame
 
-from fare.config import CONFIG
-from fare import logger
+from stare.config import CONFIG
+from stare import logger
 
 
 def _parse_objects(xml: Element) -> Tuple[str, str]:

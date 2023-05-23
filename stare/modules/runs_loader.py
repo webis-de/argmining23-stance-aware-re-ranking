@@ -6,7 +6,7 @@ from pandas import DataFrame, read_csv
 from pyterrier.model import add_ranks
 from pyterrier.transformer import Transformer
 
-from fare.utils.stance import stance_value
+from stare.utils.stance import stance_value
 
 
 @dataclass(frozen=True)

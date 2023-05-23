@@ -13,16 +13,16 @@ from pyterrier.transformer import Transformer
 from scipy.stats import ttest_rel
 from statsmodels.sandbox.stats.multicomp import MultiComparison
 
-from fare.config import CONFIG, RunConfig
-from fare.modules.diversity_reranker import DiversityReranker
-from fare.modules.effectiveness_reranker import EffectivenessReranker
-from fare.modules.fairness_reranker import FairnessReranker
-from fare.modules.runs_loader import RunLoader
-from fare.modules.stance_filter import StanceFilter
-from fare.modules.stance_randomizer import StanceF1Randomizer
-from fare.modules.stance_tagger import StanceTagger
-from fare.modules.text_loader import TextLoader
-from fare.modules.topics_loader import parse_topics
+from stare.config import CONFIG, RunConfig
+from stare.modules.diversity_reranker import DiversityReranker
+from stare.modules.effectiveness_reranker import EffectivenessReranker
+from stare.modules.fairness_reranker import FairnessReranker
+from stare.modules.runs_loader import RunLoader
+from stare.modules.stance_filter import StanceFilter
+from stare.modules.stance_randomizer import StanceF1Randomizer
+from stare.modules.stance_tagger import StanceTagger
+from stare.modules.text_loader import TextLoader
+from stare.modules.topics_loader import parse_topics
 
 init(no_download=CONFIG.offline)
 

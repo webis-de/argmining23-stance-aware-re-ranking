@@ -7,12 +7,12 @@ from ir_measures import Measure
 from yaml import safe_load
 
 # noinspection PyUnresolvedReferences
-import fare.metric.fairness
-from fare.metric import parse_measure
-from fare.modules.diversity_reranker import DiversityReranker
-from fare.modules.effectiveness_reranker import EffectivenessReranker
-from fare.modules.fairness_reranker import FairnessReranker
-from fare.modules.stance_tagger import StanceTagger
+import stare.metric.fairness
+from stare.metric import parse_measure
+from stare.modules.diversity_reranker import DiversityReranker
+from stare.modules.effectiveness_reranker import EffectivenessReranker
+from stare.modules.fairness_reranker import FairnessReranker
+from stare.modules.stance_tagger import StanceTagger
 
 
 @dataclass_json(letter_case=LetterCase.CAMEL)
