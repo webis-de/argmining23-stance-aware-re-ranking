@@ -41,6 +41,8 @@ seaborn = "*"
 jupyter = "*"
 matplotlib = "*"
 jupyterlab = "*"
+simpletransformers = "*"
+pingouin = "*"
 
 [dev-packages]
 
