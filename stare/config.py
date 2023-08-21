@@ -2,22 +2,22 @@ from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Optional, List
 
-from dataclasses_json import dataclass_json, LetterCase, config
+from dataclasses_json import LetterCase, config, DataClassJsonMixin
 from ir_measures import Measure
 from yaml import safe_load
 
 # noinspection PyUnresolvedReferences
 import stare.metric.fairness
 from stare.metric import parse_measure
-from stare.modules.diversity_reranker import DiversityReranker
-from stare.modules.effectiveness_reranker import EffectivenessReranker
-from stare.modules.fairness_reranker import FairnessReranker
+from stare.modules.stance_reranker import StanceReranker
 from stare.modules.stance_tagger import StanceTagger
 
 
-@dataclass_json(letter_case=LetterCase.CAMEL)
-@dataclass
-class RunConfig:
+@dataclass(frozen=True)
+class RunConfig(DataClassJsonMixin):
+    dataclass_json_config = config(
+        letter_case=LetterCase.CAMEL)["dataclasses_json"]
+
     stance_tagger: StanceTagger = field(
         metadata=config(
             decoder=StanceTagger
@@ -28,32 +28,20 @@ class RunConfig:
     stance_tagger_threshold: float = 0.0
     stance_randomization_cutoff: Optional[int] = None
     stance_randomization_target_f1: float = 1.0
-    effectiveness_reranker: EffectivenessReranker = field(
+    stance_reranker: StanceReranker = field(
         metadata=config(
-            decoder=EffectivenessReranker
+            decoder=StanceReranker
         ),
-        default=EffectivenessReranker.ORIGINAL,
+        default=StanceReranker.ORIGINAL,
     )
-    effectiveness_reranker_cutoff: Optional[int] = None
-    diversity_reranker: DiversityReranker = field(
-        metadata=config(
-            decoder=DiversityReranker
-        ),
-        default=DiversityReranker.ORIGINAL,
-    )
-    diversity_reranker_cutoff: Optional[int] = None
-    fairness_reranker: FairnessReranker = field(
-        metadata=config(
-            decoder=FairnessReranker
-        ),
-        default=FairnessReranker.ORIGINAL,
-    )
-    fairness_reranker_cutoff: Optional[int] = None
+    stance_reranker_cutoff: Optional[int] = None
 
 
-@dataclass_json(letter_case=LetterCase.CAMEL)
-@dataclass
-class Config:
+@dataclass(frozen=True)
+class Config(DataClassJsonMixin):
+    dataclass_json_config = config(
+        letter_case=LetterCase.CAMEL)["dataclasses_json"]
+
     topics_file_path: Path = field(
         metadata=config(encoder=str, decoder=Path)
     )
@@ -122,7 +110,6 @@ class Config:
         with config_path.open("r") as config_file:
             config_dict = safe_load(config_file)
             return Config.from_dict(config_dict)
-
 
 
 CONFIG: Config = Config.load(Path(__file__).parent.parent / "config.yml")

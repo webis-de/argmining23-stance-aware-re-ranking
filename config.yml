@@ -6,140 +6,114 @@ runsDirectoryPath: data/runs/
 corpusFilePath: data/corpus/touche-task2-passages-version-002.jsonl
 cacheDirectoryPath: data/cache/
 
-# Re-ranking with ground-truth stance labels:
-#teamRuns:
-#- Aldo-Nadi seupd2122-kueri_rrf_reranked
-#- Asuna asuna-run-5
-#- Captain-Levi levirank_dense_initial_retrieval
-#- Captain-Tempesta hextech_run_1
-#- Grimjack grimjack-fair-reranking-argumentative-axioms
-#- Katana Colbert edinburg
-#- Olivier-Armstrong tfid_arg_similarity
-#- Puss-in-Boots BM25-Baseline
-#runs:
-#- {} # original
-#- stanceTagger: ground-truth
+# Re-ranking:
+runs:
+- {} # original
+- stanceTagger: ground-truth
+  effectivenessReranker: stance-first
+  effectivenessRerankerCutoff: 5
+- stanceTagger: original
+  effectivenessReranker: stance-first
+  effectivenessRerankerCutoff: 5
+- stanceTagger: gpt3-tsv
+  effectivenessReranker: stance-first
+  effectivenessRerankerCutoff: 5
+#- stanceTagger: google/flan-t5-base
 #  effectivenessReranker: stance-first
 #  effectivenessRerankerCutoff: 5
-#- stanceTagger: ground-truth
-#  effectivenessReranker: stance-first
-#  effectivenessRerankerCutoff: 5
-#  diversityReranker: alternating-stance
-#  diversityRerankerCutoff: 5
-#measuresRelevance:
-#- nDCG@5
-#measuresQuality:
-#- nDCG@5
-#measuresStance:
-#- rND(group_col='stance_label',tie_breaking='SECOND,FIRST,NEUTRAL,NO',groups='FIRST,SECOND,NEUTRAL')@5
-#- rKL(group_col='stance_label',tie_breaking='SECOND,FIRST,NEUTRAL,NO',groups='FIRST,SECOND,NEUTRAL')@5
-#- rRD(group_col='stance_label',tie_breaking='SECOND,FIRST,NEUTRAL,NO',groups='FIRST,SECOND,NEUTRAL')@5
-#measuresDiversityRelevance:
-#- alpha_nDCG@5
-#measuresDiversityQuality:
-#- alpha_nDCG@5
-#significanceLevel: 0.05
-#effectSize: true
-##metricsOutputFilePath: data/metrics-reranking-ground-truth.csv
-#metricsOutputFilePath: data/metrics-reranking-ground-truth.tex
+- stanceTagger: ground-truth
+  stanceRandomizationTargetF1: 1.00
+  stanceRandomizationCutoff: 5
+  effectivenessReranker: stance-first
+  effectivenessRerankerCutoff: 5
+- stanceTagger: ground-truth
+  stanceRandomizationTargetF1: 0.95
+  stanceRandomizationCutoff: 5
+  effectivenessReranker: stance-first
+  effectivenessRerankerCutoff: 5
+- stanceTagger: ground-truth
+  stanceRandomizationTargetF1: 0.90
+  stanceRandomizationCutoff: 5
+  effectivenessReranker: stance-first
+  effectivenessRerankerCutoff: 5
+- stanceTagger: ground-truth
+  stanceRandomizationTargetF1: 0.85
+  stanceRandomizationCutoff: 5
+  effectivenessReranker: stance-first
+  effectivenessRerankerCutoff: 5
+- stanceTagger: ground-truth
+  stanceRandomizationTargetF1: 0.80
+  stanceRandomizationCutoff: 5
+  effectivenessReranker: stance-first
+  effectivenessRerankerCutoff: 5
+- stanceTagger: ground-truth
+  stanceRandomizationTargetF1: 0.75
+  stanceRandomizationCutoff: 5
+  effectivenessReranker: stance-first
+  effectivenessRerankerCutoff: 5
+- stanceTagger: ground-truth
+  stanceRandomizationTargetF1: 0.70
+  stanceRandomizationCutoff: 5
+  effectivenessReranker: stance-first
+  effectivenessRerankerCutoff: 5
+- stanceTagger: ground-truth
+  stanceRandomizationTargetF1: 0.65
+  stanceRandomizationCutoff: 5
+  effectivenessReranker: stance-first
+  effectivenessRerankerCutoff: 5
+- stanceTagger: ground-truth
+  stanceRandomizationTargetF1: 0.60
+  stanceRandomizationCutoff: 5
+  effectivenessReranker: stance-first
+  effectivenessRerankerCutoff: 5
+- stanceTagger: ground-truth
+  stanceRandomizationTargetF1: 0.55
+  stanceRandomizationCutoff: 5
+  effectivenessReranker: stance-first
+  effectivenessRerankerCutoff: 5
+- stanceTagger: ground-truth
+  stanceRandomizationTargetF1: 0.50
+  stanceRandomizationCutoff: 5
+  effectivenessReranker: stance-first
+  effectivenessRerankerCutoff: 5
+- stanceTagger: ground-truth
+  stanceRandomizationTargetF1: 0.45
+  stanceRandomizationCutoff: 5
+  effectivenessReranker: stance-first
+  effectivenessRerankerCutoff: 5
+- stanceTagger: ground-truth
+  stanceRandomizationTargetF1: 0.40
+  stanceRandomizationCutoff: 5
+  effectivenessReranker: stance-first
+  effectivenessRerankerCutoff: 5
+- stanceTagger: ground-truth
+  stanceRandomizationTargetF1: 0.35
+  stanceRandomizationCutoff: 5
+  effectivenessReranker: stance-first
+  effectivenessRerankerCutoff: 5
+- stanceTagger: ground-truth
+  stanceRandomizationTargetF1: 0.30
+  stanceRandomizationCutoff: 5
+  effectivenessReranker: stance-first
+  effectivenessRerankerCutoff: 5
+- stanceTagger: ground-truth
+  stanceRandomizationTargetF1: 0.25
+  stanceRandomizationCutoff: 5
+  effectivenessReranker: stance-first
+  effectivenessRerankerCutoff: 5
+- stanceTagger: ground-truth
+  stanceRandomizationTargetF1: 0.20
+  stanceRandomizationCutoff: 5
+  effectivenessReranker: stance-first
+  effectivenessRerankerCutoff: 5
+measuresRelevance:
+- nDCG@5
+measuresQuality:
+- nDCG@5
+measuresPerQuery: true
+metricsOutputFilePath: data/metrics-reranking.csv
 
-# Re-ranking all with ground-truth stance labels:
-#runs:
-#- {} # original
-#- stanceTagger: ground-truth
-#  effectivenessReranker: stance-first
-#  effectivenessRerankerCutoff: 5
-#- stanceTagger: ground-truth
-#  effectivenessReranker: stance-first
-#  effectivenessRerankerCutoff: 5
-#  diversityReranker: alternating-stance
-#  diversityRerankerCutoff: 5
-#measuresRelevance:
-#- nDCG@5
-#measuresQuality:
-#- nDCG@5
-#measuresStance:
-#- rND(group_col='stance_label',tie_breaking='SECOND,FIRST,NEUTRAL,NO',groups='FIRST,SECOND,NEUTRAL')@5
-#- rKL(group_col='stance_label',tie_breaking='SECOND,FIRST,NEUTRAL,NO',groups='FIRST,SECOND,NEUTRAL')@5
-#- rRD(group_col='stance_label',tie_breaking='SECOND,FIRST,NEUTRAL,NO',groups='FIRST,SECOND,NEUTRAL')@5
-#measuresDiversityRelevance:
-#- alpha_nDCG@5
-#measuresDiversityQuality:
-#- alpha_nDCG@5
-#significanceLevel: 0.05
-#effectSize: true
-#metricsOutputFilePath: data/metrics-reranking-all-ground-truth.csv
-
-# Re-ranking with team predicted stance labels:
-#teamRuns:
-#- Aldo-Nadi seupd2122-kueri_rrf_reranked
-#- Asuna asuna-run-5
-#- Captain-Levi levirank_dense_initial_retrieval
-#- Captain-Tempesta hextech_run_1
-#- Grimjack grimjack-fair-reranking-argumentative-axioms
-#- Katana Colbert edinburg
-#- Olivier-Armstrong tfid_arg_similarity
-#- Puss-in-Boots BM25-Baseline
-#runs:
-#- {} # original
-#- effectivenessReranker: stance-first
-#  effectivenessRerankerCutoff: 5
-#- effectivenessReranker: stance-first
-#  effectivenessRerankerCutoff: 5
-#  diversityReranker: alternating-stance
-#  diversityRerankerCutoff: 5
-#measuresRelevance:
-#- nDCG@5
-#measuresQuality:
-#- nDCG@5
-#measuresStance:
-#- rND(group_col='stance_label',tie_breaking='SECOND,FIRST,NEUTRAL,NO',groups='FIRST,SECOND,NEUTRAL')@5
-#- rKL(group_col='stance_label',tie_breaking='SECOND,FIRST,NEUTRAL,NO',groups='FIRST,SECOND,NEUTRAL')@5
-#- rRD(group_col='stance_label',tie_breaking='SECOND,FIRST,NEUTRAL,NO',groups='FIRST,SECOND,NEUTRAL')@5
-#measuresDiversityRelevance:
-#- alpha_nDCG@5
-#measuresDiversityQuality:
-#- alpha_nDCG@5
-#significanceLevel: 0.05
-#effectSize: true
-#metricsOutputFilePath: data/metrics-reranking-original.csv
-##metricsOutputFilePath: data/metrics-reranking-original.tex
-
-# Re-ranking all with team predicted stance labels:
-#runs:
-#- {} # original
-#- effectivenessReranker: stance-first
-#  effectivenessRerankerCutoff: 5
-#- effectivenessReranker: stance-first
-#  effectivenessRerankerCutoff: 5
-#  diversityReranker: alternating-stance
-#  diversityRerankerCutoff: 5
-#measuresRelevance:
-#- nDCG@5
-#measuresQuality:
-#- nDCG@5
-#measuresStance:
-#- rND(group_col='stance_label',tie_breaking='SECOND,FIRST,NEUTRAL,NO',groups='FIRST,SECOND,NEUTRAL')@5
-#- rKL(group_col='stance_label',tie_breaking='SECOND,FIRST,NEUTRAL,NO',groups='FIRST,SECOND,NEUTRAL')@5
-#- rRD(group_col='stance_label',tie_breaking='SECOND,FIRST,NEUTRAL,NO',groups='FIRST,SECOND,NEUTRAL')@5
-#measuresDiversityRelevance:
-#- alpha_nDCG@5
-#measuresDiversityQuality:
-#- alpha_nDCG@5
-#significanceLevel: 0.05
-#effectSize: true
-#metricsOutputFilePath: data/metrics-reranking-all-original.csv
-
-# Stance tagging:
-#teamRuns:
-#- Aldo-Nadi seupd2122-kueri_rrf_reranked
-#- Asuna asuna-run-5
-#- Captain-Levi levirank_dense_initial_retrieval
-#- Captain-Tempesta hextech_run_1
-#- Grimjack grimjack-fair-reranking-argumentative-axioms
-#- Katana Colbert edinburg
-#- Olivier-Armstrong tfid_arg_similarity
-#- Puss-in-Boots BM25-Baseline
+## Stance tagging:
 #runs:
 #- { } # original
 #- stanceTagger: ground-truth
@@ -158,258 +132,6 @@ cacheDirectoryPath: data/cache/
 ##- FreqNeutral
 ##- FreqNo
 #metricsOutputFilePath: data/metrics-stance-tagging.csv
-##metricsOutputFilePath: data/metrics-stance-tagging.tex
-
-# Stance tagging all:
-#runs:
-#- { } # original
-#- stanceTagger: ground-truth
-#- stanceTagger: google/flan-t5-base
-#  stanceTaggerThreshold: 0.5
-#  stanceTaggerCutoff: 5
-#- stanceTagger: gpt3-tsv
-#- stanceTagger: roberta-csv
-#measuresStance:
-#- F1
-#- NumJudged
-#- F1@5
-#- NumJudged@5
-##- FreqFirst
-##- FreqSecond
-##- FreqNeutral
-##- FreqNo
-#metricsOutputFilePath: data/metrics-stance-tagging-all.csv
-##metricsOutputFilePath: data/metrics-stance-tagging-all.tex
-
-# Re-ranking with predicted GPT-3 stance labels:
-#teamRuns:
-#- Aldo-Nadi seupd2122-kueri_rrf_reranked
-#- Asuna asuna-run-5
-#- Captain-Levi levirank_dense_initial_retrieval
-#- Captain-Tempesta hextech_run_1
-#- Grimjack grimjack-fair-reranking-argumentative-axioms
-#- Katana Colbert edinburg
-#- Olivier-Armstrong tfid_arg_similarity
-#- Puss-in-Boots BM25-Baseline
-#runs:
-#- { } # original
-#- stanceTagger: gpt3-tsv
-#  effectivenessReranker: stance-first
-#  effectivenessRerankerCutoff: 5
-#- stanceTagger: gpt3-tsv
-#  effectivenessReranker: stance-first
-#  effectivenessRerankerCutoff: 5
-#  diversityReranker: alternating-stance
-#  diversityRerankerCutoff: 5
-#measuresRelevance:
-#- nDCG@5
-#measuresQuality:
-#- nDCG@5
-#measuresStance:
-#- rND(group_col='stance_label',tie_breaking='SECOND,FIRST,NEUTRAL,NO',groups='FIRST,SECOND,NEUTRAL')@5
-#- rKL(group_col='stance_label',tie_breaking='SECOND,FIRST,NEUTRAL,NO',groups='FIRST,SECOND,NEUTRAL')@5
-#- rRD(group_col='stance_label',tie_breaking='SECOND,FIRST,NEUTRAL,NO',groups='FIRST,SECOND,NEUTRAL')@5
-#measuresDiversityRelevance:
-#- alpha_nDCG@5
-#measuresDiversityQuality:
-#- alpha_nDCG@5
-#significanceLevel: 0.05
-#effectSize: true
-#metricsOutputFilePath: data/metrics-reranking-gpt3.csv
-##metricsOutputFilePath: data/metrics-reranking-gpt3.tex
-
-# Re-ranking all with predicted GPT-3 stance labels:
-#runs:
-#- { } # original
-#- stanceTagger: gpt3-tsv
-#  effectivenessReranker: stance-first
-#  effectivenessRerankerCutoff: 5
-#- stanceTagger: gpt3-tsv
-#  effectivenessReranker: stance-first
-#  effectivenessRerankerCutoff: 5
-#  diversityReranker: alternating-stance
-#  diversityRerankerCutoff: 5
-#measuresRelevance:
-#- nDCG@5
-#measuresQuality:
-#- nDCG@5
-#measuresStance:
-#- rND(group_col='stance_label',tie_breaking='SECOND,FIRST,NEUTRAL,NO',groups='FIRST,SECOND,NEUTRAL')@5
-#- rKL(group_col='stance_label',tie_breaking='SECOND,FIRST,NEUTRAL,NO',groups='FIRST,SECOND,NEUTRAL')@5
-#- rRD(group_col='stance_label',tie_breaking='SECOND,FIRST,NEUTRAL,NO',groups='FIRST,SECOND,NEUTRAL')@5
-#measuresDiversityRelevance:
-#- alpha_nDCG@5
-#measuresDiversityQuality:
-#- alpha_nDCG@5
-#significanceLevel: 0.05
-#effectSize: true
-#metricsOutputFilePath: data/metrics-reranking-all-gpt3.csv
-
-# Effect of stance tagger F1 score on improvements:
-#runs:
-#- {} # original
-#- stanceTagger: ground-truth
-#  stanceRandomizationTargetF1: 1.00
-#  stanceRandomizationCutoff: 5
-#  effectivenessReranker: stance-first
-#  effectivenessRerankerCutoff: 5
-#  diversityReranker: alternating-stance
-#  diversityRerankerCutoff: 5
-#- stanceTagger: ground-truth
-#  stanceRandomizationTargetF1: 0.95
-#  stanceRandomizationCutoff: 5
-#  effectivenessReranker: stance-first
-#  effectivenessRerankerCutoff: 5
-#  diversityReranker: alternating-stance
-#  diversityRerankerCutoff: 5
-#- stanceTagger: ground-truth
-#  stanceRandomizationTargetF1: 0.90
-#  stanceRandomizationCutoff: 5
-#  effectivenessReranker: stance-first
-#  effectivenessRerankerCutoff: 5
-#  diversityReranker: alternating-stance
-#  diversityRerankerCutoff: 5
-#- stanceTagger: ground-truth
-#  stanceRandomizationTargetF1: 0.85
-#  stanceRandomizationCutoff: 5
-#  effectivenessReranker: stance-first
-#  effectivenessRerankerCutoff: 5
-#  diversityReranker: alternating-stance
-#  diversityRerankerCutoff: 5
-#- stanceTagger: ground-truth
-#  stanceRandomizationTargetF1: 0.80
-#  stanceRandomizationCutoff: 5
-#  effectivenessReranker: stance-first
-#  effectivenessRerankerCutoff: 5
-#  diversityReranker: alternating-stance
-#  diversityRerankerCutoff: 5
-#- stanceTagger: ground-truth
-#  stanceRandomizationTargetF1: 0.75
-#  stanceRandomizationCutoff: 5
-#  effectivenessReranker: stance-first
-#  effectivenessRerankerCutoff: 5
-#  diversityReranker: alternating-stance
-#  diversityRerankerCutoff: 5
-#- stanceTagger: ground-truth
-#  stanceRandomizationTargetF1: 0.70
-#  stanceRandomizationCutoff: 5
-#  effectivenessReranker: stance-first
-#  effectivenessRerankerCutoff: 5
-#  diversityReranker: alternating-stance
-#  diversityRerankerCutoff: 5
-#- stanceTagger: ground-truth
-#  stanceRandomizationTargetF1: 0.65
-#  stanceRandomizationCutoff: 5
-#  effectivenessReranker: stance-first
-#  effectivenessRerankerCutoff: 5
-#  diversityReranker: alternating-stance
-#  diversityRerankerCutoff: 5
-#- stanceTagger: ground-truth
-#  stanceRandomizationTargetF1: 0.60
-#  stanceRandomizationCutoff: 5
-#  effectivenessReranker: stance-first
-#  effectivenessRerankerCutoff: 5
-#  diversityReranker: alternating-stance
-#  diversityRerankerCutoff: 5
-#- stanceTagger: ground-truth
-#  stanceRandomizationTargetF1: 0.55
-#  stanceRandomizationCutoff: 5
-#  effectivenessReranker: stance-first
-#  effectivenessRerankerCutoff: 5
-#  diversityReranker: alternating-stance
-#  diversityRerankerCutoff: 5
-#- stanceTagger: ground-truth
-#  stanceRandomizationTargetF1: 0.50
-#  stanceRandomizationCutoff: 5
-#  effectivenessReranker: stance-first
-#  effectivenessRerankerCutoff: 5
-#  diversityReranker: alternating-stance
-#  diversityRerankerCutoff: 5
-#- stanceTagger: ground-truth
-#  stanceRandomizationTargetF1: 0.45
-#  stanceRandomizationCutoff: 5
-#  effectivenessReranker: stance-first
-#  effectivenessRerankerCutoff: 5
-#  diversityReranker: alternating-stance
-#  diversityRerankerCutoff: 5
-#- stanceTagger: ground-truth
-#  stanceRandomizationTargetF1: 0.40
-#  stanceRandomizationCutoff: 5
-#  effectivenessReranker: stance-first
-#  effectivenessRerankerCutoff: 5
-#  diversityReranker: alternating-stance
-#  diversityRerankerCutoff: 5
-#- stanceTagger: ground-truth
-#  stanceRandomizationTargetF1: 0.35
-#  stanceRandomizationCutoff: 5
-#  effectivenessReranker: stance-first
-#  effectivenessRerankerCutoff: 5
-#  diversityReranker: alternating-stance
-#  diversityRerankerCutoff: 5
-#- stanceTagger: ground-truth
-#  stanceRandomizationTargetF1: 0.30
-#  stanceRandomizationCutoff: 5
-#  effectivenessReranker: stance-first
-#  effectivenessRerankerCutoff: 5
-#  diversityReranker: alternating-stance
-#  diversityRerankerCutoff: 5
-#- stanceTagger: ground-truth
-#  stanceRandomizationTargetF1: 0.25
-#  stanceRandomizationCutoff: 5
-#  effectivenessReranker: stance-first
-#  effectivenessRerankerCutoff: 5
-#  diversityReranker: alternating-stance
-#  diversityRerankerCutoff: 5
-#- stanceTagger: ground-truth
-#  stanceRandomizationTargetF1: 0.20
-#  stanceRandomizationCutoff: 5
-#  effectivenessReranker: stance-first
-#  effectivenessRerankerCutoff: 5
-#  diversityReranker: alternating-stance
-#  diversityRerankerCutoff: 5
-#- stanceTagger: ground-truth
-#  stanceRandomizationTargetF1: 0.15
-#  stanceRandomizationCutoff: 5
-#  effectivenessReranker: stance-first
-#  effectivenessRerankerCutoff: 5
-#  diversityReranker: alternating-stance
-#  diversityRerankerCutoff: 5
-#- stanceTagger: ground-truth
-#  stanceRandomizationTargetF1: 0.10
-#  stanceRandomizationCutoff: 5
-#  effectivenessReranker: stance-first
-#  effectivenessRerankerCutoff: 5
-#  diversityReranker: alternating-stance
-#  diversityRerankerCutoff: 5
-#- stanceTagger: ground-truth
-#  stanceRandomizationTargetF1: 0.05
-#  stanceRandomizationCutoff: 5
-#  effectivenessReranker: stance-first
-#  effectivenessRerankerCutoff: 5
-#  diversityReranker: alternating-stance
-#  diversityRerankerCutoff: 5
-#- stanceTagger: ground-truth
-#  stanceRandomizationTargetF1: 0.00
-#  stanceRandomizationCutoff: 5
-#  effectivenessReranker: stance-first
-#  effectivenessRerankerCutoff: 5
-#  diversityReranker: alternating-stance
-#  diversityRerankerCutoff: 5
-#measuresRelevance:
-#- nDCG@5
-#measuresQuality:
-#- nDCG@5
-#measuresStance:
-#- F1@5
-#- rND(group_col='stance_label',tie_breaking='SECOND,FIRST,NEUTRAL,NO',groups='FIRST,SECOND,NEUTRAL')@5
-#- rKL(group_col='stance_label',tie_breaking='SECOND,FIRST,NEUTRAL,NO',groups='FIRST,SECOND,NEUTRAL')@5
-#- rRD(group_col='stance_label',tie_breaking='SECOND,FIRST,NEUTRAL,NO',groups='FIRST,SECOND,NEUTRAL')@5
-#measuresDiversityRelevance:
-#- alpha_nDCG@5
-#measuresDiversityQuality:
-#- alpha_nDCG@5
-#measuresPerQuery: true
-metricsOutputFilePath: data/metrics-reranking-all-f1.csv
 
 # Other options:
 #maxTeams: 3

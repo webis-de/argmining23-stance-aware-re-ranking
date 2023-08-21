@@ -57,10 +57,9 @@ class StanceFractionRandomizer(Transformer):
 @dataclass(frozen=True)
 class StanceF1Randomizer(Transformer):
     max_f1: float
-    # step: int = 100
     step: int = 1
 
-    revision: int = 2
+    revision: int = 3
 
     @cached_property
     def qrels_stance(self) -> DataFrame:

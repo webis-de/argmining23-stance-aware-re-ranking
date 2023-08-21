@@ -1,7 +1,6 @@
 from functools import cache
 from math import sqrt, nan
 from pathlib import Path
-from textwrap import dedent
 from typing import NamedTuple
 
 from ir_measures import Measure
@@ -14,12 +13,10 @@ from scipy.stats import ttest_rel
 from statsmodels.sandbox.stats.multicomp import MultiComparison
 
 from stare.config import CONFIG, RunConfig
-from stare.modules.diversity_reranker import DiversityReranker
-from stare.modules.effectiveness_reranker import EffectivenessReranker
-from stare.modules.fairness_reranker import FairnessReranker
 from stare.modules.runs_loader import RunLoader
 from stare.modules.stance_filter import StanceFilter
 from stare.modules.stance_randomizer import StanceF1Randomizer
+from stare.modules.stance_reranker import StanceReranker
 from stare.modules.stance_tagger import StanceTagger
 from stare.modules.text_loader import TextLoader
 from stare.modules.topics_loader import parse_topics
@@ -107,81 +104,28 @@ def _run(
         names.append(name)
 
     # Re-rank for effectiveness.
-    if run_config.effectiveness_reranker_cutoff is None:
+    if run_config.stance_reranker_cutoff is None:
         pipeline = ~(
                 pipeline >>
-                run_config.effectiveness_reranker
+                run_config.stance_reranker
         )
-    elif run_config.effectiveness_reranker_cutoff > 0:
+    elif run_config.stance_reranker_cutoff > 0:
         # noinspection PyTypeChecker
         pipeline = (
                 ~(
                         pipeline %
-                        run_config.effectiveness_reranker_cutoff >>
-                        run_config.effectiveness_reranker
+                        run_config.stance_reranker_cutoff >>
+                        run_config.stance_reranker
                 ) ^
                 pipeline
         )
 
-    if (run_config.effectiveness_reranker != EffectivenessReranker.ORIGINAL and
-            (run_config.effectiveness_reranker_cutoff is None or
-             run_config.effectiveness_reranker_cutoff > 0)):
-        name = run_config.effectiveness_reranker.value
-        if run_config.effectiveness_reranker_cutoff is not None:
-            name += f"@{run_config.effectiveness_reranker_cutoff}"
-        names.append(name)
-
-    # Re-rank for diversity.
-    if run_config.diversity_reranker_cutoff is None:
-        pipeline = ~(
-                pipeline >>
-                run_config.diversity_reranker
-        )
-    elif run_config.diversity_reranker_cutoff > 0:
-        # noinspection PyTypeChecker
-        pipeline = (
-                ~(
-                        pipeline %
-                        run_config.diversity_reranker_cutoff >>
-                        run_config.diversity_reranker
-                ) ^
-                pipeline
-        )
-
-    if (run_config.diversity_reranker != DiversityReranker.ORIGINAL and
-            (run_config.diversity_reranker_cutoff is None or
-             run_config.diversity_reranker_cutoff > 0)):
-        name = run_config.diversity_reranker.value
-        if run_config.diversity_reranker_cutoff is not None:
-            name += f"@{run_config.diversity_reranker_cutoff}"
-        names.append(name)
-
-    # Re-rank for fairness.
-    if run_config.fairness_reranker_cutoff is None:
-        pipeline = ~(
-                pipeline >>
-                run_config.fairness_reranker
-        )
-    elif run_config.fairness_reranker_cutoff > 0:
-        # noinspection PyTypeChecker
-        pipeline = (
-                ~(
-                        pipeline %
-                        run_config.fairness_reranker_cutoff >>
-                        run_config.fairness_reranker
-                ) ^
-                pipeline
-        )
-
-    if (run_config.fairness_reranker != FairnessReranker.ORIGINAL and
-            (run_config.fairness_reranker_cutoff is None or
-             run_config.fairness_reranker_cutoff > 0)):
-        name = run_config.fairness_reranker.value
-        if (run_config.fairness_reranker ==
-                FairnessReranker.BOOST_MINORITY_STANCE):
-            name = "boost-min"
-        if run_config.fairness_reranker_cutoff is not None:
-            name += f"@{run_config.fairness_reranker_cutoff}"
+    if (run_config.stance_reranker != StanceReranker.ORIGINAL and
+            (run_config.stance_reranker_cutoff is None or
+             run_config.stance_reranker_cutoff > 0)):
+        name = run_config.stance_reranker.value
+        if run_config.stance_reranker_cutoff is not None:
+            name += f"@{run_config.stance_reranker_cutoff}"
         names.append(name)
 
     return NamedPipeline(names, pipeline)
@@ -547,56 +491,10 @@ def main() -> None:
     # Export results.
     print("Export results.")
     output_path = CONFIG.metrics_output_file_path
-    if CONFIG.measures_per_query:
-        output_path = output_path.with_suffix(
-            f".perquery{output_path.suffix}"
-        )
     if output_path.suffix == ".csv":
         experiment.to_csv(output_path, index=False, float_format="%.3f")
     if output_path.suffix == ".xlsx":
         experiment.to_excel(output_path, index=False)
-    if output_path.suffix == ".tex":
-        measure_cols = _measure_cols(experiment)
-        measure_names = [
-            measure_col.replace("_", "\\_")
-            for measure_col in measure_cols
-        ]
-        with open(output_path, "w") as file:
-            file.write(dedent(r"""
-            \newcommand{\significant}[1]{\ensuremath{\bm{#1}}}
-            \newcommand{\effectup}[1]{\ensuremath{^{\uparrow#1}}}
-            \newcommand{\effectdown}[1]{\ensuremath{^{\downarrow#1}}}
-            \newcommand{\effectnone}[1]{\ensuremath{^{\phantom{\uparrow#1}}}}
-            """).lstrip())
-            file.write("\\begin{tabular}{l")
-            file.write("c" * len(measure_cols))
-            file.write("}\n")
-            file.write("\\toprule\n")
-            line = ["Ranking", *measure_names]
-            file.write(" & ".join(line) + " \\\\\n")
-            file.write("\\midrule\n")
-            for _, row in experiment.iterrows():
-                line = [
-                    row["name"].replace("_", "\\_")
-                ]
-                for measure_col in measure_cols:
-                    metric = row[measure_col]
-                    column = f"{metric:.3f}"
-                    significant = (row[f"{measure_col} p-value corrected"] <
-                                   CONFIG.significance_level)
-                    effect = row[f"{measure_col} effect"]
-                    if effect > 0:
-                        column = rf"{column}\effectup{{{effect:.1f}}}"
-                    elif effect < 0:
-                        column = rf"{column}\effectdown{{{-effect:.1f}}}"
-                    else:
-                        column = rf"{column}\effectnone{{0.0}}"
-                    if significant:
-                        column = rf"\significant{{{column}}}"
-                    line.append(column)
-                file.write(" & ".join(line) + " \\\\\n")
-            file.write("\\bottomrule\n")
-            file.write("\\end{tabular}\n")
 
 
 if __name__ == '__main__':

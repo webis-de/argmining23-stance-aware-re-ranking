@@ -9,7 +9,7 @@ from tqdm.auto import tqdm
 
 
 @dataclass(frozen=True)
-class StanceFirstEffectivenessReranker(Transformer):
+class StanceFirstReranker(Transformer):
     verbose: bool = False
 
     @staticmethod
@@ -44,7 +44,7 @@ class StanceFirstEffectivenessReranker(Transformer):
 
 
 @dataclass(frozen=True)
-class SubjectiveStanceFirstEffectivenessReranker(Transformer):
+class SubjectiveStanceFirstReranker(Transformer):
     verbose: bool = False
 
     @staticmethod
@@ -83,19 +83,19 @@ class SubjectiveStanceFirstEffectivenessReranker(Transformer):
         return ranking
 
 
-class EffectivenessReranker(Transformer, Enum):
+class StanceReranker(Transformer, Enum):
     ORIGINAL = "original"
     STANCE_FIRST = "stance-first"
     SUBJECTIVE_STANCE_FIRST = "subjective-stance-first"
 
     @cached_property
     def _transformer(self) -> Transformer:
-        if self == EffectivenessReranker.ORIGINAL:
+        if self == StanceReranker.ORIGINAL:
             return Transformer.identity()
-        elif self == EffectivenessReranker.STANCE_FIRST:
-            return StanceFirstEffectivenessReranker()
-        elif self == EffectivenessReranker.SUBJECTIVE_STANCE_FIRST:
-            return SubjectiveStanceFirstEffectivenessReranker()
+        elif self == StanceReranker.STANCE_FIRST:
+            return StanceFirstReranker()
+        elif self == StanceReranker.SUBJECTIVE_STANCE_FIRST:
+            return SubjectiveStanceFirstReranker()
         else:
             raise ValueError(f"Unknown effectiveness re-ranker: {self}")
 
