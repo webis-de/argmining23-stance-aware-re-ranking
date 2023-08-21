@@ -2,7 +2,7 @@
 <project version="4">
   <component name="DataSourceManagerImpl" format="xml" multifile-model="true">
     <data-source source="LOCAL" name="cache" uuid="e4c30a85-cb24-4dca-9583-7bd98b7039e9">
-      <driver-ref>sqlite.xerial</driver-ref>
+      <driver-ref>9cefab34-ed77-480c-966a-8ce98fae18a1</driver-ref>
       <synchronize>true</synchronize>
       <jdbc-driver>org.sqlite.JDBC</jdbc-driver>
       <jdbc-url>jdbc:sqlite:$PROJECT_DIR$/data/cache/text-generation/google/flan-t5-base/cache.db</jdbc-url>
@@ -17,7 +17,7 @@
       </libraries>
     </data-source>
     <data-source source="LOCAL" name="text-davinci-003" uuid="08f16ca2-a583-4570-9019-608c8901c0ea">
-      <driver-ref>sqlite.xerial</driver-ref>
+      <driver-ref>9cefab34-ed77-480c-966a-8ce98fae18a1</driver-ref>
       <synchronize>true</synchronize>
       <jdbc-driver>org.sqlite.JDBC</jdbc-driver>
       <jdbc-url>jdbc:sqlite:$PROJECT_DIR$/data/cache/text-generation/openai/text-davinci-003/cache.db</jdbc-url>
