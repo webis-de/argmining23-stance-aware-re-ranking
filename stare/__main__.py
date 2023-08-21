@@ -5,7 +5,7 @@ from typing import NamedTuple
 
 from ir_measures import Measure
 from pandas import DataFrame, merge, Series
-from pyterrier import init
+from pyterrier import init, started
 from pyterrier.io import read_qrels
 from pyterrier.pipelines import Experiment
 from pyterrier.transformer import Transformer
@@ -21,7 +21,6 @@ from stare.modules.stance_tagger import StanceTagger
 from stare.modules.text_loader import TextLoader
 from stare.modules.topics_loader import parse_topics
 
-init(no_download=CONFIG.offline)
 
 
 class NamedPipeline(NamedTuple):
@@ -173,80 +172,6 @@ def _measure_cols(df: DataFrame) -> list[str]:
     ]
 
 
-def _compute_significance(df: DataFrame) -> DataFrame:
-    significance_level = CONFIG.significance_level
-    for measure_col in _measure_cols(df):
-        comparison = MultiComparison(
-            df[measure_col],
-            df["name_index"],
-        )
-        _, _, results = comparison.allpairtest(
-            ttest_rel,
-            significance_level,
-            "bonf",
-        )
-        lookup = {
-            1: {
-                "p-value": nan,
-                "p-value_corrected": nan,
-                "reject": False,
-            }
-        }
-        for result in results:
-            if result[0] == 1:
-                name_index = result[1]
-            elif result[1] == 1:
-                name_index = result[0]
-            else:
-                continue
-            lookup[name_index] = {
-                "statistic": result[2],
-                "p-value": result[3],
-                "p-value_corrected": result[4],
-                "reject": result[5],
-            }
-        df[f"{measure_col} p-value"] = [
-            lookup[row["name_index"]]["p-value"]
-            for _, row in df.iterrows()
-        ]
-        df[f"{measure_col} p-value corrected"] = [
-            lookup[row["name_index"]]["p-value_corrected"]
-            for _, row in df.iterrows()
-        ]
-        df[f"{measure_col} reject"] = [
-            lookup[row["name_index"]]["reject"]
-            for _, row in df.iterrows()
-        ]
-
-    return df
-
-
-def cohen_d(x: Series, y: Series):
-    nx = len(x)
-    ny = len(y)
-    dof = nx + ny - 2
-    return (
-            (x.mean() - y.mean()) /
-            sqrt(
-                (
-                        (nx - 1) * x.std(ddof=1) ** 2 +
-                        (ny - 1) * y.std(ddof=1) ** 2
-                ) / dof
-            )
-    )
-
-
-def _compute_effect(df: DataFrame) -> DataFrame:
-    for measure_col in _measure_cols(df):
-        baseline = df[df["name_index"] == 1][measure_col]
-        for name_index in df["name_index"].unique():
-            compared = df[df["name_index"] == name_index][measure_col]
-            # Cohen's d
-            df.loc[
-                df["name_index"] == name_index,
-                f"{measure_col} effect"
-            ] = cohen_d(compared, baseline)
-    return df
 
 
 @cache
@@ -333,6 +258,8 @@ def _rename_column(column: str) -> str:
 
 
 def main() -> None:
+    if not started():
+        init()
     topics: DataFrame = parse_topics()
     qrels_relevance: DataFrame = read_qrels(
         str(CONFIG.qrels_relevance_file_path.absolute())
@@ -368,15 +295,6 @@ def main() -> None:
         )[:max_runs_per_team]
         for run_config in CONFIG.runs
     ]
-    if CONFIG.team_runs is not None:
-        runs = [
-            run
-            for run in runs
-            if any(
-                run.name.startswith(team_run)
-                for team_run in CONFIG.team_runs
-            )
-        ]
     all_names: list[str] = [run.name for run in runs]
 
     print("Compute relevance effectiveness measures.")
@@ -455,38 +373,6 @@ def main() -> None:
         .groupby(by="run", sort=False, group_keys=False) \
         .apply(_name_index) \
         .reset_index(drop=True)
-
-    # Compute significance.
-    if CONFIG.significance_level is not None:
-        print("Compute significance.")
-        experiment = experiment \
-            .groupby(by="run", sort=False, group_keys=False) \
-            .apply(_compute_significance)
-
-    # Compute effect size.
-    if CONFIG.effect_size:
-        print("Compute effect size.")
-        experiment = experiment \
-            .groupby(by="run", sort=False, group_keys=False) \
-            .apply(_compute_effect)
-    del experiment["run"]
-
-    # Aggregate results.
-    if not CONFIG.measures_per_query:
-        print("Aggregate results.")
-        aggregations = {
-            column:
-                "first"
-                if (column.endswith(" test") or column == "run"
-                    or column == "name" or column == "name_index")
-                else "mean"
-            for column in experiment.columns
-            if column != "qid"
-        }
-        experiment = experiment \
-            .groupby(by=["name", "name_index"], sort=False,
-                     group_keys=True) \
-            .aggregate(aggregations)
 
     # Export results.
     print("Export results.")

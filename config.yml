@@ -8,7 +8,7 @@ cacheDirectoryPath: data/cache/
 
 # Re-ranking:
 runs:
-- {} # original
+- { } # original
 - stanceTagger: ground-truth
   effectivenessReranker: stance-first
   effectivenessRerankerCutoff: 5
@@ -110,7 +110,6 @@ measuresRelevance:
 - nDCG@5
 measuresQuality:
 - nDCG@5
-measuresPerQuery: true
 metricsOutputFilePath: data/metrics-reranking.csv
 
 ## Stance tagging:
@@ -136,43 +135,8 @@ metricsOutputFilePath: data/metrics-reranking.csv
 # Other options:
 #maxTeams: 3
 #maxRunsPerTeam: 2
-#teamRuns:
-#- Aldo-Nadi seupd2122-kueri_kueristopv2_BM2_false_porter
-#- Aldo-Nadi seupd2122-kueri_kueristopv2_BM2_false_porter_reranked
-#- Aldo-Nadi seupd2122-kueri_RF_reranked
-#- Aldo-Nadi seupd2122-kueri_rrf
-#- Aldo-Nadi seupd2122-kueri_rrf_reranked
-#- Asuna asuna-run-5
-#- Captain-Levi levirank_voting_retrieval
-#- Captain-Levi levirank_psuedo_relevance_feedback
-#- Captain-Levi levirank_baseline_large_duo_t5
-#- Captain-Levi levirank_dense_initial_retrieval
-#- Captain-Levi levirank_psuedo_relevance_feedback+voting
-#- Captain-Tempesta hextech_run_1
-#- Captain-Tempesta hextech_run_2
-#- Captain-Tempesta hextech_run_3
-#- Captain-Tempesta hextech_run_4
-#- Captain-Tempesta hextech_run_5
-#- Grimjack grimjack-baseline
-#- Grimjack grimjack-argumentative-axioms
-#- Grimjack grimjack-fair-reranking-argumentative-axioms
-#- Grimjack grimjack-all-you-need-is-t0
-#- Grimjack grimjack-fair-argumentative-reranking-with-t0
-#- Katana Colbert fine tune on touche data
-#- Katana Colbert trained by me
-#- Katana Colbert edinburg
-#- Olivier-Armstrong tfid_arg_similarity
-#- Puss-in-Boots BM25-Baseline
-
-#significanceLevel: 0.05
-#effectSize: true
-
 
 # Remove documents without judgments before evaluation.
 #filterByQrels: true
-
-# Attempt to work offline.
-# Won't work unless PyTerrier and NLTK dependencies have previously been downloaded.
-#offline: true
 
 openAiApiKey: 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

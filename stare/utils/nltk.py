@@ -5,10 +5,6 @@ from stare.config import CONFIG
 
 
 def download_nltk_dependencies(*dependencies: str):
-    if CONFIG.offline:
-        # Skip download.
-        return
-
     downloader = Downloader()
     for dependency in dependencies:
         if not downloader.is_installed(dependency):

@@ -69,9 +69,6 @@ class Config(DataClassJsonMixin):
 
     max_teams: Optional[int] = None
     max_runs_per_team: Optional[int] = None
-    team_runs: Optional[set[str]] = field(metadata=config(
-        decoder=lambda runs: set(runs) if runs is not None else None
-    ), default=None)
 
     runs: List[RunConfig] = field(default_factory=list)
     stance_tagger_zero_shot_score_threshold: float = 0.0
@@ -91,14 +88,10 @@ class Config(DataClassJsonMixin):
     measures_stance: list[Measure] = field(metadata=config(
         decoder=lambda metrics: [parse_measure(metric) for metric in metrics]
     ), default_factory=list)
-    measures_per_query: bool = False
 
-    significance_level: Optional[float] = None
-    effect_size: bool = False
+    significance_level = None
 
     filter_by_qrels: bool = False
-
-    offline: bool = False
 
     open_ai_api_key: Optional[str] = None
 
