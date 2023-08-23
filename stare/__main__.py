@@ -1,5 +1,3 @@
-from functools import cache
-from math import sqrt, nan
 from pathlib import Path
 from typing import NamedTuple
 
@@ -9,8 +7,6 @@ from pyterrier import init, started
 from pyterrier.io import read_qrels
 from pyterrier.pipelines import Experiment
 from pyterrier.transformer import Transformer
-from scipy.stats import ttest_rel
-from statsmodels.sandbox.stats.multicomp import MultiComparison
 
 from stare.config import CONFIG, RunConfig
 from stare.modules.runs_loader import RunLoader
@@ -20,7 +16,6 @@ from stare.modules.stance_reranker import StanceReranker
 from stare.modules.stance_tagger import StanceTagger
 from stare.modules.text_loader import TextLoader
 from stare.modules.topics_loader import parse_topics
-
 
 
 class NamedPipeline(NamedTuple):
@@ -140,78 +135,6 @@ def _name_index(experiment: DataFrame) -> DataFrame:
     return experiment[columns]
 
 
-def _measure_cols(df: DataFrame) -> list[str]:
-    effectiveness_relevance_suffix = (
-        " rel." if len(CONFIG.measures_quality) > 0 else "")
-    effectiveness_quality_suffix = (
-        " qual." if len(CONFIG.measures_relevance) > 0 else "")
-    diversity_relevance_suffix = (
-        " rel." if len(CONFIG.measures_diversity_quality) > 0 else "")
-    diversity_quality_suffix = (
-        " qual." if len(CONFIG.measures_diversity_relevance) > 0 else "")
-    columns = []
-    for measure in CONFIG.measures_relevance:
-        column = _rename_column(str(measure))
-        columns.append(f"{column}{effectiveness_relevance_suffix}")
-    for measure in CONFIG.measures_quality:
-        column = _rename_column(str(measure))
-        columns.append(f"{column}{effectiveness_quality_suffix}")
-    for measure in CONFIG.measures_diversity_relevance:
-        column = _rename_column(str(measure))
-        columns.append(f"{column}{diversity_relevance_suffix}")
-    for measure in CONFIG.measures_diversity_quality:
-        column = _rename_column(str(measure))
-        columns.append(f"{column}{diversity_quality_suffix}")
-    for measure in CONFIG.measures_stance:
-        column = _rename_column(str(measure))
-        columns.append(column)
-    return [
-        column
-        for column in columns
-        if column in df.columns
-    ]
-
-
-
-
-@cache
-def _diversity_label(label: float, stance: str, subtopic: str) -> float:
-    if subtopic == stance:
-        return label
-    if subtopic in ("FIRST", "SECOND") and stance == "NEUTRAL":
-        return label / 2
-    if subtopic == "NEUTRAL" and stance in ("FIRST", "SECOND"):
-        return label / 2
-    else:
-        return 0
-
-
-def _diversity_qrels(
-        effectiveness_qrels: DataFrame,
-        stance_qrels: DataFrame,
-) -> DataFrame:
-    qrels = effectiveness_qrels.merge(
-        stance_qrels,
-        on=["qid", "docno"],
-        how="inner",
-        suffixes=(None, "_stance"),
-    )
-    return DataFrame([
-        {
-            "qid": row["qid"],
-            "docno": row["docno"],
-            "iteration": subtopic,
-            "label": _diversity_label(
-                row["label"],
-                row["label_stance"],
-                subtopic,
-            ),
-        }
-        for _, row in qrels.iterrows()
-        for subtopic in {"FIRST", "SECOND", "NEUTRAL"}
-    ])
-
-
 def _run_experiment(
         runs: list[NamedPipeline],
         topics: DataFrame,
@@ -245,18 +168,6 @@ def _run_experiment(
     )
 
 
-def _rename_column(column: str) -> str:
-    column = column.replace("group_col='stance_label'", "")
-    column = column.replace("tie_breaking='group-ascending'", "")
-    column = column.replace("tie_breaking='SECOND,FIRST,NEUTRAL,NO'", "")
-    column = column.replace("groups='FIRST,NEUTRAL,SECOND'", "")
-    column = column.replace(",,", ",")
-    column = column.replace("(,", "(")
-    column = column.replace(",)", ")")
-    column = column.replace("()", "")
-    return column
-
-
 def main() -> None:
     if not started():
         init()
@@ -271,12 +182,6 @@ def main() -> None:
         str(CONFIG.qrels_stance_file_path.absolute())
     )
     qrels_stance["stance_label"] = qrels_stance["label"]
-    qrels_diversity_relevance = _diversity_qrels(
-        qrels_relevance, qrels_stance
-    )
-    qrels_diversity_quality = _diversity_qrels(
-        qrels_relevance, qrels_stance
-    )
 
     max_teams = CONFIG.max_teams \
         if CONFIG.max_teams is not None else None
@@ -317,46 +222,7 @@ def main() -> None:
         suffixes=(" rel.", " qual.")
     )
 
-    print("Compute relevance diversity measures.")
-    diversity_relevance = _run_experiment(
-        runs,
-        topics,
-        qrels_diversity_relevance,
-        CONFIG.measures_diversity_relevance,
-    )
-    print("Compute quality diversity measures.")
-    diversity_quality = _run_experiment(
-        runs,
-        topics,
-        qrels_diversity_quality,
-        CONFIG.measures_diversity_quality,
-    )
-    diversity = diversity_relevance.merge(
-        diversity_quality,
-        on=["qid", "name"],
-        suffixes=(" rel.", " qual.")
-    )
-
-    print("Compute stance measures.")
-    # noinspection PyTypeChecker
-    stance = _run_experiment(
-        runs,
-        topics,
-        qrels_stance,
-        CONFIG.measures_stance,
-    )
-
-    experiment = effectiveness.merge(
-        diversity,
-        on=["qid", "name"],
-        suffixes=("", " stance")
-    ).merge(
-        stance,
-        on=["qid", "name"],
-        suffixes=("", " diversity")
-    ).reset_index(drop=False)
-
-    experiment.columns = experiment.columns.map(_rename_column)
+    experiment = effectiveness.reset_index(drop=False)
 
     def fix_name_order(df: DataFrame) -> DataFrame:
         df = df.set_index("name")
