@@ -17,14 +17,16 @@ The following sections describe how to use our code to re-rank comparative searc
 
 ### Installation
 
-First, install [Python 3](https://python.org/downloads/),
-[pipx](https://pipxproject.github.io/pipx/installation/#install-pipx), and
-[Pipenv](https://pipenv.pypa.io/en/latest/install/#isolated-installation-of-pipenv-with-pipx).
-Then install dependencies (this may take a while):
-
-```shell script
-pipenv install
-```
+1. Install [Python 3.10](https://python.org/downloads/)
+2. Create and activate virtual environment:
+    ```shell
+    python3.10 -m venv venv/
+    source venv/bin/activate
+    ```
+3. Install dependencies:
+    ```shell
+    pip install -e .
+    ```
 
 ### Re-rank and evaluate all run files
 
@@ -32,7 +34,7 @@ To evaluate the re-ranking pipeline on all runs and all topics, follow these ste
 1. Modify the configuration in [`config.yml`](config.yml)
 2. Run the `stare` module:
     ```shell script
-    pipenv run python -m stare
+    python -m stare
     ```
 
 ## Testing
@@ -40,9 +42,9 @@ To evaluate the re-ranking pipeline on all runs and all topics, follow these ste
 After [installing](#installation) all dependencies, you can run all unit tests:
 
 ```shell script
-pipenv run flake8 stare
-pipenv run pylint -E stare
-pipenv run pytest stare
+flake8 stare
+pylint stare
+pytest stare
 ```
 
 ## License
