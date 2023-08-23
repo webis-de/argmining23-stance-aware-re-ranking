@@ -10,102 +10,106 @@ cacheDirectoryPath: data/cache/
 runs:
 - { } # original
 - stanceTagger: ground-truth
-  effectivenessReranker: stance-first
-  effectivenessRerankerCutoff: 5
+  stanceReranker: stance-first
+  stanceRerankerCutoff: 5
 - stanceTagger: original
-  effectivenessReranker: stance-first
-  effectivenessRerankerCutoff: 5
+  stanceReranker: stance-first
+  stanceRerankerCutoff: 5
 - stanceTagger: gpt3-tsv
-  effectivenessReranker: stance-first
-  effectivenessRerankerCutoff: 5
-#- stanceTagger: google/flan-t5-base
-#  effectivenessReranker: stance-first
-#  effectivenessRerankerCutoff: 5
+  stanceReranker: stance-first
+  stanceRerankerCutoff: 5
+- stanceTagger: roberta-csv
+  stanceReranker: stance-first
+  stanceRerankerCutoff: 5
+- stanceTagger: google/flan-t5-base
+  stanceTaggerCutoff: 5
+  stanceReranker: stance-first
+  stanceRerankerCutoff: 5
 - stanceTagger: ground-truth
   stanceRandomizationTargetF1: 1.00
   stanceRandomizationCutoff: 5
-  effectivenessReranker: stance-first
-  effectivenessRerankerCutoff: 5
+  stanceReranker: stance-first
+  stanceRerankerCutoff: 5
 - stanceTagger: ground-truth
   stanceRandomizationTargetF1: 0.95
   stanceRandomizationCutoff: 5
-  effectivenessReranker: stance-first
-  effectivenessRerankerCutoff: 5
+  stanceReranker: stance-first
+  stanceRerankerCutoff: 5
 - stanceTagger: ground-truth
   stanceRandomizationTargetF1: 0.90
   stanceRandomizationCutoff: 5
-  effectivenessReranker: stance-first
-  effectivenessRerankerCutoff: 5
+  stanceReranker: stance-first
+  stanceRerankerCutoff: 5
 - stanceTagger: ground-truth
   stanceRandomizationTargetF1: 0.85
   stanceRandomizationCutoff: 5
-  effectivenessReranker: stance-first
-  effectivenessRerankerCutoff: 5
+  stanceReranker: stance-first
+  stanceRerankerCutoff: 5
 - stanceTagger: ground-truth
   stanceRandomizationTargetF1: 0.80
   stanceRandomizationCutoff: 5
-  effectivenessReranker: stance-first
-  effectivenessRerankerCutoff: 5
+  stanceReranker: stance-first
+  stanceRerankerCutoff: 5
 - stanceTagger: ground-truth
   stanceRandomizationTargetF1: 0.75
   stanceRandomizationCutoff: 5
-  effectivenessReranker: stance-first
-  effectivenessRerankerCutoff: 5
+  stanceReranker: stance-first
+  stanceRerankerCutoff: 5
 - stanceTagger: ground-truth
   stanceRandomizationTargetF1: 0.70
   stanceRandomizationCutoff: 5
-  effectivenessReranker: stance-first
-  effectivenessRerankerCutoff: 5
+  stanceReranker: stance-first
+  stanceRerankerCutoff: 5
 - stanceTagger: ground-truth
   stanceRandomizationTargetF1: 0.65
   stanceRandomizationCutoff: 5
-  effectivenessReranker: stance-first
-  effectivenessRerankerCutoff: 5
+  stanceReranker: stance-first
+  stanceRerankerCutoff: 5
 - stanceTagger: ground-truth
   stanceRandomizationTargetF1: 0.60
   stanceRandomizationCutoff: 5
-  effectivenessReranker: stance-first
-  effectivenessRerankerCutoff: 5
+  stanceReranker: stance-first
+  stanceRerankerCutoff: 5
 - stanceTagger: ground-truth
   stanceRandomizationTargetF1: 0.55
   stanceRandomizationCutoff: 5
-  effectivenessReranker: stance-first
-  effectivenessRerankerCutoff: 5
+  stanceReranker: stance-first
+  stanceRerankerCutoff: 5
 - stanceTagger: ground-truth
   stanceRandomizationTargetF1: 0.50
   stanceRandomizationCutoff: 5
-  effectivenessReranker: stance-first
-  effectivenessRerankerCutoff: 5
+  stanceReranker: stance-first
+  stanceRerankerCutoff: 5
 - stanceTagger: ground-truth
   stanceRandomizationTargetF1: 0.45
   stanceRandomizationCutoff: 5
-  effectivenessReranker: stance-first
-  effectivenessRerankerCutoff: 5
+  stanceReranker: stance-first
+  stanceRerankerCutoff: 5
 - stanceTagger: ground-truth
   stanceRandomizationTargetF1: 0.40
   stanceRandomizationCutoff: 5
-  effectivenessReranker: stance-first
-  effectivenessRerankerCutoff: 5
+  stanceReranker: stance-first
+  stanceRerankerCutoff: 5
 - stanceTagger: ground-truth
   stanceRandomizationTargetF1: 0.35
   stanceRandomizationCutoff: 5
-  effectivenessReranker: stance-first
-  effectivenessRerankerCutoff: 5
+  stanceReranker: stance-first
+  stanceRerankerCutoff: 5
 - stanceTagger: ground-truth
   stanceRandomizationTargetF1: 0.30
   stanceRandomizationCutoff: 5
-  effectivenessReranker: stance-first
-  effectivenessRerankerCutoff: 5
+  stanceReranker: stance-first
+  stanceRerankerCutoff: 5
 - stanceTagger: ground-truth
   stanceRandomizationTargetF1: 0.25
   stanceRandomizationCutoff: 5
-  effectivenessReranker: stance-first
-  effectivenessRerankerCutoff: 5
+  stanceReranker: stance-first
+  stanceRerankerCutoff: 5
 - stanceTagger: ground-truth
   stanceRandomizationTargetF1: 0.20
   stanceRandomizationCutoff: 5
-  effectivenessReranker: stance-first
-  effectivenessRerankerCutoff: 5
+  stanceReranker: stance-first
+  stanceRerankerCutoff: 5
 measuresRelevance:
 - nDCG@5
 measuresQuality:
