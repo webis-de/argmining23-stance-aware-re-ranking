@@ -8,6 +8,7 @@ from textwrap import dedent
 from time import sleep
 
 import openai
+from click import command, argument, Choice
 from diskcache import Cache
 from nltk import sent_tokenize, word_tokenize
 from openai import Completion
@@ -15,6 +16,7 @@ from openai.error import RateLimitError
 from pandas import DataFrame, Series, read_csv, merge
 from pyterrier.transformer import Transformer
 from ratelimit import limits, sleep_and_retry
+from sklearn.metrics import f1_score
 from torch import Tensor
 from torch.cuda import is_available
 from torch.nn.functional import softmax
@@ -758,3 +760,51 @@ class StanceTagger(Transformer, Enum):
 
     def __repr__(self) -> str:
         return repr(self._transformer)
+
+
+@command()
+@argument(
+    "tagger",
+    type=Choice([str(tagger.value) for tagger in StanceTagger]),
+)
+def main(tagger: str) -> None:
+    from stare.config import CONFIG
+    from stare.modules.topics_loader import parse_topics
+    from stare.modules.text_loader import TextLoader
+
+    topics = parse_topics()
+
+    qrels = read_csv(
+        str(CONFIG.qrels_stance_file_path.absolute()),
+        sep="\\s+",
+        names=["qid", "0", "docno", "stance_label"],
+        dtype=str
+    )
+    del qrels["0"]
+    qrels["stance_value"] = qrels["stance_label"].map(stance_value)
+
+    run_input = qrels.merge(
+        topics,
+        on="qid",
+        how="left",
+    )
+
+    pipeline = TextLoader() >> StanceTagger(tagger)
+    run = pipeline.transform(run_input)
+
+    df = qrels.merge(
+        run,
+        on=["qid", "docno"],
+        how="left",
+        suffixes=("_qrels", "_run"),
+    )
+    score = f1_score(
+        df["stance_label_qrels"],
+        df["stance_label_run"],
+        average="macro",
+    )
+    print(f"macro F1: {score}")
+
+
+if __name__ == '__main__':
+    main()
