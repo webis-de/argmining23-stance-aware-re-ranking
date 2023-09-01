@@ -6,8 +6,6 @@ from dataclasses_json import LetterCase, config, DataClassJsonMixin
 from ir_measures import Measure
 from yaml import safe_load
 
-# noinspection PyUnresolvedReferences
-import stare.metric.fairness
 from stare.metric import parse_measure
 from stare.modules.stance_reranker import StanceReranker
 from stare.modules.stance_tagger import StanceTagger
