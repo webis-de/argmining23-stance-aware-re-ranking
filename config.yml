@@ -9,6 +9,10 @@ cacheDirectoryPath: data/cache/
 # Re-ranking:
 runs:
 - { } # original
+- optimalReranker: optimal-relevance
+  optimalRerankerCutoff: 5
+- optimalReranker: optimal-quality
+  optimalRerankerCutoff: 5
 - stanceTagger: ground-truth
   stanceReranker: stance-first
   stanceRerankerCutoff: 5

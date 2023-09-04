@@ -7,6 +7,7 @@ from ir_measures import Measure
 from yaml import safe_load
 
 from stare.metric import parse_measure
+from stare.modules.optimal_reranker import OptimalReranker
 from stare.modules.stance_reranker import StanceReranker
 from stare.modules.stance_tagger import StanceTagger
 
@@ -33,6 +34,13 @@ class RunConfig(DataClassJsonMixin):
         default=StanceReranker.ORIGINAL,
     )
     stance_reranker_cutoff: Optional[int] = None
+    optimal_reranker: Optional[OptimalReranker] = field(
+        metadata=config(
+            decoder=OptimalReranker
+        ),
+        default=None,
+    )
+    optimal_reranker_cutoff: Optional[int] = None
 
 
 @dataclass(frozen=True)

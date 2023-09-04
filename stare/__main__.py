@@ -122,6 +122,33 @@ def _run(
             name += f"@{run_config.stance_reranker_cutoff}"
         names.append(name)
 
+    # Re-rank optimal.
+    if run_config.optimal_reranker is None:
+        pipeline = pipeline
+    elif run_config.optimal_reranker_cutoff is None:
+        pipeline = ~(
+                pipeline >>
+                run_config.optimal_reranker
+        )
+    elif run_config.optimal_reranker_cutoff > 0:
+        # noinspection PyTypeChecker
+        pipeline = (
+                ~(
+                        pipeline %
+                        run_config.optimal_reranker_cutoff >>
+                        run_config.optimal_reranker
+                ) ^
+                pipeline
+        )
+
+    if (run_config.optimal_reranker is not None and
+            (run_config.optimal_reranker_cutoff is None or
+             run_config.optimal_reranker_cutoff > 0)):
+        name = run_config.optimal_reranker.value
+        if run_config.optimal_reranker_cutoff is not None:
+            name += f"@{run_config.optimal_reranker_cutoff}"
+        names.append(name)
+
     return NamedPipeline(names, pipeline)
 
 
