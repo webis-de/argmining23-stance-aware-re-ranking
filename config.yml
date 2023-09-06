@@ -30,86 +30,481 @@ runs:
   stanceReranker: stance-first
   stanceRerankerCutoff: 5
 - stanceTagger: ground-truth
-  stanceRandomizationTargetF1: 1.00
+  stanceRandomizationTargetF1: 0.95
+  stanceRandomizationCutoff: 5
+  stanceRandomizationSeed: 1
+  stanceReranker: stance-first
+  stanceRerankerCutoff: 5
+- stanceTagger: ground-truth
+  stanceRandomizationTargetF1: 0.90
+  stanceRandomizationSeed: 1
+  stanceRandomizationCutoff: 5
+  stanceReranker: stance-first
+  stanceRerankerCutoff: 5
+- stanceTagger: ground-truth
+  stanceRandomizationTargetF1: 0.85
+  stanceRandomizationSeed: 1
+  stanceRandomizationCutoff: 5
+  stanceReranker: stance-first
+  stanceRerankerCutoff: 5
+- stanceTagger: ground-truth
+  stanceRandomizationTargetF1: 0.80
+  stanceRandomizationSeed: 1
+  stanceRandomizationCutoff: 5
+  stanceReranker: stance-first
+  stanceRerankerCutoff: 5
+- stanceTagger: ground-truth
+  stanceRandomizationTargetF1: 0.75
+  stanceRandomizationSeed: 1
+  stanceRandomizationCutoff: 5
+  stanceReranker: stance-first
+  stanceRerankerCutoff: 5
+- stanceTagger: ground-truth
+  stanceRandomizationSeed: 1
+  stanceRandomizationTargetF1: 0.70
+  stanceRandomizationCutoff: 5
+  stanceReranker: stance-first
+  stanceRerankerCutoff: 5
+- stanceTagger: ground-truth
+  stanceRandomizationSeed: 1
+  stanceRandomizationTargetF1: 0.65
+  stanceRandomizationCutoff: 5
+  stanceReranker: stance-first
+  stanceRerankerCutoff: 5
+- stanceTagger: ground-truth
+  stanceRandomizationSeed: 1
+  stanceRandomizationTargetF1: 0.60
+  stanceRandomizationCutoff: 5
+  stanceReranker: stance-first
+  stanceRerankerCutoff: 5
+- stanceTagger: ground-truth
+  stanceRandomizationSeed: 1
+  stanceRandomizationTargetF1: 0.55
+  stanceRandomizationCutoff: 5
+  stanceReranker: stance-first
+  stanceRerankerCutoff: 5
+- stanceTagger: ground-truth
+  stanceRandomizationSeed: 1
+  stanceRandomizationTargetF1: 0.50
+  stanceRandomizationCutoff: 5
+  stanceReranker: stance-first
+  stanceRerankerCutoff: 5
+- stanceTagger: ground-truth
+  stanceRandomizationSeed: 1
+  stanceRandomizationTargetF1: 0.45
+  stanceRandomizationCutoff: 5
+  stanceReranker: stance-first
+  stanceRerankerCutoff: 5
+- stanceTagger: ground-truth
+  stanceRandomizationSeed: 1
+  stanceRandomizationTargetF1: 0.40
+  stanceRandomizationCutoff: 5
+  stanceReranker: stance-first
+  stanceRerankerCutoff: 5
+- stanceTagger: ground-truth
+  stanceRandomizationSeed: 1
+  stanceRandomizationTargetF1: 0.35
+  stanceRandomizationCutoff: 5
+  stanceReranker: stance-first
+  stanceRerankerCutoff: 5
+- stanceTagger: ground-truth
+  stanceRandomizationSeed: 1
+  stanceRandomizationTargetF1: 0.30
+  stanceRandomizationCutoff: 5
+  stanceReranker: stance-first
+  stanceRerankerCutoff: 5
+- stanceTagger: ground-truth
+  stanceRandomizationSeed: 1
+  stanceRandomizationTargetF1: 0.25
+  stanceRandomizationCutoff: 5
+  stanceReranker: stance-first
+  stanceRerankerCutoff: 5
+- stanceTagger: ground-truth
+  stanceRandomizationSeed: 1
+  stanceRandomizationTargetF1: 0.20
   stanceRandomizationCutoff: 5
   stanceReranker: stance-first
   stanceRerankerCutoff: 5
 - stanceTagger: ground-truth
   stanceRandomizationTargetF1: 0.95
   stanceRandomizationCutoff: 5
+  stanceRandomizationSeed: 2
   stanceReranker: stance-first
   stanceRerankerCutoff: 5
 - stanceTagger: ground-truth
   stanceRandomizationTargetF1: 0.90
+  stanceRandomizationSeed: 2
   stanceRandomizationCutoff: 5
   stanceReranker: stance-first
   stanceRerankerCutoff: 5
 - stanceTagger: ground-truth
   stanceRandomizationTargetF1: 0.85
+  stanceRandomizationSeed: 2
   stanceRandomizationCutoff: 5
   stanceReranker: stance-first
   stanceRerankerCutoff: 5
 - stanceTagger: ground-truth
   stanceRandomizationTargetF1: 0.80
+  stanceRandomizationSeed: 2
   stanceRandomizationCutoff: 5
   stanceReranker: stance-first
   stanceRerankerCutoff: 5
 - stanceTagger: ground-truth
   stanceRandomizationTargetF1: 0.75
+  stanceRandomizationSeed: 2
   stanceRandomizationCutoff: 5
   stanceReranker: stance-first
   stanceRerankerCutoff: 5
 - stanceTagger: ground-truth
+  stanceRandomizationSeed: 2
   stanceRandomizationTargetF1: 0.70
   stanceRandomizationCutoff: 5
   stanceReranker: stance-first
   stanceRerankerCutoff: 5
 - stanceTagger: ground-truth
+  stanceRandomizationSeed: 2
   stanceRandomizationTargetF1: 0.65
   stanceRandomizationCutoff: 5
   stanceReranker: stance-first
   stanceRerankerCutoff: 5
 - stanceTagger: ground-truth
+  stanceRandomizationSeed: 2
   stanceRandomizationTargetF1: 0.60
   stanceRandomizationCutoff: 5
   stanceReranker: stance-first
   stanceRerankerCutoff: 5
 - stanceTagger: ground-truth
+  stanceRandomizationSeed: 2
   stanceRandomizationTargetF1: 0.55
   stanceRandomizationCutoff: 5
   stanceReranker: stance-first
   stanceRerankerCutoff: 5
 - stanceTagger: ground-truth
+  stanceRandomizationSeed: 2
   stanceRandomizationTargetF1: 0.50
   stanceRandomizationCutoff: 5
   stanceReranker: stance-first
   stanceRerankerCutoff: 5
 - stanceTagger: ground-truth
+  stanceRandomizationSeed: 2
   stanceRandomizationTargetF1: 0.45
   stanceRandomizationCutoff: 5
   stanceReranker: stance-first
   stanceRerankerCutoff: 5
 - stanceTagger: ground-truth
+  stanceRandomizationSeed: 2
   stanceRandomizationTargetF1: 0.40
   stanceRandomizationCutoff: 5
   stanceReranker: stance-first
   stanceRerankerCutoff: 5
 - stanceTagger: ground-truth
+  stanceRandomizationSeed: 2
   stanceRandomizationTargetF1: 0.35
   stanceRandomizationCutoff: 5
   stanceReranker: stance-first
   stanceRerankerCutoff: 5
 - stanceTagger: ground-truth
+  stanceRandomizationSeed: 2
   stanceRandomizationTargetF1: 0.30
   stanceRandomizationCutoff: 5
   stanceReranker: stance-first
   stanceRerankerCutoff: 5
 - stanceTagger: ground-truth
+  stanceRandomizationSeed: 2
   stanceRandomizationTargetF1: 0.25
   stanceRandomizationCutoff: 5
   stanceReranker: stance-first
   stanceRerankerCutoff: 5
 - stanceTagger: ground-truth
+  stanceRandomizationSeed: 2
+  stanceRandomizationTargetF1: 0.20
+  stanceRandomizationCutoff: 5
+  stanceReranker: stance-first
+  stanceRerankerCutoff: 5
+- stanceTagger: ground-truth
+  stanceRandomizationTargetF1: 0.95
+  stanceRandomizationCutoff: 5
+  stanceRandomizationSeed: 3
+  stanceReranker: stance-first
+  stanceRerankerCutoff: 5
+- stanceTagger: ground-truth
+  stanceRandomizationTargetF1: 0.90
+  stanceRandomizationSeed: 3
+  stanceRandomizationCutoff: 5
+  stanceReranker: stance-first
+  stanceRerankerCutoff: 5
+- stanceTagger: ground-truth
+  stanceRandomizationTargetF1: 0.85
+  stanceRandomizationSeed: 3
+  stanceRandomizationCutoff: 5
+  stanceReranker: stance-first
+  stanceRerankerCutoff: 5
+- stanceTagger: ground-truth
+  stanceRandomizationTargetF1: 0.80
+  stanceRandomizationSeed: 3
+  stanceRandomizationCutoff: 5
+  stanceReranker: stance-first
+  stanceRerankerCutoff: 5
+- stanceTagger: ground-truth
+  stanceRandomizationTargetF1: 0.75
+  stanceRandomizationSeed: 3
+  stanceRandomizationCutoff: 5
+  stanceReranker: stance-first
+  stanceRerankerCutoff: 5
+- stanceTagger: ground-truth
+  stanceRandomizationSeed: 3
+  stanceRandomizationTargetF1: 0.70
+  stanceRandomizationCutoff: 5
+  stanceReranker: stance-first
+  stanceRerankerCutoff: 5
+- stanceTagger: ground-truth
+  stanceRandomizationSeed: 3
+  stanceRandomizationTargetF1: 0.65
+  stanceRandomizationCutoff: 5
+  stanceReranker: stance-first
+  stanceRerankerCutoff: 5
+- stanceTagger: ground-truth
+  stanceRandomizationSeed: 3
+  stanceRandomizationTargetF1: 0.60
+  stanceRandomizationCutoff: 5
+  stanceReranker: stance-first
+  stanceRerankerCutoff: 5
+- stanceTagger: ground-truth
+  stanceRandomizationSeed: 3
+  stanceRandomizationTargetF1: 0.55
+  stanceRandomizationCutoff: 5
+  stanceReranker: stance-first
+  stanceRerankerCutoff: 5
+- stanceTagger: ground-truth
+  stanceRandomizationSeed: 3
+  stanceRandomizationTargetF1: 0.50
+  stanceRandomizationCutoff: 5
+  stanceReranker: stance-first
+  stanceRerankerCutoff: 5
+- stanceTagger: ground-truth
+  stanceRandomizationSeed: 3
+  stanceRandomizationTargetF1: 0.45
+  stanceRandomizationCutoff: 5
+  stanceReranker: stance-first
+  stanceRerankerCutoff: 5
+- stanceTagger: ground-truth
+  stanceRandomizationSeed: 3
+  stanceRandomizationTargetF1: 0.40
+  stanceRandomizationCutoff: 5
+  stanceReranker: stance-first
+  stanceRerankerCutoff: 5
+- stanceTagger: ground-truth
+  stanceRandomizationSeed: 3
+  stanceRandomizationTargetF1: 0.35
+  stanceRandomizationCutoff: 5
+  stanceReranker: stance-first
+  stanceRerankerCutoff: 5
+- stanceTagger: ground-truth
+  stanceRandomizationSeed: 3
+  stanceRandomizationTargetF1: 0.30
+  stanceRandomizationCutoff: 5
+  stanceReranker: stance-first
+  stanceRerankerCutoff: 5
+- stanceTagger: ground-truth
+  stanceRandomizationSeed: 3
+  stanceRandomizationTargetF1: 0.25
+  stanceRandomizationCutoff: 5
+  stanceReranker: stance-first
+  stanceRerankerCutoff: 5
+- stanceTagger: ground-truth
+  stanceRandomizationSeed: 3
+  stanceRandomizationTargetF1: 0.20
+  stanceRandomizationCutoff: 5
+  stanceReranker: stance-first
+  stanceRerankerCutoff: 5
+- stanceTagger: ground-truth
+  stanceRandomizationTargetF1: 0.95
+  stanceRandomizationCutoff: 5
+  stanceRandomizationSeed: 4
+  stanceReranker: stance-first
+  stanceRerankerCutoff: 5
+- stanceTagger: ground-truth
+  stanceRandomizationTargetF1: 0.90
+  stanceRandomizationSeed: 4
+  stanceRandomizationCutoff: 5
+  stanceReranker: stance-first
+  stanceRerankerCutoff: 5
+- stanceTagger: ground-truth
+  stanceRandomizationTargetF1: 0.85
+  stanceRandomizationSeed: 4
+  stanceRandomizationCutoff: 5
+  stanceReranker: stance-first
+  stanceRerankerCutoff: 5
+- stanceTagger: ground-truth
+  stanceRandomizationTargetF1: 0.80
+  stanceRandomizationSeed: 4
+  stanceRandomizationCutoff: 5
+  stanceReranker: stance-first
+  stanceRerankerCutoff: 5
+- stanceTagger: ground-truth
+  stanceRandomizationTargetF1: 0.75
+  stanceRandomizationSeed: 4
+  stanceRandomizationCutoff: 5
+  stanceReranker: stance-first
+  stanceRerankerCutoff: 5
+- stanceTagger: ground-truth
+  stanceRandomizationSeed: 4
+  stanceRandomizationTargetF1: 0.70
+  stanceRandomizationCutoff: 5
+  stanceReranker: stance-first
+  stanceRerankerCutoff: 5
+- stanceTagger: ground-truth
+  stanceRandomizationSeed: 4
+  stanceRandomizationTargetF1: 0.65
+  stanceRandomizationCutoff: 5
+  stanceReranker: stance-first
+  stanceRerankerCutoff: 5
+- stanceTagger: ground-truth
+  stanceRandomizationSeed: 4
+  stanceRandomizationTargetF1: 0.60
+  stanceRandomizationCutoff: 5
+  stanceReranker: stance-first
+  stanceRerankerCutoff: 5
+- stanceTagger: ground-truth
+  stanceRandomizationSeed: 4
+  stanceRandomizationTargetF1: 0.55
+  stanceRandomizationCutoff: 5
+  stanceReranker: stance-first
+  stanceRerankerCutoff: 5
+- stanceTagger: ground-truth
+  stanceRandomizationSeed: 4
+  stanceRandomizationTargetF1: 0.50
+  stanceRandomizationCutoff: 5
+  stanceReranker: stance-first
+  stanceRerankerCutoff: 5
+- stanceTagger: ground-truth
+  stanceRandomizationSeed: 4
+  stanceRandomizationTargetF1: 0.45
+  stanceRandomizationCutoff: 5
+  stanceReranker: stance-first
+  stanceRerankerCutoff: 5
+- stanceTagger: ground-truth
+  stanceRandomizationSeed: 4
+  stanceRandomizationTargetF1: 0.40
+  stanceRandomizationCutoff: 5
+  stanceReranker: stance-first
+  stanceRerankerCutoff: 5
+- stanceTagger: ground-truth
+  stanceRandomizationSeed: 4
+  stanceRandomizationTargetF1: 0.35
+  stanceRandomizationCutoff: 5
+  stanceReranker: stance-first
+  stanceRerankerCutoff: 5
+- stanceTagger: ground-truth
+  stanceRandomizationSeed: 4
+  stanceRandomizationTargetF1: 0.30
+  stanceRandomizationCutoff: 5
+  stanceReranker: stance-first
+  stanceRerankerCutoff: 5
+- stanceTagger: ground-truth
+  stanceRandomizationSeed: 4
+  stanceRandomizationTargetF1: 0.25
+  stanceRandomizationCutoff: 5
+  stanceReranker: stance-first
+  stanceRerankerCutoff: 5
+- stanceTagger: ground-truth
+  stanceRandomizationSeed: 4
+  stanceRandomizationTargetF1: 0.20
+  stanceRandomizationCutoff: 5
+  stanceReranker: stance-first
+  stanceRerankerCutoff: 5
+- stanceTagger: ground-truth
+  stanceRandomizationTargetF1: 0.95
+  stanceRandomizationCutoff: 5
+  stanceRandomizationSeed: 5
+  stanceReranker: stance-first
+  stanceRerankerCutoff: 5
+- stanceTagger: ground-truth
+  stanceRandomizationTargetF1: 0.90
+  stanceRandomizationSeed: 5
+  stanceRandomizationCutoff: 5
+  stanceReranker: stance-first
+  stanceRerankerCutoff: 5
+- stanceTagger: ground-truth
+  stanceRandomizationTargetF1: 0.85
+  stanceRandomizationSeed: 5
+  stanceRandomizationCutoff: 5
+  stanceReranker: stance-first
+  stanceRerankerCutoff: 5
+- stanceTagger: ground-truth
+  stanceRandomizationTargetF1: 0.80
+  stanceRandomizationSeed: 5
+  stanceRandomizationCutoff: 5
+  stanceReranker: stance-first
+  stanceRerankerCutoff: 5
+- stanceTagger: ground-truth
+  stanceRandomizationTargetF1: 0.75
+  stanceRandomizationSeed: 5
+  stanceRandomizationCutoff: 5
+  stanceReranker: stance-first
+  stanceRerankerCutoff: 5
+- stanceTagger: ground-truth
+  stanceRandomizationSeed: 5
+  stanceRandomizationTargetF1: 0.70
+  stanceRandomizationCutoff: 5
+  stanceReranker: stance-first
+  stanceRerankerCutoff: 5
+- stanceTagger: ground-truth
+  stanceRandomizationSeed: 5
+  stanceRandomizationTargetF1: 0.65
+  stanceRandomizationCutoff: 5
+  stanceReranker: stance-first
+  stanceRerankerCutoff: 5
+- stanceTagger: ground-truth
+  stanceRandomizationSeed: 5
+  stanceRandomizationTargetF1: 0.60
+  stanceRandomizationCutoff: 5
+  stanceReranker: stance-first
+  stanceRerankerCutoff: 5
+- stanceTagger: ground-truth
+  stanceRandomizationSeed: 5
+  stanceRandomizationTargetF1: 0.55
+  stanceRandomizationCutoff: 5
+  stanceReranker: stance-first
+  stanceRerankerCutoff: 5
+- stanceTagger: ground-truth
+  stanceRandomizationSeed: 5
+  stanceRandomizationTargetF1: 0.50
+  stanceRandomizationCutoff: 5
+  stanceReranker: stance-first
+  stanceRerankerCutoff: 5
+- stanceTagger: ground-truth
+  stanceRandomizationSeed: 5
+  stanceRandomizationTargetF1: 0.45
+  stanceRandomizationCutoff: 5
+  stanceReranker: stance-first
+  stanceRerankerCutoff: 5
+- stanceTagger: ground-truth
+  stanceRandomizationSeed: 5
+  stanceRandomizationTargetF1: 0.40
+  stanceRandomizationCutoff: 5
+  stanceReranker: stance-first
+  stanceRerankerCutoff: 5
+- stanceTagger: ground-truth
+  stanceRandomizationSeed: 5
+  stanceRandomizationTargetF1: 0.35
+  stanceRandomizationCutoff: 5
+  stanceReranker: stance-first
+  stanceRerankerCutoff: 5
+- stanceTagger: ground-truth
+  stanceRandomizationSeed: 5
+  stanceRandomizationTargetF1: 0.30
+  stanceRandomizationCutoff: 5
+  stanceReranker: stance-first
+  stanceRerankerCutoff: 5
+- stanceTagger: ground-truth
+  stanceRandomizationSeed: 5
+  stanceRandomizationTargetF1: 0.25
+  stanceRandomizationCutoff: 5
+  stanceReranker: stance-first
+  stanceRerankerCutoff: 5
+- stanceTagger: ground-truth
+  stanceRandomizationSeed: 5
   stanceRandomizationTargetF1: 0.20
   stanceRandomizationCutoff: 5
   stanceReranker: stance-first

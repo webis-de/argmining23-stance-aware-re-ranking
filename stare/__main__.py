@@ -7,6 +7,7 @@ from pyterrier import init, started
 from pyterrier.io import read_qrels
 from pyterrier.pipelines import Experiment
 from pyterrier.transformer import Transformer
+from tqdm.auto import tqdm
 
 from stare.config import CONFIG, RunConfig
 from stare.modules.runs_loader import RunLoader
@@ -76,7 +77,10 @@ def _run(
     if run_config.stance_randomization_cutoff is None:
         pipeline = ~(
                 pipeline >>
-                StanceF1Randomizer(run_config.stance_randomization_target_f1)
+                StanceF1Randomizer(
+                    max_f1=run_config.stance_randomization_target_f1,
+                    seed=run_config.stance_randomization_seed,
+                )
         )
     elif run_config.stance_randomization_cutoff > 0:
         # noinspection PyTypeChecker
@@ -85,7 +89,9 @@ def _run(
                         pipeline %
                         run_config.stance_randomization_cutoff >>
                         StanceF1Randomizer(
-                            run_config.stance_randomization_target_f1)
+                            max_f1=run_config.stance_randomization_target_f1,
+                            seed=run_config.stance_randomization_seed,
+                        )
                 ) ^
                 pipeline
         )
@@ -198,7 +204,9 @@ def _run_experiment(
 def main() -> None:
     if not started():
         init()
+    print("Load topics.")
     topics: DataFrame = parse_topics()
+    print("Load qrels.")
     qrels_relevance: DataFrame = read_qrels(
         str(CONFIG.qrels_relevance_file_path.absolute())
     )
@@ -214,8 +222,8 @@ def main() -> None:
         if CONFIG.max_teams is not None else None
     max_runs_per_team = CONFIG.max_runs_per_team \
         if CONFIG.max_runs_per_team is not None else None
-    runs: list[NamedPipeline] = [
-        _run(run_file_path, run_config)
+    run_file_paths: list[tuple[Path, RunConfig]] = [
+        (run_file_path, run_config)
         for team_directory_path in
         sorted(
             CONFIG.runs_directory_path.iterdir()
@@ -226,6 +234,16 @@ def main() -> None:
             (team_directory_path / "output").iterdir()
         )[:max_runs_per_team]
         for run_config in CONFIG.runs
+    ]
+    # noinspection PyTypeChecker
+    run_file_paths = tqdm(
+        run_file_paths,
+        desc="Load runs",
+        unit="path"
+    )
+    runs: list[NamedPipeline] = [
+        _run(run_file_path, run_config)
+        for run_file_path, run_config in run_file_paths
     ]
     all_names: list[str] = [run.name for run in runs]
 

@@ -1,65 +1,20 @@
 from dataclasses import dataclass
 from functools import cached_property
 from math import log10, ceil
+from typing import Optional
 
+from numpy import ndarray
 from numpy.random import choice
 from pandas import DataFrame, read_csv
 from pyterrier.transformer import Transformer
 from sklearn.metrics import f1_score
-
-from stare.utils.stance import stance_label, stance_value
-
-
-class StanceFractionRandomizeMethod:
-    DRAW = "draw"
-    FLIP = "flip"
-
-
-@dataclass(frozen=True)
-class StanceFractionRandomizer(Transformer):
-    method: StanceFractionRandomizeMethod
-    fraction: float
-
-    revision: int = 2
-
-    def transform(self, ranking: DataFrame) -> DataFrame:
-        if self.fraction == 0:
-            return ranking
-
-        ranking_stance_notna = ranking[ranking["stance_label"].notna()]
-        to_be_randomized = ranking_stance_notna.sample(
-            frac=self.fraction,
-            random_state=0,
-        ).index
-
-        if self.method == StanceFractionRandomizeMethod.FLIP:
-            ranking.loc[to_be_randomized, "stance_value"] *= -1
-            ranking.loc[to_be_randomized, "stance_label"] = \
-                ranking.loc[to_be_randomized, "stance_value"].map(stance_label)
-        elif self.method == StanceFractionRandomizeMethod.DRAW:
-            labels = ranking.loc[to_be_randomized, "stance_label"].unique()
-            frequencies = ranking.loc[to_be_randomized, "stance_label"] \
-                .value_counts(normalize=True, sort=False) \
-                .reindex(labels).values
-            ranking.loc[to_be_randomized, "stance_label"] = choice(
-                labels,
-                p=frequencies,
-                size=len(to_be_randomized),
-            )
-            ranking.loc[to_be_randomized, "stance_value"] = \
-                ranking.loc[to_be_randomized, "stance_label"].map(stance_value)
-        else:
-            raise ValueError(f"Unknown method: {self.method}")
-
-        return ranking
 
 
 @dataclass(frozen=True)
 class StanceF1Randomizer(Transformer):
     max_f1: float
     step: int = 1
-
-    revision: int = 3
+    seed: Optional[int] = None
 
     @cached_property
     def qrels_stance(self) -> DataFrame:
@@ -73,18 +28,24 @@ class StanceF1Randomizer(Transformer):
         del qrels["0"]
         return qrels
 
+    @cached_property
+    def qrels_labels(self) -> ndarray:
+        return self.qrels_stance["stance_label"].unique()
+
+    @cached_property
+    def qrels_frequencies(self) -> ndarray:
+        return self.qrels_stance["stance_label"] \
+            .value_counts(normalize=True, sort=False) \
+            .reindex(self.qrels_labels).values
+
     def transform(self, ranking: DataFrame) -> DataFrame:
         if self.max_f1 == 1:
             return ranking
 
         # Add randomly generated stances.
-        labels = self.qrels_stance["stance_label"].unique()
-        frequencies = self.qrels_stance["stance_label"] \
-            .value_counts(normalize=True, sort=False) \
-            .reindex(labels).values
         ranking["stance_label_random"] = choice(
-            labels,
-            p=frequencies,
+            self.qrels_labels,
+            p=self.qrels_frequencies,
             size=len(ranking),
         )
 
@@ -97,7 +58,11 @@ class StanceF1Randomizer(Transformer):
         )
 
         # Shuffle ranking.
-        ranking = ranking.sample(frac=1, random_state=0, ignore_index=True)
+        ranking = ranking.sample(
+            frac=1,
+            random_state=self.seed,
+            ignore_index=True,
+        )
 
         print(f"Randomize stance labels until F1 <= {self.max_f1:.2f}")
         for random_proporiton in range(0, len(ranking), self.step):
@@ -111,8 +76,9 @@ class StanceF1Randomizer(Transformer):
                 average="macro",
             )
             if random_proporiton % (10 * self.step) == 0:
-                print(f"Randomized: {random_proporiton:{ceil(log10(len(ranking)))}d} "
-                      f"F1: {f1:.2f}")
+                print(
+                    f"Randomized: {random_proporiton:{ceil(log10(len(ranking)))}d} "
+                    f"F1: {f1:.2f}")
             if f1 <= self.max_f1:
                 break
 

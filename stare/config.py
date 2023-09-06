@@ -27,6 +27,7 @@ class RunConfig(DataClassJsonMixin):
     stance_tagger_threshold: float = 0.0
     stance_randomization_cutoff: Optional[int] = None
     stance_randomization_target_f1: float = 1.0
+    stance_randomization_seed: Optional[int] = None
     stance_reranker: StanceReranker = field(
         metadata=config(
             decoder=StanceReranker
