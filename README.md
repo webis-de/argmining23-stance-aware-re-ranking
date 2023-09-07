@@ -7,9 +7,9 @@
 [![Commit activity](https://img.shields.io/github/commit-activity/m/TODO/stare?style=flat-square)](https://github.com/TODO/stare/commits)
 [![License](https://img.shields.io/github/license/TODO/stare?style=flat-square)](LICENSE)
 
-# 🆚 Stance-Aware Re-ranking for Comparative Queries
+# 🆚 Stance-Aware Re-Ranking for Non-factual Comparative Queries
 
-Code and resources to reproduce the paper _Stance-Aware Re-ranking for Comparative Queries_.
+Code and resources to reproduce the ArgMining 2023 paper _Stance-Aware Re-Ranking for Non-factual Comparative Queries_.
 
 ## Usage
 
