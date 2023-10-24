@@ -43,8 +43,9 @@ class Text2TextGenerationStanceTagger(Transformer):
     @cached_property
     def _cache(self) -> Cache:
         from stare.config import CONFIG
-        cache_path = CONFIG.cache_directory_path / "text2text-generation" / \
-                     self.model
+        cache_path = (
+                CONFIG.cache_directory_path / "text2text-generation" /
+                self.model)
         return Cache(str(cache_path))
 
     def _generate(self, task: str) -> str:

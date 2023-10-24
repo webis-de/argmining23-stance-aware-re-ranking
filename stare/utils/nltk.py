@@ -1,7 +1,6 @@
 from nltk.downloader import Downloader
 
 from stare import logger
-from stare.config import CONFIG
 
 
 def download_nltk_dependencies(*dependencies: str):

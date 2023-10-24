@@ -77,7 +77,8 @@ class StanceF1Randomizer(Transformer):
             )
             if random_proporiton % (10 * self.step) == 0:
                 print(
-                    f"Randomized: {random_proporiton:{ceil(log10(len(ranking)))}d} "
+                    f"Randomized: "
+                    f"{random_proporiton:{ceil(log10(len(ranking)))}d} "
                     f"F1: {f1:.2f}")
             if f1 <= self.max_f1:
                 break

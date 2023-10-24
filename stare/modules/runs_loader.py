@@ -28,7 +28,6 @@ def _read_run(run_file_path: Path) -> DataFrame:
     return ranking
 
 
-
 @dataclass(frozen=True)
 class RunLoader(Transformer):
     run_file_path: Path
