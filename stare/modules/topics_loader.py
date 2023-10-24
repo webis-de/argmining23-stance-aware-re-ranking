@@ -1,6 +1,7 @@
 from typing import Optional, Tuple
-from xml.etree.ElementTree import ElementTree, Element, parse
+from xml.etree.ElementTree import ElementTree, Element  # nosec: B405
 
+from defusedxml.ElementTree import parse
 from pandas import DataFrame
 
 from stare.config import CONFIG
@@ -60,7 +61,9 @@ def _parse_topic(xml: Element) -> dict:
 
 def _parse_topics(tree: ElementTree) -> DataFrame:
     root = tree.getroot()
-    assert root.tag == "topics"
+    if root.tag != "topics":
+        raise RuntimeError(
+            f"Expected root tag to be 'topics' but got '{root.tag}'.")
     return DataFrame(
         data=[_parse_topic(child) for child in root],
         columns=[
