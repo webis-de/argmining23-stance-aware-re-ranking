@@ -22,8 +22,8 @@ class OptimalRelevanceReranker(Transformer):
             dtype=str
         ).drop(columns=["0"])
 
-    def transform(self, ranking: DataFrame) -> DataFrame:
-        ranking = ranking.merge(
+    def transform(self, topics_or_res: DataFrame) -> DataFrame:
+        topics_or_res = topics_or_res.merge(
             self.qrels,
             how="left",
             on=["qid", "docno"],
@@ -33,8 +33,8 @@ class OptimalRelevanceReranker(Transformer):
         ).drop(
             columns=["label"],
         )
-        ranking = reset_order(ranking)
-        return ranking
+        topics_or_res = reset_order(topics_or_res)
+        return topics_or_res
 
 
 @dataclass(frozen=True)
@@ -51,8 +51,8 @@ class OptimalQualityReranker(Transformer):
             dtype=str
         ).drop(columns=["0"])
 
-    def transform(self, ranking: DataFrame) -> DataFrame:
-        ranking = ranking.merge(
+    def transform(self, topics_or_res: DataFrame) -> DataFrame:
+        topics_or_res = topics_or_res.merge(
             self.qrels,
             how="left",
             on=["qid", "docno"],
@@ -62,8 +62,8 @@ class OptimalQualityReranker(Transformer):
         ).drop(
             columns=["label"],
         )
-        ranking = reset_order(ranking)
-        return ranking
+        topics_or_res = reset_order(topics_or_res)
+        return topics_or_res
 
 
 class OptimalReranker(Transformer, Enum):
@@ -81,8 +81,8 @@ class OptimalReranker(Transformer, Enum):
         else:
             raise ValueError(f"Unknown optimal re-ranker: {self}")
 
-    def transform(self, ranking: DataFrame) -> DataFrame:
-        return self._transformer.transform(ranking)
+    def transform(self, topics_or_res: DataFrame) -> DataFrame:
+        return self._transformer.transform(topics_or_res)
 
     def __repr__(self) -> str:
         return repr(self._transformer)

@@ -45,5 +45,5 @@ class RunLoader(Transformer):
     def _transformer(self) -> Transformer:
         return Transformer.from_df(self._ranking)
 
-    def transform(self, topics: DataFrame) -> DataFrame:
-        return self._transformer.transform(topics)
+    def transform(self, topics_or_res: DataFrame) -> DataFrame:
+        return self._transformer.transform(topics_or_res)

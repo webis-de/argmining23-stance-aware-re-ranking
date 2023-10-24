@@ -12,8 +12,8 @@ from stare.config import CONFIG
 class TextLoader(Transformer):
     verbose: bool = False
 
-    def transform(self, ranking: DataFrame) -> DataFrame:
-        document_ids: set[str] = set(ranking["docno"].tolist())
+    def transform(self, topics_or_res: DataFrame) -> DataFrame:
+        document_ids: set[str] = set(topics_or_res["docno"].tolist())
         document_texts: dict[str, str] = {}
         with CONFIG.corpus_file_path.open("r") as lines:
             if self.verbose:
@@ -29,7 +29,7 @@ class TextLoader(Transformer):
                 document_id = document_dict["id"]
                 if document_id in document_ids:
                     document_texts[document_id] = document_dict["contents"]
-        ranking["text"] = ranking["docno"].map(
+        topics_or_res["text"] = topics_or_res["docno"].map(
             lambda document_id: document_texts[document_id]
         )
-        return ranking
+        return topics_or_res

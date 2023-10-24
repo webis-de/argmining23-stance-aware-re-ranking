@@ -118,26 +118,26 @@ class Text2TextGenerationStanceTagger(Transformer):
             return nan
         return mean(stances)
 
-    def transform(self, ranking: DataFrame) -> DataFrame:
-        if "stance_value" in ranking.columns:
-            ranking.rename({"stance_value": "stance_value_original"})
-        if "stance_label" in ranking.columns:
-            ranking.rename({"stance_label": "stance_label_original"})
+    def transform(self, topics_or_res: DataFrame) -> DataFrame:
+        if "stance_value" in topics_or_res.columns:
+            topics_or_res.rename({"stance_value": "stance_value_original"})
+        if "stance_label" in topics_or_res.columns:
+            topics_or_res.rename({"stance_label": "stance_label_original"})
 
-        rows = ranking.iterrows()
+        rows = topics_or_res.iterrows()
         if self.verbose:
             rows = tqdm(
                 rows,
-                total=len(ranking),
+                total=len(topics_or_res),
                 desc=f"Tag stance with {self.model}",
                 unit="document",
             )
-        ranking["stance_value"] = [
+        topics_or_res["stance_value"] = [
             self._stance_multi_target(row)
             for _, row in rows
         ]
-        ranking["stance_label"] = ranking["stance_value"].map(stance_label)
-        return ranking
+        topics_or_res["stance_label"] = topics_or_res["stance_value"].map(stance_label)
+        return topics_or_res
 
 
 @dataclass(frozen=True)
@@ -174,14 +174,14 @@ class Gpt3TsvStanceTagger(Transformer):
         df["stance_value"] = df["stance_label"].map(stance_value)
         return df
 
-    def transform(self, ranking: DataFrame) -> DataFrame:
-        ranking = ranking.merge(
+    def transform(self, topics_or_res: DataFrame) -> DataFrame:
+        topics_or_res = topics_or_res.merge(
             self._tsv_stance,
             how="left",
             on=["qid", "docno"],
             suffixes=("_original", None),
         )
-        return ranking
+        return topics_or_res
 
 
 @dataclass(frozen=True)
@@ -220,14 +220,14 @@ class RobertaCsvStanceTagger(Transformer):
         df["stance_value"] = df["stance_label"].map(stance_value)
         return df
 
-    def transform(self, ranking: DataFrame) -> DataFrame:
-        ranking = ranking.merge(
+    def transform(self, topics_or_res: DataFrame) -> DataFrame:
+        topics_or_res = topics_or_res.merge(
             self._csv_stance,
             how="left",
             on=["qid", "docno"],
             suffixes=("_original", None),
         )
-        return ranking
+        return topics_or_res
 
 
 @dataclass(frozen=True)
@@ -246,14 +246,14 @@ class GroundTruthStanceTagger(Transformer):
         qrels["stance_value"] = qrels["stance_label"].map(stance_value)
         return qrels
 
-    def transform(self, ranking: DataFrame) -> DataFrame:
-        ranking = ranking.merge(
+    def transform(self, topics_or_res: DataFrame) -> DataFrame:
+        topics_or_res = topics_or_res.merge(
             self.qrels_stance,
             how="left",
             on=["qid", "docno"],
             suffixes=("_original", None),
         )
-        return ranking
+        return topics_or_res
 
 
 class StanceTagger(Transformer, Enum):
@@ -291,8 +291,8 @@ class StanceTagger(Transformer, Enum):
         else:
             raise ValueError(f"Unknown stance tagger: {self}")
 
-    def transform(self, ranking: DataFrame) -> DataFrame:
-        return self._transformer.transform(ranking)
+    def transform(self, topics_or_res: DataFrame) -> DataFrame:
+        return self._transformer.transform(topics_or_res)
 
     def __repr__(self) -> str:
         return repr(self._transformer)
@@ -343,4 +343,5 @@ def main(tagger: str) -> None:
 
 
 if __name__ == '__main__':
+    # pylint: disable=no-value-for-parameter
     main()

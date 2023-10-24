@@ -130,7 +130,7 @@ def _run(
 
     # Re-rank optimal.
     if run_config.optimal_reranker is None:
-        pipeline = pipeline
+        pass
     elif run_config.optimal_reranker_cutoff is None:
         pipeline = ~(
                 pipeline >>

@@ -31,16 +31,16 @@ class StanceFirstReranker(Transformer):
 
         return ranking
 
-    def transform(self, ranking: DataFrame) -> DataFrame:
-        groups = ranking.groupby("qid", sort=False, group_keys=False)
+    def transform(self, topics_or_res: DataFrame) -> DataFrame:
+        groups = topics_or_res.groupby("qid", sort=False, group_keys=False)
         if self.verbose:
             tqdm.pandas(desc="Rank stance first", unit="query")
             groups = groups.progress_apply(self._rerank_query)
         else:
             groups = groups.apply(self._rerank_query)
-        ranking = groups.reset_index(drop=True)
-        ranking = add_ranks(ranking)
-        return ranking
+        topics_or_res = groups.reset_index(drop=True)
+        topics_or_res = add_ranks(topics_or_res)
+        return topics_or_res
 
 
 @dataclass(frozen=True)
@@ -71,16 +71,16 @@ class SubjectiveStanceFirstReranker(Transformer):
 
         return ranking
 
-    def transform(self, ranking: DataFrame) -> DataFrame:
-        groups = ranking.groupby("qid", sort=False, group_keys=False)
+    def transform(self, topics_or_res: DataFrame) -> DataFrame:
+        groups = topics_or_res.groupby("qid", sort=False, group_keys=False)
         if self.verbose:
             tqdm.pandas(desc="Rank subjective stance first", unit="query")
             groups = groups.progress_apply(self._rerank_query)
         else:
             groups = groups.apply(self._rerank_query)
-        ranking = groups.reset_index(drop=True)
-        ranking = add_ranks(ranking)
-        return ranking
+        topics_or_res = groups.reset_index(drop=True)
+        topics_or_res = add_ranks(topics_or_res)
+        return topics_or_res
 
 
 class StanceReranker(Transformer, Enum):
@@ -99,8 +99,8 @@ class StanceReranker(Transformer, Enum):
         else:
             raise ValueError(f"Unknown effectiveness re-ranker: {self}")
 
-    def transform(self, ranking: DataFrame) -> DataFrame:
-        return self._transformer.transform(ranking)
+    def transform(self, topics_or_res: DataFrame) -> DataFrame:
+        return self._transformer.transform(topics_or_res)
 
     def __repr__(self) -> str:
         return repr(self._transformer)
