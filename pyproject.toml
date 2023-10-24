@@ -48,6 +48,7 @@ dynamic = ["version"]
 
 [project.optional-dependencies]
 tests = [
+    "bandit[toml]~=1.7",
     "flake8~=6.1",
     "pylint~=2.17",
     "pytest~=7.4",
@@ -75,6 +76,9 @@ disable = [
     "fixme",
     "logging-fstring-interpolation"
 ]
+
+[tool.bandit.assert_used]
+skips = ["**/test_*.py"]
 
 [tool.pytest.ini_options]
 log_cli = "True"
