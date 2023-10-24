@@ -14,7 +14,7 @@ classifiers = [
 ]
 dependencies = [
     "click~=8.1",
-    "dataclasses-json~=0.5.14",
+    "dataclasses-json~=0.6.1",
     "defusedxml~=0.7.1",
     "diskcache~=5.6",
     "importlib-metadata~=4.0",
