@@ -136,7 +136,8 @@ class Text2TextGenerationStanceTagger(Transformer):
             self._stance_multi_target(row)
             for _, row in rows
         ]
-        topics_or_res["stance_label"] = topics_or_res["stance_value"].map(stance_label)
+        topics_or_res["stance_label"] = (
+            topics_or_res["stance_value"].map(stance_label))
         return topics_or_res
 
 
