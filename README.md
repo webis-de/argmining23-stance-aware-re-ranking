@@ -1,6 +1,3 @@
-[![DOI](https://img.shields.io/badge/DOI-TODO-blue?style=flat-square)](https://doi.org/TODO)
-[![arXiv preprint](https://img.shields.io/badge/arXiv-TODO-blue?style=flat-square)](https://arxiv.org/abs/TODO)
-[![Papers with Code](https://img.shields.io/badge/papers%20with%20code-TODO-blue?style=flat-square)](https://paperswithcode.com/paper/TODO)
 [![CI](https://img.shields.io/github/actions/workflow/status/webis-de/argmining23-stance-aware-re-ranking/ci.yml?branch=main&style=flat-square)](https://github.com/webis-de/argmining23-stance-aware-re-ranking/actions/workflows/ci.yml)
 [![Code coverage](https://img.shields.io/codecov/c/github/webis-de/argmining23-stance-aware-re-ranking?style=flat-square)](https://codecov.io/github/webis-de/argmining23-stance-aware-re-ranking/)
 [![Issues](https://img.shields.io/github/issues/webis-de/argmining23-stance-aware-re-ranking?style=flat-square)](https://github.com/webis-de/argmining23-stance-aware-re-ranking/issues)
